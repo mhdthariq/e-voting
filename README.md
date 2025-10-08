@@ -9,7 +9,7 @@ A prototype e-voting system built with Next.js that implements blockchain concep
 ### 🎯 Key Features
 
 - **Blockchain Security**: Custom blockchain implementation with proof-of-work
-- **Digital Signatures**: Ed25519 cryptographic signatures for vote authenticity  
+- **Digital Signatures**: Ed25519 cryptographic signatures for vote authenticity
 - **Merkle Tree Validation**: Efficient vote integrity verification
 - **Role-Based Access**: Admin, Organization, and Voter interfaces
 - **Anti-Tampering**: Hash injection and replay attack prevention
@@ -70,7 +70,7 @@ A prototype e-voting system built with Next.js that implements blockchain concep
 src/
 ├── app/                    # Next.js app router
 │   ├── admin/             # Admin dashboard pages
-│   ├── organization/      # Organization pages  
+│   ├── organization/      # Organization pages
 │   ├── voter/            # Voter pages
 │   ├── api/              # API routes
 │   └── auth/             # Authentication pages
@@ -109,14 +109,14 @@ scripts/                # Development & testing scripts
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
-git clone <repository-url>
+git clone https://github.com/mhdthariq/e-voting.git
 cd e-voting
 ```
 
@@ -164,7 +164,7 @@ Visit `http://localhost:3000` to see the application.
 
 ### Phase 3: Authentication ⏳ (Planned)
 - JWT token implementation
-- Login/logout functionality  
+- Login/logout functionality
 - Role-based middleware
 - Session management
 
@@ -222,7 +222,7 @@ npx ts-node --project tsconfig.node.json scripts/filename.ts
 - `POST /api/auth/logout` - User logout
 - `GET /api/auth/me` - Get current user
 
-### Election Endpoints  
+### Election Endpoints
 - `GET /api/elections` - List elections
 - `POST /api/elections` - Create election
 - `PUT /api/elections/:id` - Update election
@@ -292,7 +292,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🔗 Links
 
 - **Documentation**: [View roadmap](./DEVELOPMENT_ROADMAP.md)
-- **Current Status**: [View status](./CURRENT_STATUS.md)  
+- **Current Status**: [View status](./CURRENT_STATUS.md)
 - **Project Specification**: [View specs](./ProjectDocument.md)
 - **TypeScript Setup**: [View guide](./TYPESCRIPT_SETUP.md)
 
