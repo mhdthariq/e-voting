@@ -18,6 +18,10 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "src/generated/**",
+      "prisma/migrations/**",
+      "dev.db*",
+      "test.db*",
     ],
   },
 ];

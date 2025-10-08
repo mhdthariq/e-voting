@@ -1,0 +1,236 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id                  Int        @id @default(autoincrement())
+  username            String     @unique
+  email               String     @unique
+  passwordHash        String
+  role                UserRole
+  publicKey           String?
+  privateKeyEncrypted String?
+  status              UserStatus @default(ACTIVE)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  // Relations
+  organizationElections Election[] @relation("OrganizationElections")
+  votes                 Vote[]
+  auditLogs             AuditLog[]
+
+  @@map("users")
+}
+
+// Election Management
+model Election {
+  id             Int            @id @default(autoincrement())
+  title          String
+  description    String
+  organizationId Int
+  status         ElectionStatus @default(DRAFT)
+  startDate      DateTime
+  endDate        DateTime
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  // Relations
+  organization User                @relation("OrganizationElections", fields: [organizationId], references: [id], onDelete: Cascade)
+  candidates   Candidate[]
+  voters       ElectionVoter[]
+  votes        Vote[]
+  blocks       BlockchainBlock[]
+  statistics   ElectionStatistics?
+
+  @@map("elections")
+}
+
+model Candidate {
+  id          Int      @id @default(autoincrement())
+  electionId  Int
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@map("candidates")
+}
+
+model ElectionVoter {
+  id         Int      @id @default(autoincrement())
+  electionId Int
+  name       String
+  email      String
+  username   String?
+  password   String?
+  hasVoted   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@unique([electionId, email])
+  @@map("election_voters")
+}
+
+// Voting and Blockchain
+model Vote {
+  id              Int      @id @default(autoincrement())
+  electionId      Int
+  voterId         Int
+  blockHash       String
+  transactionHash String   @unique
+  votedAt         DateTime @default(now())
+
+  // Relations
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  voter    User     @relation(fields: [voterId], references: [id], onDelete: Cascade)
+
+  @@unique([electionId, voterId])
+  @@map("votes")
+}
+
+model BlockchainBlock {
+  id           Int      @id @default(autoincrement())
+  blockIndex   Int
+  previousHash String
+  merkleRoot   String
+  timestamp    DateTime
+  electionId   Int
+  nonce        Int
+  hash         String   @unique
+  votesData    String // JSON string of VoteTransaction[]
+  createdAt    DateTime @default(now())
+
+  // Relations
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@unique([electionId, blockIndex])
+  @@map("blockchain_blocks")
+}
+
+// Audit and Logging
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  action     String
+  resource   String
+  resourceId Int?
+  details    String
+  ipAddress  String
+  userAgent  String
+  createdAt  DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
+}
+
+// Statistics and Analytics
+model ElectionStatistics {
+  id                    Int       @id @default(autoincrement())
+  electionId            Int       @unique
+  totalRegisteredVoters Int       @default(0)
+  totalVotesCast        Int       @default(0)
+  participationRate     Float     @default(0.0)
+  votingStarted         DateTime?
+  lastVoteTime          DateTime?
+  averageVotingTime     Float?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@map("election_statistics")
+}
+
+model SystemStatistics {
+  id               Int      @id @default(autoincrement())
+  totalUsers       Int      @default(0)
+  totalElections   Int      @default(0)
+  totalVotes       Int      @default(0)
+  totalBlocks      Int      @default(0)
+  averageBlockTime Float    @default(0.0)
+  systemUptime     Int      @default(0) // in seconds
+  recordedAt       DateTime @default(now())
+
+  @@map("system_statistics")
+}
+
+// Email and Notifications
+model EmailLog {
+  id         Int           @id @default(autoincrement())
+  recipients String // JSON array of email addresses
+  template   EmailTemplate
+  subject    String
+  content    String
+  status     EmailStatus   @default(PENDING)
+  sentAt     DateTime?
+  error      String?
+  createdAt  DateTime      @default(now())
+
+  @@map("email_logs")
+}
+
+// Configuration
+model SystemConfig {
+  id        Int        @id @default(autoincrement())
+  key       String     @unique
+  value     String
+  type      ConfigType @default(STRING)
+  updatedAt DateTime   @updatedAt
+
+  @@map("system_config")
+}
+
+// Enums
+enum UserRole {
+  ADMIN        @map("admin")
+  ORGANIZATION @map("organization")
+  VOTER        @map("voter")
+}
+
+enum UserStatus {
+  ACTIVE   @map("active")
+  INACTIVE @map("inactive")
+}
+
+enum ElectionStatus {
+  DRAFT  @map("draft")
+  ACTIVE @map("active")
+  ENDED  @map("ended")
+}
+
+enum EmailTemplate {
+  VOTER_INVITATION @map("voter_invitation")
+  ELECTION_RESULTS @map("election_results")
+  ELECTION_UPDATE  @map("election_update")
+}
+
+enum EmailStatus {
+  PENDING @map("pending")
+  SENT    @map("sent")
+  FAILED  @map("failed")
+}
+
+enum ConfigType {
+  STRING  @map("string")
+  NUMBER  @map("number")
+  BOOLEAN @map("boolean")
+  JSON    @map("json")
+}
