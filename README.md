@@ -137,8 +137,8 @@ npm install
 
 3. **Configure environment**
 ```bash
-cp .env.example .env.local
-# Edit .env.local with your configuration
+cp env.example .env
+# Edit .env with your configuration
 ```
 
 4. **Initialize database**
@@ -271,7 +271,7 @@ The system provides multiple ways to verify blockchain integrity:
 
 ## 📧 Email Configuration
 
-Configure email settings in `.env.local`:
+Configure email settings in `.env`:
 
 ```env
 EMAIL_SERVICE=gmail
@@ -362,7 +362,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Prisma Generated**: `/src/generated/`, `/prisma/migrations/`
 - **Build Artifacts**: `.next/`, `*.tsbuildinfo`, `/build`
 - **Dependencies**: `node_modules/`
-- **Environment**: `.env*` files (use .env.example as template)
+- **Environment**: `.env*` files (use env.example as template)
 - **System Files**: `.DS_Store`, `*.pem`
 
 ### For Contributors
