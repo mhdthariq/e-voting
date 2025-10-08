@@ -274,7 +274,7 @@ The TypeScript setup enables:
 
 ---
 
-*Last Updated: December 2024*
-*TypeScript Version: 5.x*
-*Node.js Compatibility: 18+*
+*Last Updated: 8 October 2024
+*TypeScript Version: 5.7.3
+*Node.js Compatibility: 18+
 *Configuration: Unified tsconfig.json*
