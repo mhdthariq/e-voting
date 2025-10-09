@@ -11,9 +11,10 @@ export const baseSchemas = {
   email: z
     .string()
     .min(1, "Email is required")
-    .email("Invalid email format")
     .max(255, "Email too long")
-    .transform((email) => email.toLowerCase().trim()),
+    .trim()
+    .toLowerCase()
+    .pipe(z.email("Invalid email format")),
 
   // Password validation
   password: z
@@ -28,13 +29,14 @@ export const baseSchemas = {
   // Username validation
   username: z
     .string()
+    .trim()
     .min(3, "Username must be at least 3 characters")
     .max(50, "Username too long")
     .regex(
       /^[a-zA-Z0-9_-]+$/,
       "Username can only contain letters, numbers, hyphens, and underscores",
     )
-    .transform((username) => username.toLowerCase().trim()),
+    .toLowerCase(),
 
   // Name validation
   name: z
@@ -45,7 +47,7 @@ export const baseSchemas = {
       /^[a-zA-Z\s'-]+$/,
       "Name can only contain letters, spaces, hyphens, and apostrophes",
     )
-    .transform((name) => name.trim()),
+    .trim(),
 
   // Phone number validation
   phone: z
@@ -54,13 +56,13 @@ export const baseSchemas = {
     .transform((phone) => phone.replace(/\D/g, "")),
 
   // URL validation
-  url: z.string().url("Invalid URL format").max(2048, "URL too long"),
+  url: z.url("Invalid URL format").max(2048, "URL too long"),
 
   // UUID validation
-  uuid: z.string().uuid("Invalid UUID format"),
+  uuid: z.uuid("Invalid UUID format"),
 
   // Date validation
-  dateString: z.string().datetime("Invalid date format"),
+  dateString: z.iso.datetime("Invalid date format"),
 
   // Positive integer
   positiveInt: z
