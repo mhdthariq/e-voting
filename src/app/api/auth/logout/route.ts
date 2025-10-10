@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { protect } from "@/lib/auth/middleware";
-import { UserService } from "@/lib/database/services/user.service";
+import { AuditService } from "@/lib/database/services/audit.service";
 import { log } from "@/utils/logger";
 
 // UserService methods are static, no need to instantiate
@@ -31,24 +31,18 @@ export async function POST(request: NextRequest) {
         ip,
       });
 
-      // Note: Audit logging needs to be implemented in UserService
-      // try {
-      //   await UserService.createAuditLog(
-      //     userId,
-      //     "USER_LOGOUT",
-      //     "User logged out successfully",
-      //     {
-      //       ip,
-      //       userAgent: request.headers.get("user-agent") || "unknown",
-      //     },
-      //   );
-      // } catch (auditError) {
-      //   // Non-critical error
-      //   log.exception(auditError as Error, "AUTH", {
-      //     operation: "logoutAuditLog",
-      //     userId,
-      //   });
-      // }
+      try {
+        await AuditService.logUserLogout(
+          parseInt(userId),
+          ip,
+          request.headers.get("user-agent") || "unknown",
+        );
+      } catch (auditError) {
+        log.error("Audit logging failed for logout", "AUTH", {
+          userId,
+          error: auditError,
+        });
+      }
     } else {
       log.security("Logout attempt without valid token", { ip });
     }

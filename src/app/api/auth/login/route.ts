@@ -6,7 +6,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/jwt";
 import { password } from "@/lib/auth/password";
-import { UserService } from "@/lib/database/services/user.service";
+import { UserService } from "../../../../lib/database/services/user.service";
+import { AuditService } from "../../../../lib/database/services/audit.service";
 import { schemas } from "@/utils/validation";
 import { log } from "@/utils/logger";
 
@@ -124,8 +125,8 @@ export async function POST(request: NextRequest) {
       organizationName: undefined, // Not available in current schema
     });
 
-    // Note: lastLoginAt field doesn't exist in current schema
-    // This would need to be added to the User model if needed
+    // Update last login time and create audit log
+    await UserService.updateLastLogin(user.id);
 
     // Log successful login
     log.auth("User logged in successfully", {
@@ -136,16 +137,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Create audit log entry
-    // Note: Audit logging needs to be implemented in UserService
-    // await UserService.createAuditLog(
-    //   user.id,
-    //   "USER_LOGIN",
-    //   "User logged in successfully",
-    //   {
-    //     ip: request.headers.get("x-forwarded-for") || "unknown",
-    //     userAgent: request.headers.get("user-agent") || "unknown",
-    //   },
-    // );
+    await AuditService.logUserLogin(
+      user.id,
+      request.headers.get("x-forwarded-for") || "unknown",
+      request.headers.get("user-agent") || "unknown",
+    );
 
     // Prepare response with user info (excluding sensitive data)
     const userInfo = {

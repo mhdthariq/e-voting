@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/jwt";
 import { UserService } from "@/lib/database/services/user.service";
+import { AuditService } from "@/lib/database/services/audit.service";
 import { log } from "@/utils/logger";
 
 // UserService methods are static, no need to instantiate
@@ -119,16 +120,11 @@ export async function POST(request: NextRequest) {
       ip: request.headers.get("x-forwarded-for") || "unknown",
     });
 
-    // Note: Audit logging needs to be implemented in UserService
-    // await UserService.createAuditLog(
-    //   userId,
-    //   "TOKEN_REFRESH",
-    //   "Access token refreshed successfully",
-    //   {
-    //     ip: request.headers.get("x-forwarded-for") || "unknown",
-    //     userAgent: request.headers.get("user-agent") || "unknown",
-    //   },
-    // );
+    await AuditService.logTokenRefresh(
+      parseInt(userId),
+      request.headers.get("x-forwarded-for") || "unknown",
+      request.headers.get("user-agent") || "unknown",
+    );
 
     // Prepare user info (excluding sensitive data)
     const userInfo = {

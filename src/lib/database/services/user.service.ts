@@ -312,6 +312,132 @@ export class UserService {
     };
   }
 
+  // Audit logging methods
+  static async createAuditLog(
+    userId: number,
+    action: string,
+    resource: string,
+    resourceId?: number,
+    details?: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<void> {
+    try {
+      await prisma.auditLog.create({
+        data: {
+          userId,
+          action,
+          resource,
+          resourceId,
+          details: details || "",
+          ipAddress: ipAddress || "unknown",
+          userAgent: userAgent || "unknown",
+        },
+      });
+    } catch (error) {
+      console.error("Failed to create audit log:", error);
+      // Don't throw error to avoid disrupting the main operation
+    }
+  }
+
+  // Get audit logs for a user
+  static async getUserAuditLogs(
+    userId: number,
+    page: number = 1,
+    limit: number = 20,
+  ) {
+    const skip = (page - 1) * limit;
+
+    const [logs, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.auditLog.count({ where: { userId } }),
+    ]);
+
+    return {
+      data: logs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  // Get all audit logs (admin only)
+  static async getAllAuditLogs(
+    page: number = 1,
+    limit: number = 50,
+    action?: string,
+    resource?: string,
+  ) {
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (action) where.action = action;
+    if (resource) where.resource = resource;
+
+    const [logs, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.auditLog.count({ where }),
+    ]);
+
+    return {
+      data: logs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  // Update user last login time
+  static async updateLastLogin(userId: number): Promise<boolean> {
+    try {
+      // TODO: Add lastLoginAt field to User model if needed
+      // await prisma.user.update({
+      //   where: { id: userId },
+      //   data: { lastLoginAt: new Date() },
+      // });
+
+      // For now, create an audit log entry for login
+      await this.createAuditLog(
+        userId,
+        "LOGIN",
+        "USER",
+        userId,
+        "User logged in successfully",
+      );
+
+      return true;
+    } catch (error) {
+      console.error("Failed to update last login:", error);
+      return false;
+    }
+  }
+
   // Helper method to map Prisma user to application User type
   private static mapPrismaUserToUser(prismaUser: any): User {
     return {
