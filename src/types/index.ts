@@ -11,6 +11,11 @@ export interface User {
   publicKey?: string;
   privateKeyEncrypted?: string;
   status: UserStatus;
+  firstName?: string;
+  lastName?: string;
+  organizationName?: string;
+  isActive: boolean;
+  lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

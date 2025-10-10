@@ -323,6 +323,11 @@ export class UserService {
       publicKey: prismaUser.publicKey,
       privateKeyEncrypted: prismaUser.privateKeyEncrypted,
       status: prismaUser.status.toLowerCase() as UserStatus,
+      firstName: undefined,
+      lastName: undefined,
+      organizationName: undefined,
+      isActive: prismaUser.status.toLowerCase() === "active",
+      lastLoginAt: undefined,
       createdAt: prismaUser.createdAt,
       updatedAt: prismaUser.updatedAt,
     };
