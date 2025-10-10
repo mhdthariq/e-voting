@@ -4,7 +4,29 @@
  */
 
 import bcrypt from "bcryptjs";
-import { log } from "@/utils/logger";
+
+// Fallback logger to prevent import issues
+const log = {
+  auth: (msg: string, meta?: Record<string, unknown>) =>
+    console.log(`[AUTH] ${msg}`, meta || ""),
+  error: (msg: string, context?: string, meta?: Record<string, unknown>) =>
+    console.error(`[${context || "ERROR"}] ${msg}`, meta || ""),
+  exception: (error: Error, context?: string, meta?: Record<string, unknown>) =>
+    console.error(`[${context || "EXCEPTION"}]`, error.message, meta || ""),
+  warn: (msg: string, context?: string, meta?: Record<string, unknown>) =>
+    console.warn(`[${context || "WARN"}] ${msg}`, meta || ""),
+  info: (msg: string, context?: string, meta?: Record<string, unknown>) =>
+    console.info(`[${context || "INFO"}] ${msg}`, meta || ""),
+  debug: (msg: string, context?: string, meta?: Record<string, unknown>) =>
+    console.debug(`[${context || "DEBUG"}] ${msg}`, meta || ""),
+  security: (msg: string, meta?: Record<string, unknown>) =>
+    console.warn(`[SECURITY] ${msg}`, meta || ""),
+  audit: (action: string, userId?: string, meta?: Record<string, unknown>) =>
+    console.log(
+      `[AUDIT] ${action} ${userId ? `by user ${userId}` : ""}`,
+      meta || "",
+    ),
+};
 
 // Password configuration
 const PASSWORD_CONFIG = {

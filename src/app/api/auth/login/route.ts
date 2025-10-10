@@ -6,8 +6,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/jwt";
 import { password } from "@/lib/auth/password";
-import { UserService } from "../../../../lib/database/services/user.service";
-import { AuditService } from "../../../../lib/database/services/audit.service";
+import { UserService } from "@/lib/database/services/user.service";
+import { AuditService } from "@/lib/database/services/audit.service";
 import { schemas } from "@/utils/validation";
 import { log } from "@/utils/logger";
 
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Handle OPTIONS for CORS
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {

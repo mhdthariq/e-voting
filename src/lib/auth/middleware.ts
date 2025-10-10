@@ -355,9 +355,9 @@ class AuthMiddleware {
     // This is a simple in-memory rate limiter
     // In production, you'd want to use Redis or a proper rate limiting service
 
-    const ip = this.getClientIP(request);
-    const identifier = `${key}:${ip}`;
-
+    // Note: In production, would get IP and create identifier for rate limiting
+    // const ip = this.getClientIP(request);
+    // const identifier = `${key}:${ip}`;
     // For now, return allowed (implement proper rate limiting in production)
     return {
       allowed: true,

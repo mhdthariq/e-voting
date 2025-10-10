@@ -285,10 +285,7 @@ export class UserService {
     const skip = (page - 1) * limit;
 
     const where = {
-      OR: [
-        { username: { contains: query, mode: "insensitive" as const } },
-        { email: { contains: query, mode: "insensitive" as const } },
-      ],
+      OR: [{ username: { contains: query } }, { email: { contains: query } }],
     };
 
     const [users, total] = await Promise.all([

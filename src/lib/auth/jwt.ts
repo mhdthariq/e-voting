@@ -4,7 +4,29 @@
  */
 
 import * as jwt from "jsonwebtoken";
-import { log } from "@/utils/logger";
+
+// Fallback logger to prevent import issues
+const log = {
+  auth: (msg: string, meta?: Record<string, unknown>) =>
+    console.log(`[AUTH] ${msg}`, meta || ""),
+  error: (msg: string, context?: string, meta?: Record<string, unknown>) =>
+    console.error(`[${context || "ERROR"}] ${msg}`, meta || ""),
+  exception: (error: Error, context?: string, meta?: Record<string, unknown>) =>
+    console.error(`[${context || "EXCEPTION"}]`, error.message, meta || ""),
+  warn: (msg: string, context?: string, meta?: Record<string, unknown>) =>
+    console.warn(`[${context || "WARN"}] ${msg}`, meta || ""),
+  info: (msg: string, context?: string, meta?: Record<string, unknown>) =>
+    console.info(`[${context || "INFO"}] ${msg}`, meta || ""),
+  debug: (msg: string, context?: string, meta?: Record<string, unknown>) =>
+    console.debug(`[${context || "DEBUG"}] ${msg}`, meta || ""),
+  security: (msg: string, meta?: Record<string, unknown>) =>
+    console.warn(`[SECURITY] ${msg}`, meta || ""),
+  audit: (action: string, userId?: string, meta?: Record<string, unknown>) =>
+    console.log(
+      `[AUDIT] ${action} ${userId ? `by user ${userId}` : ""}`,
+      meta || "",
+    ),
+};
 
 // JWT configuration from environment variables
 const JWT_CONFIG = {
@@ -65,13 +87,7 @@ class JwtManager {
     payload: Omit<JwtPayload, "iat" | "exp" | "iss" | "aud">,
   ): string {
     try {
-      const tokenPayload: JwtPayload = {
-        ...payload,
-        iss: JWT_CONFIG.issuer,
-        aud: JWT_CONFIG.audience,
-      };
-
-      const token = jwt.sign(tokenPayload, JWT_CONFIG.secret, {
+      const token = jwt.sign(payload, JWT_CONFIG.secret, {
         expiresIn: JWT_CONFIG.expiresIn,
         issuer: JWT_CONFIG.issuer,
         audience: JWT_CONFIG.audience,
@@ -95,11 +111,9 @@ class JwtManager {
    */
   generateRefreshToken(userId: string, tokenVersion: number = 1): string {
     try {
-      const payload: RefreshTokenPayload = {
+      const payload: Omit<RefreshTokenPayload, "iss" | "aud"> = {
         userId,
         tokenVersion,
-        iss: JWT_CONFIG.issuer,
-        aud: JWT_CONFIG.audience,
       };
 
       const token = jwt.sign(payload, JWT_CONFIG.secret, {

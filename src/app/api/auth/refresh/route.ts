@@ -106,11 +106,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate new access token using the refresh helper
-    const tokenResponse = await auth.refresh(
-      refreshToken,
-      UserService.findById,
-    );
+    // Generate new access token directly
+    const accessToken = auth.login({
+      userId: user.id.toString(),
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      organizationName: user.organizationName,
+    }).accessToken;
+
+    const tokenResponse = {
+      accessToken,
+      expiresIn: 604800, // 7 days in seconds
+      tokenType: "Bearer" as const,
+    };
 
     // Log successful token refresh
     log.auth("Access token refreshed successfully", {
@@ -143,6 +152,7 @@ export async function POST(request: NextRequest) {
       user: userInfo,
       tokens: {
         accessToken: tokenResponse.accessToken,
+        refreshToken: refreshToken, // Return the same refresh token
         expiresIn: tokenResponse.expiresIn,
         tokenType: tokenResponse.tokenType,
       },
@@ -177,7 +187,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Handle OPTIONS for CORS
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
