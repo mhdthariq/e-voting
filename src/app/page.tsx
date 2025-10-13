@@ -1,103 +1,287 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Sun, Moon, LogIn, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { login } from "@/utils/auth";
+
+export default function HomePage() {
+  const [darkMode, setDarkMode] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
+  
+
+  // ✅ Dummy login logic
+  const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const result = await login(username, password);
+
+  if (result.success) {
+    setError("");
+    router.push("/dashboard");
+  } else {
+    setError(result.message || "Invalid username or password");
+  }
+};
+
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div
+      className={`relative min-h-screen flex flex-col md:flex-row transition-colors duration-500 ${
+        darkMode ? "bg-black text-white" : "bg-gray-100 text-gray-900"
+      }`}
+    >
+      {/* 🌗 Theme Toggle */}
+      <motion.button
+        whileTap={{ rotate: 180, scale: 0.9 }}
+        onClick={() => setDarkMode(!darkMode)}
+        className={`absolute top-6 right-6 p-3 rounded-full shadow-md transition-all border z-20 ${
+          darkMode
+            ? "bg-neutral-900 border-emerald-800 hover:bg-emerald-800 text-emerald-300"
+            : "bg-white border-gray-300 hover:bg-emerald-100 text-emerald-700"
+        }`}
+      >
+        {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+      </motion.button>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      {/* 🌀 MOBILE FLIP CONTAINER */}
+      <div className="flex-1 flex md:hidden justify-center items-center perspective-[1200px] relative overflow-hidden">
+        <motion.div
+          key={showLogin ? "login" : "info"}
+          initial={{ rotateY: showLogin ? 180 : -180, opacity: 0 }}
+          animate={{ rotateY: 0, opacity: 1 }}
+          exit={{ rotateY: showLogin ? -180 : 180, opacity: 0 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          className="w-full absolute backface-hidden"
+        >
+          {!showLogin ? (
+            // Info side
+            <motion.div className="flex flex-col justify-center items-center text-center px-6 py-16 bg-gradient-to-br from-emerald-700 to-black text-white rounded-2xl mx-4">
+              <h1 className="text-4xl font-extrabold mb-3 text-emerald-400">
+                Welcome to BlockVote
+              </h1>
+              <p className="text-base mb-6 max-w-sm opacity-90">
+                A secure blockchain-based voting system — designed for trust and transparency.
+              </p>
+              <ul className="text-emerald-200 text-sm mb-6 space-y-2">
+                <li>🔐 Secure and verifiable</li>
+                <li>🗳️ Blockchain-backed voting</li>
+                <li>🌍 Transparent results</li>
+              </ul>
+              <Button
+                onClick={() => setShowLogin(true)}
+                className="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold px-6 py-2 rounded-full flex items-center gap-2"
+              >
+                <LogIn size={18} /> Go to Login
+              </Button>
+            </motion.div>
+          ) : (
+            // Login side
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className={`w-full max-w-sm mx-auto rounded-2xl shadow-2xl border ${
+                darkMode
+                  ? "bg-neutral-900 border-emerald-800"
+                  : "bg-white border-gray-300"
+              } p-8`}
+            >
+              <h2
+                className={`text-3xl font-bold mb-6 text-center ${
+                  darkMode ? "text-emerald-400" : "text-emerald-700"
+                }`}
+              >
+                Login
+              </h2>
+
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div>
+                  <label
+                    className={`block font-medium mb-1 ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Username"
+                    className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:outline-none ${
+                      darkMode
+                        ? "bg-black border-emerald-800 text-white focus:ring-emerald-500"
+                        : "border-gray-300 focus:ring-emerald-500"
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className={`block font-medium mb-1 ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:outline-none ${
+                      darkMode
+                        ? "bg-black border-emerald-800 text-white focus:ring-emerald-500"
+                        : "border-gray-300 focus:ring-emerald-500"
+                    }`}
+                  />
+                </div>
+
+                {error && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-red-500 text-sm text-center"
+                  >
+                    {error}
+                  </motion.p>
+                )}
+
+                <Button
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-black py-2 rounded-lg font-semibold"
+                  type="submit"
+                >
+                  Login
+                </Button>
+              </form>
+
+              <Button
+                onClick={() => setShowLogin(false)}
+                className="mt-6 w-full text-emerald-400 hover:text-emerald-500 flex justify-center items-center gap-2"
+                variant="outline"
+              >
+                <ArrowLeft size={18} /> Back
+              </Button>
+            </motion.div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* 💻 DESKTOP LAYOUT */}
+      <div className="hidden md:flex flex-1">
+        {/* Left Info */}
+        <motion.div
+          initial={{ x: -80, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="flex-1 flex flex-col justify-center bg-gradient-to-br from-emerald-700 to-black text-white p-16"
+        >
+          <h1 className="text-5xl font-extrabold mb-4 text-emerald-400">
+            Welcome to BlockVote
+          </h1>
+          <p className="text-lg mb-6 max-w-md opacity-90">
+            A secure, decentralized voting system built on blockchain technology.
+            Designed for trust, transparency, and digital democracy.
+          </p>
+          <ul className="space-y-3 text-base list-disc list-inside text-emerald-200">
+            <li>🔐 Blockchain-backed vote integrity</li>
+            <li>🗳️ Tamper-proof, verifiable sessions</li>
+            <li>🌍 Accessible for any organization</li>
+          </ul>
+        </motion.div>
+
+        {/* Right Login */}
+        <motion.div
+          initial={{ x: 80, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="flex-1 flex justify-center items-center p-16"
+        >
+          <div
+            className={`w-full max-w-md rounded-2xl shadow-2xl border ${
+              darkMode
+                ? "bg-neutral-900 border-emerald-800"
+                : "bg-white border-gray-300"
+            } p-8`}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <h2
+              className={`text-3xl font-bold mb-6 text-center ${
+                darkMode ? "text-emerald-400" : "text-emerald-700"
+              }`}
+            >
+              Login to BlockVote
+            </h2>
+
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div>
+                <label
+                  className={`block font-medium mb-1 ${
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your Username"
+                  className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:outline-none ${
+                    darkMode
+                      ? "bg-black border-emerald-800 text-white focus:ring-emerald-500"
+                      : "border-gray-300 focus:ring-emerald-500"
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label
+                  className={`block font-medium mb-1 ${
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:outline-none ${
+                    darkMode
+                      ? "bg-black border-emerald-800 text-white focus:ring-emerald-500"
+                      : "border-gray-300 focus:ring-emerald-500"
+                  }`}
+                />
+              </div>
+
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-red-500 text-sm text-center"
+                >
+                  {error}
+                </motion.p>
+              )}
+
+              <Button
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-black py-2 rounded-lg font-semibold transition-all"
+                type="submit"
+              >
+                Login
+              </Button>
+            </form>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }
