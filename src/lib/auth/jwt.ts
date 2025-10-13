@@ -28,14 +28,31 @@ const log = {
     ),
 };
 
-// JWT configuration from environment variables
+// JWT configuration from .env file
 const JWT_CONFIG = {
-  secret: process.env.JWT_SECRET || "fallback-secret-change-in-production",
-  expiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "30d",
-  issuer: process.env.JWT_ISSUER || "blockvote",
-  audience: process.env.JWT_AUDIENCE || "blockvote-users",
+  secret: process.env.JWT_SECRET!,
+  expiresIn: process.env.JWT_EXPIRES_IN!,
+  refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN!,
+  issuer: process.env.JWT_ISSUER!,
+  audience: process.env.JWT_AUDIENCE!,
 };
+
+// Validate required environment variables on startup
+if (!JWT_CONFIG.secret) {
+  throw new Error("JWT_SECRET is required in .env file");
+}
+if (!JWT_CONFIG.expiresIn) {
+  throw new Error("JWT_EXPIRES_IN is required in .env file");
+}
+if (!JWT_CONFIG.refreshExpiresIn) {
+  throw new Error("JWT_REFRESH_EXPIRES_IN is required in .env file");
+}
+if (!JWT_CONFIG.issuer) {
+  throw new Error("JWT_ISSUER is required in .env file");
+}
+if (!JWT_CONFIG.audience) {
+  throw new Error("JWT_AUDIENCE is required in .env file");
+}
 
 // JWT Payload interface
 export interface JwtPayload {
@@ -309,14 +326,11 @@ class JwtManager {
   validateConfig(): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    if (
-      !JWT_CONFIG.secret ||
-      JWT_CONFIG.secret === "fallback-secret-change-in-production"
-    ) {
-      errors.push("JWT_SECRET must be set in production");
+    if (!JWT_CONFIG.secret) {
+      errors.push("JWT_SECRET must be set in .env file");
     }
 
-    if (JWT_CONFIG.secret.length < 32) {
+    if (JWT_CONFIG.secret && JWT_CONFIG.secret.length < 32) {
       errors.push("JWT_SECRET should be at least 32 characters long");
     }
 
