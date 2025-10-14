@@ -1,6 +1,9 @@
 /**
  * Organization Registration API Endpoints
  * Handles organization registration requests and verification
+ *
+ * The registration process creates an organization that acts as an admin user directly.
+ * Organizations log in using their own credentials to manage elections.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -10,7 +13,9 @@ import { log } from "@/utils/logger";
 
 // Validation schemas
 const organizationRegistrationSchema = z.object({
-  organizationName: z.string().min(2, "Organization name must be at least 2 characters"),
+  organizationName: z
+    .string()
+    .min(2, "Organization name must be at least 2 characters"),
   contactEmail: z.string().email("Invalid contact email address"),
   contactName: z.string().min(2, "Contact name must be at least 2 characters"),
   phone: z.string().optional(),
@@ -23,13 +28,10 @@ const organizationRegistrationSchema = z.object({
     zipCode: z.string().min(5, "ZIP code must be at least 5 characters"),
     country: z.string().min(2, "Country must be at least 2 characters"),
   }),
-  adminUser: z.object({
-    username: z.string().min(3, "Username must be at least 3 characters"),
-    email: z.string().email("Invalid admin email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    firstName: z.string().min(2, "First name must be at least 2 characters"),
-    lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  }),
+  // Organization login credentials
+  // The organization will use these credentials to log in as an admin
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 const registrationVerificationSchema = z.object({
@@ -49,6 +51,9 @@ function getClientInfo(request: NextRequest) {
 
 /**
  * POST /api/auth/register - Submit organization registration
+ *
+ * Creates a pending organization registration.
+ * The organization will be able to log in directly once approved.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -67,7 +72,7 @@ export async function POST(request: NextRequest) {
             message: issue.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -88,13 +93,15 @@ export async function POST(request: NextRequest) {
       ...clientInfo,
     });
 
-    return NextResponse.json({
-      success: result.success,
-      message: result.message,
-      registrationId: result.registrationId,
-      expiresAt: result.expiresAt,
-    }, { status: statusCode });
-
+    return NextResponse.json(
+      {
+        success: result.success,
+        message: result.message,
+        registrationId: result.registrationId,
+        expiresAt: result.expiresAt,
+      },
+      { status: statusCode },
+    );
   } catch (error) {
     log.exception(error as Error, "AUTH", {
       operation: "organizationRegistration",
@@ -105,7 +112,7 @@ export async function POST(request: NextRequest) {
         success: false,
         message: "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -130,7 +137,7 @@ export async function PUT(request: NextRequest) {
             message: issue.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -150,11 +157,13 @@ export async function PUT(request: NextRequest) {
       ...clientInfo,
     });
 
-    return NextResponse.json({
-      success: result.success,
-      message: result.message,
-    }, { status: statusCode });
-
+    return NextResponse.json(
+      {
+        success: result.success,
+        message: result.message,
+      },
+      { status: statusCode },
+    );
   } catch (error) {
     log.exception(error as Error, "AUTH", {
       operation: "registrationVerification",
@@ -165,7 +174,7 @@ export async function PUT(request: NextRequest) {
         success: false,
         message: "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -194,7 +203,6 @@ export async function GET(request: NextRequest) {
       success: true,
       message: "Registration endpoint is active",
     });
-
   } catch (error) {
     log.exception(error as Error, "AUTH", {
       operation: "registrationStatus",
@@ -205,7 +213,7 @@ export async function GET(request: NextRequest) {
         success: false,
         message: "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

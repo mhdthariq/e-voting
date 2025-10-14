@@ -29,9 +29,10 @@ export enum RegistrationStatus {
 
 // Organization registration request
 export interface OrganizationRegistrationRequest {
+  // Organization details
   organizationName: string;
-  contactEmail: string;
-  contactName: string;
+  contactEmail: string; // Main contact email (will be used for login)
+  contactName: string; // Main contact person name
   phone?: string;
   website?: string;
   description: string;
@@ -42,13 +43,13 @@ export interface OrganizationRegistrationRequest {
     zipCode: string;
     country: string;
   };
-  adminUser: {
-    username: string;
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-  };
+
+  // Organization login credentials
+  // The organization will use these credentials to log in as an admin
+  username: string; // Organization's login username
+  password: string; // Organization's login password
+
+  // Request metadata
   ipAddress?: string;
   userAgent?: string;
 }
@@ -65,7 +66,7 @@ export interface RegistrationApproval {
   registrationId: string;
   approved: boolean;
   adminNotes?: string;
-  adminUserId: number;
+  approvedBy: number; // System admin user ID who approved/rejected
   ipAddress?: string;
   userAgent?: string;
 }
@@ -89,15 +90,16 @@ export interface RegistrationRecord {
   website?: string;
   description: string;
   address: unknown;
-  adminUser: unknown;
+  username: string;
+  passwordHash: string;
   status: RegistrationStatus;
   verificationToken?: string;
-  verifiedAt?: Date;
+  verificationTokenExpires?: Date;
+  approvedBy?: number;
   approvedAt?: Date;
-  rejectedAt?: Date;
-  adminNotes?: string;
+  rejectedReason?: string;
   createdAt: Date;
-  expiresAt: Date;
+  updatedAt: Date;
   ipAddress?: string;
   userAgent?: string;
 }
@@ -120,26 +122,24 @@ class OrganizationRegistrationManager {
     request: OrganizationRegistrationRequest,
   ): Promise<RegistrationResult> {
     try {
-      // Check for existing organization with same email
+      // Check for existing organization with same email or username
       const existingOrg = await prisma.user.findFirst({
         where: {
-          OR: [
-            { email: request.contactEmail },
-            { email: request.adminUser.email },
-          ],
+          OR: [{ email: request.contactEmail }, { username: request.username }],
         },
       });
 
       if (existingOrg) {
-        log.security("Registration attempted with existing email", {
+        log.security("Registration attempted with existing credentials", {
           contactEmail: request.contactEmail,
-          adminEmail: request.adminUser.email,
+          username: request.username,
           ipAddress: request.ipAddress,
         });
 
         return {
           success: false,
-          message: "An account with this email already exists.",
+          message:
+            "An organization with this email or username already exists.",
         };
       }
 
@@ -159,8 +159,8 @@ class OrganizationRegistrationManager {
         };
       }
 
-      // Validate admin user password
-      const passwordValidation = password.validate(request.adminUser.password);
+      // Validate organization password
+      const passwordValidation = password.validate(request.password);
       if (!passwordValidation.isValid) {
         return {
           success: false,
@@ -174,8 +174,8 @@ class OrganizationRegistrationManager {
         Date.now() + REGISTRATION_CONFIG.tokenExpiryHours * 60 * 60 * 1000,
       );
 
-      // Hash admin password
-      const hashedPassword = await password.hash(request.adminUser.password);
+      // Hash organization password
+      const hashedPassword = await password.hash(request.password);
 
       // Store registration request
       const registrationData = {
@@ -186,10 +186,8 @@ class OrganizationRegistrationManager {
         website: request.website,
         description: request.description,
         address: request.address,
-        adminUser: {
-          ...request.adminUser,
-          password: hashedPassword, // Store hashed password
-        },
+        username: request.username,
+        passwordHash: hashedPassword,
         status: REGISTRATION_CONFIG.requireEmailVerification
           ? RegistrationStatus.PENDING_VERIFICATION
           : RegistrationStatus.PENDING_APPROVAL,
@@ -397,7 +395,7 @@ class OrganizationRegistrationManager {
         approvedAt: approval.approved ? new Date().toISOString() : undefined,
         rejectedAt: !approval.approved ? new Date().toISOString() : undefined,
         adminNotes: approval.adminNotes,
-        processedBy: approval.adminUserId,
+        processedBy: approval.approvedBy,
       };
 
       await prisma.systemConfig.update({
@@ -415,7 +413,7 @@ class OrganizationRegistrationManager {
       // Create audit log
       await prisma.auditLog.create({
         data: {
-          userId: approval.adminUserId,
+          userId: approval.approvedBy,
           action: approval.approved
             ? "REGISTRATION_APPROVED"
             : "REGISTRATION_REJECTED",
@@ -431,7 +429,7 @@ class OrganizationRegistrationManager {
         registrationId: approval.registrationId,
         organizationName: registrationData.organizationName,
         approved: approval.approved,
-        adminUserId: approval.adminUserId,
+        approvedBy: approval.approvedBy,
         adminNotes: approval.adminNotes,
         ipAddress: approval.ipAddress,
       });
@@ -471,12 +469,12 @@ class OrganizationRegistrationManager {
 
     const registrationData = JSON.parse(registrationRecord.value);
 
-    // Create organization user account
-    const orgUser = await prisma.user.create({
+    // Create the organization user account
+    const organizationUser = await prisma.user.create({
       data: {
-        username: registrationData.adminUser.username,
-        email: registrationData.adminUser.email,
-        passwordHash: registrationData.adminUser.password, // Already hashed
+        username: registrationData.username,
+        email: registrationData.contactEmail,
+        passwordHash: registrationData.passwordHash,
         role: "ORGANIZATION",
         status: "ACTIVE",
       },
@@ -485,7 +483,7 @@ class OrganizationRegistrationManager {
     // Store organization details in system config
     await prisma.systemConfig.create({
       data: {
-        key: `org_details_${orgUser.id}`,
+        key: `org_details_${organizationUser.id}`,
         value: JSON.stringify({
           organizationName: registrationData.organizationName,
           contactEmail: registrationData.contactEmail,
@@ -494,21 +492,16 @@ class OrganizationRegistrationManager {
           website: registrationData.website,
           description: registrationData.description,
           address: registrationData.address,
-          adminUser: {
-            firstName: registrationData.adminUser.firstName,
-            lastName: registrationData.adminUser.lastName,
-          },
-          createdAt: new Date().toISOString(),
-          registrationId,
+          username: registrationData.username,
         }),
         type: "JSON",
       },
     });
 
     log.auth("Organization account created", {
-      userId: orgUser.id,
+      userId: organizationUser.id,
       organizationName: registrationData.organizationName,
-      email: registrationData.adminUser.email,
+      email: registrationData.contactEmail,
       registrationId,
     });
   }
@@ -545,24 +538,16 @@ class OrganizationRegistrationManager {
               website: data.website,
               description: data.description,
               address: data.address,
-              adminUser: {
-                ...data.adminUser,
-                password: "[REDACTED]", // Don't expose password
-              },
+              username: data.username,
+              passwordHash: "[REDACTED]", // Don't expose password
               status: data.status,
               verificationToken: data.verificationToken,
-              verifiedAt: data.verifiedAt
-                ? new Date(data.verifiedAt)
-                : undefined,
-              approvedAt: data.approvedAt
-                ? new Date(data.approvedAt)
-                : undefined,
-              rejectedAt: data.rejectedAt
-                ? new Date(data.rejectedAt)
-                : undefined,
-              adminNotes: data.adminNotes,
+              verificationTokenExpires: data.verificationTokenExpires,
+              approvedBy: data.approvedBy,
+              approvedAt: data.approvedAt,
+              rejectedReason: data.rejectedReason,
               createdAt: new Date(data.createdAt),
-              expiresAt: new Date(data.expiresAt),
+              updatedAt: new Date(data.updatedAt),
               ipAddress: data.ipAddress,
               userAgent: data.userAgent,
             });
