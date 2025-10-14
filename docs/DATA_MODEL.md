@@ -1,7 +1,7 @@
 # 📊 BlockVote Data Model Documentation
 
-**Version**: 2.0  
-**Last Updated**: October 2024  
+**Version**: 0.2
+**Last Updated**: October 2025
 **Architecture**: Simplified Organization-as-Admin Model
 
 ## 📋 Table of Contents
@@ -35,7 +35,7 @@ graph TD
     A[User Table] --> B[System Admin]
     A --> C[Organization]
     A --> D[Voter]
-    
+
     C --> E[Creates Elections]
     C --> F[Manages Voters]
     E --> G[Election Results]
@@ -149,7 +149,7 @@ CREATE TABLE election_voters (
   voter_id    INTEGER REFERENCES users(id) ON DELETE CASCADE,
   invited_at  TIMESTAMP DEFAULT NOW(),
   voted_at    TIMESTAMP,
-  
+
   UNIQUE(election_id, voter_id)
 );
 ```
@@ -180,7 +180,7 @@ CREATE TABLE votes (
   blockchain_hash  VARCHAR(64) NOT NULL,
   signature        TEXT NOT NULL,
   voted_at         TIMESTAMP DEFAULT NOW(),
-  
+
   UNIQUE(election_id, voter_id)  -- Prevent double voting
 );
 ```
@@ -228,7 +228,7 @@ Users (1) ----< Elections (N)
   |         Candidates (N)
   |              |
   |              |
-  v              v  
+  v              v
 ElectionVoters ----< Votes
   |
   |
@@ -239,7 +239,7 @@ Users (Voters)
 
 #### **One-to-Many Relationships**
 - **Organization → Elections**: `users.id` ← `elections.organization_id`
-- **Election → Candidates**: `elections.id` ← `candidates.election_id`  
+- **Election → Candidates**: `elections.id` ← `candidates.election_id`
 - **Election → Votes**: `elections.id` ← `votes.election_id`
 - **User → Votes**: `users.id` ← `votes.voter_id` (for voters only)
 - **User → AuditLogs**: `users.id` ← `audit_logs.user_id`
@@ -267,13 +267,13 @@ ALTER TABLE system_config ADD CONSTRAINT unique_config_key UNIQUE (key);
 #### **Check Constraints**
 ```sql
 -- Role-based constraints
-ALTER TABLE elections ADD CONSTRAINT check_organization_role 
+ALTER TABLE elections ADD CONSTRAINT check_organization_role
   CHECK (organization_id IN (
     SELECT id FROM users WHERE role = 'ORGANIZATION'
   ));
 
 -- Status transitions
-ALTER TABLE elections ADD CONSTRAINT check_date_order 
+ALTER TABLE elections ADD CONSTRAINT check_date_order
   CHECK (start_date < end_date);
 ```
 
@@ -287,15 +287,15 @@ sequenceDiagram
     participant API as Registration API
     participant DB as Database
     participant Admin as System Admin
-    
+
     O->>API: Submit registration
     API->>DB: Store in system_config
     API->>O: Registration pending
-    
+
     Admin->>API: Review registration
     API->>DB: Create user record
     API->>O: Approval notification
-    
+
     O->>API: Login with credentials
     API->>O: JWT tokens + access
 ```
@@ -306,9 +306,9 @@ sequenceDiagram
 interface LoginProcess {
   input: {
     username: string;    // Organization username
-    password: string;    // Organization password  
+    password: string;    // Organization password
   };
-  
+
   process: [
     "Validate credentials against users table",
     "Check user status (ACTIVE required)",
@@ -317,7 +317,7 @@ interface LoginProcess {
     "Create audit log entry",
     "Return tokens + user info"
   ];
-  
+
   output: {
     accessToken: string;
     refreshToken: string;
@@ -396,7 +396,7 @@ interface NewRegistration {
   organizationName: string;
   contactEmail: string;    // Becomes User.email
   contactName: string;
-  username: string;        // Becomes User.username  
+  username: string;        // Becomes User.username
   password: string;        // Becomes User.passwordHash (hashed)
   // ... other org details
 }
@@ -410,7 +410,7 @@ interface NewRegistration {
 - ✅ Simpler API endpoints
 - ✅ Easier user management
 
-#### **Better Performance** 
+#### **Better Performance**
 - ✅ Fewer database joins
 - ✅ Simplified queries
 - ✅ Reduced storage overhead
@@ -418,7 +418,7 @@ interface NewRegistration {
 
 #### **Improved Maintainability**
 - ✅ Single source of truth for users
-- ✅ Clearer data relationships  
+- ✅ Clearer data relationships
 - ✅ Simpler backup/migration procedures
 - ✅ Easier debugging and monitoring
 
@@ -495,11 +495,11 @@ async function verifyElectionOwnership(userId: number, electionId: number) {
       organizationId: userId  // Direct ownership check
     }
   });
-  
+
   if (!election) {
     throw new Error('Election not found or access denied');
   }
-  
+
   return election;
 }
 ```
@@ -514,7 +514,7 @@ async function getUserElections(user: User) {
       where: { organizationId: user.id }
     });
   }
-  
+
   if (user.role === 'VOTER') {
     // Voter sees elections they're invited to
     return prisma.election.findMany({
@@ -525,7 +525,7 @@ async function getUserElections(user: User) {
       }
     });
   }
-  
+
   if (user.role === 'ADMIN') {
     // Admin sees all elections
     return prisma.election.findMany();
@@ -561,7 +561,7 @@ CREATE INDEX idx_audit_logs_created ON audit_logs(created_at);
 ### 🚀 **Query Optimization Tips**
 
 1. **Use Role-based Filtering**: Always filter by user role when appropriate
-2. **Leverage Indexes**: Design queries to use the indexes above  
+2. **Leverage Indexes**: Design queries to use the indexes above
 3. **Minimize Joins**: The simplified model reduces join complexity
 4. **Pagination**: Use cursor-based pagination for large datasets
 5. **Caching**: Cache frequently accessed organization and election data
@@ -574,7 +574,7 @@ The simplified **organization-as-admin model** provides a clean, efficient, and 
 
 - **Simplified Architecture**: Direct organization authentication
 - **Better Performance**: Fewer joins and queries
-- **Easier Development**: Clear relationships and patterns  
+- **Easier Development**: Clear relationships and patterns
 - **Enhanced Security**: Simplified access control
 - **Improved Testing**: Fewer edge cases and scenarios
 
@@ -582,6 +582,6 @@ This data model forms the foundation for all BlockVote functionality and provide
 
 ---
 
-**🔄 Last Updated**: October 2024  
-**👥 Maintainers**: BlockVote Development Team  
+**🔄 Last Updated**: October 2025
+**👥 Maintainers**: BlockVote Development Team
 **📄 Related Docs**: [Development Roadmap](../DEVELOPMENT_ROADMAP.md), [API Documentation](../src/app/api/), [Database Schema](../prisma/schema.prisma)
