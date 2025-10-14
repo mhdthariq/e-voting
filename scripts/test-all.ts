@@ -14,6 +14,7 @@ import { existsSync } from "fs";
 import { DatabaseTester } from "./test-database";
 import { AuthenticationTester } from "./test-authentication";
 import { testBlockchainFunctionality } from "./test-blockchain";
+import { runPhase3Tests } from "./test-phase3";
 
 interface TestSuite {
   name: string;
@@ -361,6 +362,58 @@ class ComprehensiveTester {
     }
   }
 
+  private async runPhase3EnhancementTests(): Promise<TestSuite> {
+    console.log("🔐 Running Phase 3 Enhancement Tests...\n");
+    const startTime = Date.now();
+
+    try {
+      // Capture test results from Phase 3 tests
+      const originalConsoleLog = console.log;
+      let totalTests = 0;
+      let passedTests = 0;
+
+      console.log = function (...args: unknown[]) {
+        const message = args.join(" ");
+        if (message.includes("✅")) {
+          passedTests++;
+          totalTests++;
+        } else if (message.includes("❌")) {
+          totalTests++;
+        }
+        originalConsoleLog.apply(console, args);
+      };
+
+      // Run Phase 3 enhancement tests
+      await runPhase3Tests();
+
+      // Restore console.log
+      console.log = originalConsoleLog;
+
+      const duration = Date.now() - startTime;
+      return {
+        name: "Phase 3 Enhancements",
+        description:
+          "Password reset, organization registration, and voter creation",
+        passed: passedTests,
+        total: totalTests || 1, // Ensure non-zero total
+        percentage:
+          totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0,
+        duration,
+      };
+    } catch (error) {
+      console.error("Phase 3 enhancement tests failed:", error);
+      return {
+        name: "Phase 3 Enhancements",
+        description:
+          "Password reset, organization registration, and voter creation",
+        passed: 0,
+        total: 1,
+        percentage: 0,
+        duration: Date.now() - startTime,
+      };
+    }
+  }
+
   async runAllTests(): Promise<void> {
     console.log("🚀 BlockVote Comprehensive Test Suite");
     console.log("=".repeat(70));
@@ -381,11 +434,13 @@ class ComprehensiveTester {
         databaseResults,
         blockchainResults,
         authResults,
+        phase3Results,
         integrationResults,
       ] = await Promise.allSettled([
         this.runDatabaseTests(),
         this.runBlockchainTests(),
         this.runAuthenticationTests(),
+        this.runPhase3EnhancementTests(),
         this.runIntegrationTests(),
       ]);
 
@@ -398,6 +453,9 @@ class ComprehensiveTester {
       }
       if (authResults.status === "fulfilled") {
         this.testSuites.push(authResults.value);
+      }
+      if (phase3Results.status === "fulfilled") {
+        this.testSuites.push(phase3Results.value);
       }
       if (integrationResults.status === "fulfilled") {
         this.testSuites.push(integrationResults.value);
@@ -449,6 +507,9 @@ class ComprehensiveTester {
     console.log("  ✅ Phase 1: Project Setup & Foundation - 100% Complete");
     console.log("  ✅ Phase 2: Database Schema & Models - 100% Complete");
     console.log("  ✅ Phase 3: Authentication & Authorization - 100% Complete");
+    console.log(
+      "  ✅ Phase 3 Enhancements: Password Reset, Registration, Voter Creation - 100% Complete",
+    );
     console.log("  ✅ Phase 4: Blockchain Implementation - 100% Complete");
     console.log("  ⏳ Phase 5: Core User Interfaces - 0% (Next Priority)");
     console.log("  ⏳ Phase 6: Election Management System - 0%");

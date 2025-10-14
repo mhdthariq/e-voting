@@ -12,6 +12,7 @@
     "test:database": "npx ts-node scripts/test-database.ts",
     "test:auth": "npx ts-node scripts/test-authentication.ts",
     "test:blockchain": "npx ts-node scripts/test-blockchain.ts",
+    "test:phase3": "npx ts-node scripts/test-phase3.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
