@@ -1,26 +1,30 @@
 // utils/jwt.ts
 import jwt from "jsonwebtoken";
 
-const SECRET_KEY = "blockvote_secret_key"; // (only for demo)
+const SECRET_KEY = "process.env.JWT_SECRET"; 
 
-// Encode to Base64 (fake JWT)
-export function generateToken(payload: object) {
-  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const body = btoa(JSON.stringify({ ...payload, exp: Date.now() + 60 * 60 * 1000 })); // 1 hour expiry
-  const signature = btoa("blockvote_secret_key");
-  return `${header}.${body}.${signature}`;
+if (!SECRET_KEY) {
+  throw new Error("❌ Missing JWT_SECRET in environment variables");
 }
 
-// Verify the fake token
-export function verifyToken(token: string) {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
+/**
+ * Securely generates a JWT using jsonwebtoken
+ * @param payload - Object payload to sign
+ * @returns A signed JWT string
+ */
+export function generateToken(payload: object): string {
+  return jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" });
+}
 
-    const payload = JSON.parse(atob(parts[1]));
-    if (payload.exp < Date.now()) return null; // expired
-    return payload;
-  } catch (err) {
+/**
+ * Verifies and decodes a JWT
+ * @param token - JWT string
+ * @returns Decoded payload or null if invalid
+ */
+export function verifyToken(token: string): object | null {
+  try {
+    return jwt.verify(token, SECRET_KEY) as object;
+  } catch {
     return null;
   }
 }

@@ -5,19 +5,41 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home, Users, List, Clock, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
-import { verifyToken } from "@/utils/jwt";
+import { getCurrentUser, logout, UserInfo } from "@/utils/auth"; // import UserInfo
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<UserInfo | null>(null); // use correct type
 
   useEffect(() => {
-    const token = sessionStorage.getItem("token");
-    if (!token || !verifyToken(token)) {
-      router.push("/"); // 🚫 redirect if no token
+    async function checkAuth() {
+      const currentUser = await getCurrentUser();
+
+      if (!currentUser) {
+        router.push("/"); // not authenticated
+      } else {
+        setUser(currentUser);
+      }
+
+      setIsLoading(false);
     }
+
+    checkAuth();
   }, [router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-emerald-400">
+        Checking authentication...
+      </div>
+    );
+  }
 
   const menu = [
     { name: "Dashboard", icon: Home, path: "/dashboard" },
@@ -26,8 +48,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Candidates", icon: Users, path: "/dashboard/candidates" },
   ];
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("token");
+  const handleLogout = async () => {
+    await logout();
     router.push("/");
   };
 
@@ -38,7 +60,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         initial={{ x: -100 }}
         animate={{ x: 0 }}
         transition={{ duration: 0.3 }}
-        className={`hidden md:flex md:flex-col md:w-64 bg-gradient-to-b from-emerald-800 to-black h-full justify-between shadow-xl`}
+        className="hidden md:flex md:flex-col md:w-64 bg-gradient-to-b from-emerald-800 to-black h-full justify-between shadow-xl"
       >
         <div>
           <div className="p-6 text-2xl font-extrabold text-emerald-300 border-b border-emerald-700">
@@ -77,12 +99,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header (Mobile Only) */}
         <header className="flex justify-between items-center px-6 py-4 border-b border-emerald-800 bg-black/80 sticky top-0 z-10 md:hidden">
           <h1 className="text-xl font-semibold text-emerald-400">BlockVote</h1>
         </header>
 
-        {/* Animated Page Content */}
         <AnimatePresence mode="wait">
           <motion.main
             key={pathname}
@@ -97,7 +117,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </AnimatePresence>
       </div>
 
-      {/* Bottom Navbar for Mobile */}
+      {/* Mobile Bottom Navbar */}
       <motion.nav
         initial={{ y: 100 }}
         animate={{ y: 0 }}
@@ -123,7 +143,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           );
         })}
 
-        {/* Logout Button on Mobile */}
         <button
           onClick={handleLogout}
           className="flex flex-col items-center text-xs text-gray-400 hover:text-red-400"

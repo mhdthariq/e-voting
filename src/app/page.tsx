@@ -13,23 +13,34 @@ export default function HomePage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  
 
-  // ✅ Dummy login logic
+  // ✅ Handle Login
   const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  const result = await login(username, password);
-
-  if (result.success) {
+    e.preventDefault();
     setError("");
-    router.push("/dashboard");
-  } else {
-    setError(result.message || "Invalid username or password");
-  }
-};
+    setLoading(true);
 
+    try {
+      const result = await login(username, password);
+
+      if (result.success && result.user) {
+        localStorage.setItem("user", JSON.stringify(result.user));
+        setError("");
+
+        // Optional: small delay for animation before redirect
+        setTimeout(() => router.push("/dashboard"), 300);
+      } else {
+        setError(result.message || "Invalid username or password");
+      }
+    } catch (err) {
+      console.error("Login failed:", err);
+      setError("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -155,10 +166,19 @@ export default function HomePage() {
                 )}
 
                 <Button
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-black py-2 rounded-lg font-semibold"
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-black py-2 rounded-lg font-semibold flex justify-center items-center gap-2"
                   type="submit"
+                  disabled={loading}
                 >
-                  Login
+                  {loading ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-black border-t-transparent rounded-full"
+                    />
+                  ) : (
+                    "Login"
+                  )}
                 </Button>
               </form>
 
@@ -273,10 +293,19 @@ export default function HomePage() {
               )}
 
               <Button
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-black py-2 rounded-lg font-semibold transition-all"
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-black py-2 rounded-lg font-semibold flex justify-center items-center gap-2"
                 type="submit"
+                disabled={loading}
               >
-                Login
+                {loading ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    className="w-5 h-5 border-2 border-black border-t-transparent rounded-full"
+                  />
+                ) : (
+                  "Login"
+                )}
               </Button>
             </form>
           </div>

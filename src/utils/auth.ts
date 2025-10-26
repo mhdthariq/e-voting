@@ -1,42 +1,108 @@
 // src/utils/auth.ts
-import bcrypt from "bcryptjs";
-import { generateToken, verifyToken } from "./jwt";
 
-interface LoginResult {
+export interface LoginResult {
   success: boolean;
   message?: string;
-  token?: string;
+  user?: UserInfo | null;
 }
 
-const USERS = [
-  {
-    username: "voter1",
-    passwordHash: "$2b$10$YqmB8M9gnTElFO0tRiU0P.4fdkZhoKHfMelzvjhax6PL36CIRmipy", // "voter123"
-  },
-];
-
-export async function login(username: string, password: string): Promise<LoginResult> {
-  const user = USERS.find((u) => u.username === username);
-  if (!user) return { success: false, message: "User not found" };
-
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) return { success: false, message: "Invalid password" };
-
-  // Generate a token
-  const token = generateToken({ username });
-  sessionStorage.setItem("token", token);
-
-  return { success: true, token };
+export interface UserInfo {
+  id: string;
+  email: string;
+  username: string;
+  role: "admin" | "organization" | "voter";
+  status: string;
+  createdAt: string;
+  updatedAt?: string;
+  permissions?: string[];
 }
 
-// ✅ Logout
-export function logout() {
-  sessionStorage.removeItem("token");
+/**
+ * Login - Authenticate user via backend
+ * Backend handles JWT creation + HttpOnly cookies
+ */
+export async function login(identifier: string, password: string): Promise<LoginResult> {
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // ⬅ allows backend to set cookies
+      body: JSON.stringify({ identifier, password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      return { success: false, message: data.error || "Invalid credentials" };
+    }
+
+    // Optionally fetch the latest user info after login
+    const user = await getCurrentUser();
+
+    if (user) localStorage.setItem("user", JSON.stringify(user));
+
+    return {
+      success: true,
+      message: data.message || "Login successful",
+      user: user ?? null,
+    };
+  } catch (err) {
+    console.error("Login error:", err);
+    return { success: false, message: "Network or server error" };
+  }
 }
 
-// ✅ Check if user still logged in
-export function getCurrentUser() {
-  const token = sessionStorage.getItem("token");
-  if (!token) return null;
-  return verifyToken(token);
+/**
+ * Get current authenticated user via /api/auth/me
+ */
+export async function getCurrentUser(): Promise<UserInfo | null> {
+  try {
+    const res = await fetch("/api/auth/me", {
+      method: "GET",
+      credentials: "include", // sends cookies
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+
+    if (!data.success || !data.user) return null;
+
+    return data.user;
+  } catch (err) {
+    console.error("Get current user failed:", err);
+    return null;
+  }
+}
+
+/**
+ * Logout - calls backend to clear cookies and local storage
+ */
+export async function logout(): Promise<void> {
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (err) {
+    console.error("Logout failed:", err);
+  } finally {
+    localStorage.removeItem("user");
+  }
+}
+
+/**
+ * Check if user is authenticated (based on /me or cached data)
+ */
+export async function isAuthenticated(): Promise<boolean> {
+  const cached = localStorage.getItem("user");
+  if (cached) return true;
+
+  const user = await getCurrentUser();
+  if (user) {
+    localStorage.setItem("user", JSON.stringify(user));
+    return true;
+  }
+
+  return false;
 }
