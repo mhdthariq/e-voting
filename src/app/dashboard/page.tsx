@@ -10,5 +10,15 @@ export default async function DashboardPage() {
     redirect(`${process.env.NEXT_PUBLIC_APP_URL}`);
   }
 
-  return <DashboardClient user={user} />;
+  // Redirect based on role
+    switch (user.role) {
+    case "admin":
+      redirect("/dashboard/admin");
+      break;
+    case "organization":
+      redirect("/dashboard/organization");
+      break;
+    default:
+      redirect("/dashboard/user");
+  }
 }

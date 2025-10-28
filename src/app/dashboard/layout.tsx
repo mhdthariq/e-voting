@@ -5,33 +5,31 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home, Users, List, Clock, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getCurrentUser, logout, UserInfo } from "@/utils/auth"; // import UserInfo
+import { getCurrentUser, logout, UserInfo } from "@/utils/auth";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<UserInfo | null>(null); // use correct type
+  const [user, setUser] = useState<UserInfo | null>(null);
 
-  useEffect(() => {
-    async function checkAuth() {
+    useEffect(() => {
+    let mounted = true;
+    async function loadUser() {
       const currentUser = await getCurrentUser();
-
-      if (!currentUser) {
-        router.push("/"); // not authenticated
-      } else {
+      if (mounted) {
+        if (!currentUser) {
+          router.replace("/"); // safer than push to avoid loop
+          return;
+        }
         setUser(currentUser);
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     }
+    loadUser();
+    return () => { mounted = false; };
+  }, []); // ✅ no [router] dependency
 
-    checkAuth();
-  }, [router]);
 
   if (isLoading) {
     return (
@@ -41,12 +39,25 @@ export default function DashboardLayout({
     );
   }
 
-  const menu = [
-    { name: "Dashboard", icon: Home, path: "/dashboard" },
-    { name: "Voting Room", icon: List, path: "/dashboard/voting" },
-    { name: "History", icon: Clock, path: "/dashboard/history" },
-    { name: "Candidates", icon: Users, path: "/dashboard/candidates" },
-  ];
+  // 🌟 Dynamic sidebar based on role
+  const menu =
+    user?.role === "admin"
+      ? [
+          { name: "Dashboard", icon: Home, path: "/dashboard/admin" },
+          { name: "Candidates", icon: Users, path: "/dashboard/admin/candidates" },
+          { name: "Voting Room", icon: List, path: "/dashboard/admin/voting" },
+          { name: "History", icon: Clock, path: "/dashboard/admin/history" },
+        ] 
+      : user?.role === "organization" ? [
+          { name: "Dashboard", icon: Home, path: "/dashboard/user" },
+          { name: "Candidates", icon: Users, path: "/dashboard/user/candidates" },
+          { name: "Voting Room", icon: List, path: "/dashboard/organization/voting" },
+          { name: "History", icon: Clock, path: "/dashboard/organization/history" },
+                ]
+      : [
+          { name: "Dashboard", icon: Home, path: "/dashboard/user" },
+          { name: "Candidates", icon: Users, path: "/dashboard/user/candidates" },
+      ]
 
   const handleLogout = async () => {
     await logout();
@@ -55,7 +66,7 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-black text-white relative">
-      {/* Sidebar for Desktop */}
+      {/* Sidebar */}
       <motion.aside
         initial={{ x: -100 }}
         animate={{ x: 0 }}
@@ -99,10 +110,6 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        <header className="flex justify-between items-center px-6 py-4 border-b border-emerald-800 bg-black/80 sticky top-0 z-10 md:hidden">
-          <h1 className="text-xl font-semibold text-emerald-400">BlockVote</h1>
-        </header>
-
         <AnimatePresence mode="wait">
           <motion.main
             key={pathname}
@@ -110,7 +117,7 @@ export default function DashboardLayout({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="flex-1 p-6 pb-24 md:pb-6 bg-neutral-950"
+            className="flex-1 p-6 bg-neutral-950"
           >
             {children}
           </motion.main>
