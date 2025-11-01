@@ -50,23 +50,6 @@ interface OrganizationRegistration {
   reviewedBy?: number;
 }
 
-interface UserManagementData {
-  users: User[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-  filters: {
-    search: string;
-    role: string;
-    status: string;
-    sortBy: string;
-    sortOrder: string;
-  };
-}
-
 interface CreateUserForm {
   username: string;
   email: string;
@@ -87,16 +70,19 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<
     "overview" | "users" | "organizations" | "system" | "logs"
   >("overview");
-  const [userManagement, setUserManagement] = useState<UserManagementData>({
-    users: [],
-    pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
-    filters: {
-      search: "",
-      role: "",
-      status: "",
-      sortBy: "createdAt",
-      sortOrder: "desc",
-    },
+  const [users, setUsers] = useState<User[]>([]);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
+  const [filters, setFilters] = useState({
+    search: "",
+    role: "",
+    status: "",
+    sortBy: "createdAt",
+    sortOrder: "desc",
   });
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
@@ -221,10 +207,9 @@ export default function AdminDashboard() {
         "Content-Type": "application/json",
       };
 
-      const { filters } = userManagement;
       const queryParams = new URLSearchParams({
-        page: filters.search ? "1" : userManagement.pagination.page.toString(),
-        limit: userManagement.pagination.limit.toString(),
+        page: filters.search ? "1" : pagination.page.toString(),
+        limit: pagination.limit.toString(),
         ...(filters.search && { search: filters.search }),
         ...(filters.role && { role: filters.role }),
         ...(filters.status && { status: filters.status }),
@@ -237,12 +222,8 @@ export default function AdminDashboard() {
       });
       if (response.ok) {
         const data = await response.json();
-        setUserManagement((prev) => ({
-          ...prev,
-          users: data.data,
-          pagination: data.pagination,
-          filters: data.filters,
-        }));
+        setUsers(data.data);
+        setPagination(data.pagination);
       }
     } catch (error) {
       console.error("Error loading user management data:", error);
@@ -255,7 +236,7 @@ export default function AdminDashboard() {
       loadUserManagementData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userManagement.filters, userManagement.pagination.page, activeTab]);
+  }, [filters, pagination.page, activeTab]);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -353,26 +334,17 @@ export default function AdminDashboard() {
   };
 
   const handleSearchUsers = (search: string) => {
-    setUserManagement((prev) => ({
-      ...prev,
-      filters: { ...prev.filters, search },
-      pagination: { ...prev.pagination, page: 1 },
-    }));
+    setFilters((prev) => ({ ...prev, search }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const handleFilterUsers = (filterType: string, value: string) => {
-    setUserManagement((prev) => ({
-      ...prev,
-      filters: { ...prev.filters, [filterType]: value },
-      pagination: { ...prev.pagination, page: 1 },
-    }));
+    setFilters((prev) => ({ ...prev, [filterType]: value }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const handlePageChange = (page: number) => {
-    setUserManagement((prev) => ({
-      ...prev,
-      pagination: { ...prev.pagination, page },
-    }));
+    setPagination((prev) => ({ ...prev, page }));
   };
 
   const rejectOrganization = async (registrationId: number) => {
@@ -787,14 +759,14 @@ export default function AdminDashboard() {
                       type="text"
                       placeholder="Search users..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      value={userManagement.filters.search}
+                      value={filters.search}
                       onChange={(e) => handleSearchUsers(e.target.value)}
                     />
                   </div>
                   <div>
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      value={userManagement.filters.role}
+                      value={filters.role}
                       onChange={(e) =>
                         handleFilterUsers("role", e.target.value)
                       }
@@ -808,7 +780,7 @@ export default function AdminDashboard() {
                   <div>
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      value={userManagement.filters.status}
+                      value={filters.status}
                       onChange={(e) =>
                         handleFilterUsers("status", e.target.value)
                       }
@@ -821,13 +793,10 @@ export default function AdminDashboard() {
                   <div>
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      value={`${userManagement.filters.sortBy}-${userManagement.filters.sortOrder}`}
+                      value={`${filters.sortBy}-${filters.sortOrder}`}
                       onChange={(e) => {
                         const [sortBy, sortOrder] = e.target.value.split("-");
-                        setUserManagement((prev) => ({
-                          ...prev,
-                          filters: { ...prev.filters, sortBy, sortOrder },
-                        }));
+                        setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
                       }}
                     >
                       <option value="createdAt-desc">Newest First</option>
@@ -862,7 +831,7 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {userManagement.users.map((user) => (
+                      {users.map((user) => (
                         <tr key={user.id}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
@@ -940,45 +909,38 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Pagination */}
-                {userManagement.pagination.totalPages > 1 && (
+                {pagination.totalPages > 1 && (
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-gray-500">
-                      Showing{" "}
-                      {(userManagement.pagination.page - 1) *
-                        userManagement.pagination.limit +
-                        1}{" "}
-                      to{" "}
+                      Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
                       {Math.min(
-                        userManagement.pagination.page *
-                          userManagement.pagination.limit,
-                        userManagement.pagination.total,
+                        pagination.page * pagination.limit,
+                        pagination.total,
                       )}{" "}
-                      of {userManagement.pagination.total} results
+                      of {pagination.total} results
                     </div>
                     <div className="flex space-x-1">
                       <button
-                        onClick={() =>
-                          handlePageChange(userManagement.pagination.page - 1)
-                        }
-                        disabled={userManagement.pagination.page === 1}
+                        onClick={() => handlePageChange(pagination.page - 1)}
+                        disabled={pagination.page === 1}
                         className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Previous
                       </button>
                       {Array.from(
-                        { length: userManagement.pagination.totalPages },
+                        { length: pagination.totalPages },
                         (_, i) => i + 1,
                       )
                         .slice(
-                          Math.max(0, userManagement.pagination.page - 3),
-                          userManagement.pagination.page + 2,
+                          Math.max(0, pagination.page - 3),
+                          pagination.page + 2,
                         )
                         .map((page) => (
                           <button
                             key={page}
                             onClick={() => handlePageChange(page)}
                             className={`px-3 py-1 border border-gray-300 rounded-md text-sm ${
-                              page === userManagement.pagination.page
+                              page === pagination.page
                                 ? "bg-blue-600 text-white"
                                 : "hover:bg-gray-50"
                             }`}
@@ -987,13 +949,8 @@ export default function AdminDashboard() {
                           </button>
                         ))}
                       <button
-                        onClick={() =>
-                          handlePageChange(userManagement.pagination.page + 1)
-                        }
-                        disabled={
-                          userManagement.pagination.page ===
-                          userManagement.pagination.totalPages
-                        }
+                        onClick={() => handlePageChange(pagination.page + 1)}
+                        disabled={pagination.page === pagination.totalPages}
                         className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
