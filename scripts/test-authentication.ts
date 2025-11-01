@@ -53,12 +53,12 @@ class AuthenticationTester {
       role: "admin",
     },
     organization: {
-      email: "org@blockvote.com",
+      email: "council@university.edu",
       password: "org123!",
       role: "organization",
     },
     voter: {
-      email: "voter1@blockvote.com",
+      email: "alice.johnson@student.edu",
       password: "voter123!",
       role: "voter",
     },

@@ -2,15 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: "admin" | "organization" | "voter";
-  status: "active" | "inactive" | "suspended";
-  createdAt: string;
-}
+import { User } from "@/types";
 
 interface SystemStats {
   totalUsers: number;
@@ -51,8 +43,11 @@ interface OrganizationRegistration {
 }
 
 interface CreateUserForm {
+  studentId: string;
   username: string;
   email: string;
+  firstName: string;
+  lastName: string;
   password: string;
   role: "admin" | "organization" | "voter";
 }
@@ -88,8 +83,11 @@ export default function AdminDashboard() {
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [createUserForm, setCreateUserForm] = useState<CreateUserForm>({
+    studentId: "",
     username: "",
     email: "",
+    firstName: "",
+    lastName: "",
     password: "",
     role: "voter",
   });
@@ -264,8 +262,11 @@ export default function AdminDashboard() {
       if (response.ok) {
         setShowCreateUserModal(false);
         setCreateUserForm({
+          studentId: "",
           username: "",
           email: "",
+          firstName: "",
+          lastName: "",
           password: "",
           role: "voter",
         });
@@ -754,7 +755,15 @@ export default function AdminDashboard() {
                   </h3>
                   <button
                     onClick={() => {
-                      setCreateUserForm((prev) => ({ ...prev, role: "voter" }));
+                      setCreateUserForm({
+                        studentId: "",
+                        username: "",
+                        email: "",
+                        firstName: "",
+                        lastName: "",
+                        password: "",
+                        role: "voter",
+                      });
                       setShowCreateUserModal(true);
                     }}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
@@ -831,7 +840,10 @@ export default function AdminDashboard() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          User
+                          User Details
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Student/ID
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Role
@@ -855,19 +867,30 @@ export default function AdminDashboard() {
                               <div className="flex-shrink-0 h-10 w-10">
                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                                   <span className="text-sm font-medium text-gray-700">
-                                    {user.username.charAt(0).toUpperCase()}
+                                    {(
+                                      user.firstName?.charAt(0) ||
+                                      user.username.charAt(0)
+                                    ).toUpperCase()}
                                   </span>
                                 </div>
                               </div>
                               <div className="ml-4">
                                 <div className="text-sm font-medium text-gray-900">
-                                  {user.username}
+                                  {user.firstName && user.lastName
+                                    ? `${user.firstName} ${user.lastName}`
+                                    : user.username}
                                 </div>
                                 <div className="text-sm text-gray-500">
                                   {user.email}
                                 </div>
+                                <div className="text-xs text-gray-400">
+                                  @{user.username}
+                                </div>
                               </div>
                             </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {user.studentId || "—"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
@@ -991,10 +1014,15 @@ export default function AdminDashboard() {
                   </h3>
                   <button
                     onClick={() => {
-                      setCreateUserForm((prev) => ({
-                        ...prev,
+                      setCreateUserForm({
+                        studentId: "",
+                        username: "",
+                        email: "",
+                        firstName: "",
+                        lastName: "",
+                        password: "",
                         role: "organization",
-                      }));
+                      });
                       setShowCreateUserModal(true);
                     }}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
@@ -1090,10 +1118,15 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="ml-4">
                                   <div className="text-sm font-medium text-gray-900">
-                                    {org.username}
+                                    {org.firstName && org.lastName
+                                      ? `${org.firstName} ${org.lastName}`
+                                      : org.username}
                                   </div>
                                   <div className="text-sm text-gray-500">
                                     {org.email}
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    @{org.username}
                                   </div>
                                 </div>
                               </div>
@@ -1181,7 +1214,24 @@ export default function AdminDashboard() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Username
+                        Student/ID Number
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g., 2021001234 or NIP123456"
+                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        value={createUserForm.studentId}
+                        onChange={(e) =>
+                          setCreateUserForm((prev) => ({
+                            ...prev,
+                            studentId: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Username/Display Name
                       </label>
                       <input
                         type="text"
@@ -1195,6 +1245,42 @@ export default function AdminDashboard() {
                           }))
                         }
                       />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          First Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          value={createUserForm.firstName}
+                          onChange={(e) =>
+                            setCreateUserForm((prev) => ({
+                              ...prev,
+                              firstName: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Last Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          value={createUserForm.lastName}
+                          onChange={(e) =>
+                            setCreateUserForm((prev) => ({
+                              ...prev,
+                              lastName: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">

@@ -11,8 +11,11 @@ export class UserService {
 
     const user = await prisma.user.create({
       data: {
+        studentId: userData.studentId,
         username: userData.username,
         email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
         passwordHash: hashedPassword,
         role: userData.role.toUpperCase() as any,
         status: "ACTIVE" as any,
@@ -439,18 +442,20 @@ export class UserService {
   private static mapPrismaUserToUser(prismaUser: any): User {
     return {
       id: prismaUser.id,
+      studentId: prismaUser.studentId,
       username: prismaUser.username,
       email: prismaUser.email,
+      firstName: prismaUser.firstName,
+      lastName: prismaUser.lastName,
       passwordHash: prismaUser.passwordHash,
       role: prismaUser.role.toLowerCase() as UserRole,
       publicKey: prismaUser.publicKey,
       privateKeyEncrypted: prismaUser.privateKeyEncrypted,
       status: prismaUser.status.toLowerCase() as UserStatus,
-      firstName: undefined,
-      lastName: undefined,
-      organizationName: undefined,
+      emailVerified: prismaUser.emailVerified,
+      emailVerificationToken: prismaUser.emailVerificationToken,
       isActive: prismaUser.status.toLowerCase() === "active",
-      lastLoginAt: undefined,
+      lastLoginAt: prismaUser.lastLoginAt,
       createdAt: prismaUser.createdAt,
       updatedAt: prismaUser.updatedAt,
     };

@@ -7,141 +7,434 @@ async function main() {
   console.log("🌱 Starting database seeding...");
 
   try {
+    // Clean existing data first
+    console.log("🧹 Cleaning existing data...");
+    await prisma.userElectionParticipation.deleteMany();
+
+    await prisma.vote.deleteMany();
+    await prisma.blockchainBlock.deleteMany();
+    await prisma.auditLog.deleteMany();
+    await prisma.electionStatistics.deleteMany();
+    await prisma.systemStatistics.deleteMany();
+    await prisma.electionVoter.deleteMany();
+    await prisma.candidate.deleteMany();
+    await prisma.election.deleteMany();
+    await prisma.emailLog.deleteMany();
+    await prisma.systemConfig.deleteMany();
+    await prisma.user.deleteMany();
+    console.log("✅ Database cleaned");
+
     // Create admin user
     const adminPassword = await bcrypt.hash("admin123!", 12);
-    const admin = await prisma.user.upsert({
-      where: { email: "admin@blockvote.com" },
-      update: {},
-      create: {
+    const admin = await prisma.user.create({
+      data: {
+        studentId: "ADMIN001",
         username: "admin",
         email: "admin@blockvote.com",
+        firstName: "System",
+        lastName: "Administrator",
         passwordHash: adminPassword,
         role: "ADMIN",
         status: "ACTIVE",
+        emailVerified: true,
+        lastLoginAt: new Date(),
       },
     });
     console.log("✅ Admin user created:", admin.email);
 
-    // Create organization user
+    // Create organization users
     const orgPassword = await bcrypt.hash("org123!", 12);
-    const organization = await prisma.user.upsert({
-      where: { email: "org@blockvote.com" },
-      update: {},
-      create: {
-        username: "organization1",
-        email: "org@blockvote.com",
+    const organizations = [];
+
+    const org1 = await prisma.user.create({
+      data: {
+        studentId: "ORG001",
+        username: "university-council",
+        email: "council@university.edu",
+        firstName: "University",
+        lastName: "Student Council",
         passwordHash: orgPassword,
         role: "ORGANIZATION",
         status: "ACTIVE",
+        emailVerified: true,
+        lastLoginAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
       },
     });
-    console.log("✅ Organization user created:", organization.email);
+    organizations.push(org1);
 
-    // Create voter users
+    const org2 = await prisma.user.create({
+      data: {
+        studentId: "ORG002",
+        username: "computer-science-dept",
+        email: "cs-dept@university.edu",
+        firstName: "Computer Science",
+        lastName: "Department",
+        passwordHash: orgPassword,
+        role: "ORGANIZATION",
+        status: "ACTIVE",
+        emailVerified: true,
+      },
+    });
+    organizations.push(org2);
+
+    console.log("✅ Organization users created:", organizations.length);
+
+    // Create voter users with realistic data
     const voterPassword = await bcrypt.hash("voter123!", 12);
     const voters = [];
-    for (let i = 1; i <= 5; i++) {
-      const voter = await prisma.user.upsert({
-        where: { email: `voter${i}@blockvote.com` },
-        update: {},
-        create: {
-          username: `voter${i}`,
-          email: `voter${i}@blockvote.com`,
+
+    const voterData = [
+      {
+        studentId: "STU2024001",
+        username: "alice.johnson",
+        email: "alice.johnson@student.edu",
+        firstName: "Alice",
+        lastName: "Johnson",
+      },
+      {
+        studentId: "STU2024002",
+        username: "bob.smith",
+        email: "bob.smith@student.edu",
+        firstName: "Bob",
+        lastName: "Smith",
+      },
+      {
+        studentId: "STU2024003",
+        username: "carol.davis",
+        email: "carol.davis@student.edu",
+        firstName: "Carol",
+        lastName: "Davis",
+      },
+      {
+        studentId: "STU2024004",
+        username: "david.wilson",
+        email: "david.wilson@student.edu",
+        firstName: "David",
+        lastName: "Wilson",
+      },
+      {
+        studentId: "STU2024005",
+        username: "emma.brown",
+        email: "emma.brown@student.edu",
+        firstName: "Emma",
+        lastName: "Brown",
+      },
+      {
+        studentId: "STU2024006",
+        username: "frank.miller",
+        email: "frank.miller@student.edu",
+        firstName: "Frank",
+        lastName: "Miller",
+      },
+      {
+        studentId: "STU2024007",
+        username: "grace.taylor",
+        email: "grace.taylor@student.edu",
+        firstName: "Grace",
+        lastName: "Taylor",
+      },
+      {
+        studentId: "STU2024008",
+        username: "henry.anderson",
+        email: "henry.anderson@student.edu",
+        firstName: "Henry",
+        lastName: "Anderson",
+      },
+    ];
+
+    for (const voterInfo of voterData) {
+      const voter = await prisma.user.create({
+        data: {
+          studentId: voterInfo.studentId,
+          username: voterInfo.username,
+          email: voterInfo.email,
+          firstName: voterInfo.firstName,
+          lastName: voterInfo.lastName,
           passwordHash: voterPassword,
           role: "VOTER",
           status: "ACTIVE",
+          emailVerified: Math.random() > 0.3, // 70% have verified emails
+          lastLoginAt:
+            Math.random() > 0.5
+              ? new Date(
+                  Date.now() -
+                    Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000),
+                )
+              : undefined,
         },
       });
       voters.push(voter);
     }
     console.log("✅ Voter users created:", voters.length);
 
-    // Create a sample election
-    const election = await prisma.election.upsert({
-      where: { id: 1 },
-      update: {},
-      create: {
+    // Create sample elections
+    const elections = [];
+
+    // Active election
+    const activeElection = await prisma.election.create({
+      data: {
         title: "Student Council President Election 2024",
         description:
-          "Annual election for the student council president position.",
-        organizationId: organization.id,
-        status: "DRAFT",
-        startDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // One week from now
+          "Annual election for the student council president position. This election will determine the leadership for the upcoming academic year.",
+        organizationId: org1.id,
+        status: "ACTIVE",
+        startDate: new Date(Date.now() - 24 * 60 * 60 * 1000), // Started yesterday
+        endDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), // Ends in 6 days
       },
     });
-    console.log("✅ Sample election created:", election.title);
+    elections.push(activeElection);
 
-    // Create candidates for the election
-    const candidates = await Promise.all([
-      prisma.candidate.upsert({
-        where: { id: 1 },
-        update: {},
-        create: {
-          electionId: election.id,
-          name: "Alice Johnson",
+    // Draft election
+    const draftElection = await prisma.election.create({
+      data: {
+        title: "Computer Science Department Representative Election",
+        description:
+          "Election for department representative to the academic board.",
+        organizationId: org2.id,
+        status: "DRAFT",
+        startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // Starts in 2 weeks
+        endDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000), // Ends in 3 weeks
+      },
+    });
+    elections.push(draftElection);
+
+    // Ended election
+    const endedElection = await prisma.election.create({
+      data: {
+        title: "Library Committee Election 2024",
+        description:
+          "Election for student representatives on the library advisory committee.",
+        organizationId: org1.id,
+        status: "ENDED",
+        startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Started 30 days ago
+        endDate: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000), // Ended 23 days ago
+      },
+    });
+    elections.push(endedElection);
+
+    console.log("✅ Sample elections created:", elections.length);
+
+    // Create candidates for active election
+    const activeCandidates = await Promise.all([
+      prisma.candidate.create({
+        data: {
+          electionId: activeElection.id,
+          name: "Sarah Thompson",
           description:
-            "Experienced leader with focus on student welfare and academic excellence.",
+            "Experienced leader with focus on student welfare, campus sustainability, and academic excellence. Former class representative with proven track record.",
         },
       }),
-      prisma.candidate.upsert({
-        where: { id: 2 },
-        update: {},
-        create: {
-          electionId: election.id,
-          name: "Bob Smith",
+      prisma.candidate.create({
+        data: {
+          electionId: activeElection.id,
+          name: "Michael Chen",
           description:
-            "Advocate for better campus facilities and student engagement activities.",
+            "Advocate for better campus facilities, student engagement activities, and mental health support programs. Computer Science major with leadership experience.",
         },
       }),
-      prisma.candidate.upsert({
-        where: { id: 3 },
-        update: {},
-        create: {
-          electionId: election.id,
-          name: "Carol Davis",
+      prisma.candidate.create({
+        data: {
+          electionId: activeElection.id,
+          name: "Jessica Rodriguez",
           description:
-            "Champion of sustainability initiatives and digital innovation in education.",
+            "Champion of diversity initiatives, digital innovation in education, and improved student services. Business Administration major with student government experience.",
         },
       }),
     ]);
-    console.log("✅ Candidates created:", candidates.length);
 
-    // Register voters for the election
-    const electionVoters = await Promise.all(
-      voters.map((voter, index) =>
-        prisma.electionVoter.upsert({
-          where: {
-            electionId_email: {
-              electionId: election.id,
-              email: voter.email,
-            },
-          },
-          update: {},
-          create: {
-            electionId: election.id,
-            name: `Voter ${index + 1}`,
-            email: voter.email,
-            username: voter.username,
-            password: "voter123!", // In production, this would be generated securely
-          },
-        }),
-      ),
+    // Create candidates for draft election
+    const draftCandidates = await Promise.all([
+      prisma.candidate.create({
+        data: {
+          electionId: draftElection.id,
+          name: "Alex Kumar",
+          description:
+            "PhD candidate focused on improving graduate student representation and research opportunities.",
+        },
+      }),
+      prisma.candidate.create({
+        data: {
+          electionId: draftElection.id,
+          name: "Lisa Wang",
+          description:
+            "Senior undergraduate with experience in curriculum committee and student mentoring programs.",
+        },
+      }),
+    ]);
+
+    // Create candidates for ended election
+    const endedCandidates = await Promise.all([
+      prisma.candidate.create({
+        data: {
+          electionId: endedElection.id,
+          name: "Thomas Green",
+          description:
+            "Library science enthusiast with focus on digital resources and study spaces.",
+        },
+      }),
+      prisma.candidate.create({
+        data: {
+          electionId: endedElection.id,
+          name: "Maria Santos",
+          description:
+            "Graduate student advocate for extended library hours and research support.",
+        },
+      }),
+    ]);
+
+    console.log(
+      "✅ Candidates created:",
+      activeCandidates.length + draftCandidates.length + endedCandidates.length,
     );
-    console.log("✅ Election voters registered:", electionVoters.length);
 
-    // Create election statistics
-    await prisma.electionStatistics.upsert({
-      where: { electionId: election.id },
-      update: {},
-      create: {
-        electionId: election.id,
-        totalRegisteredVoters: voters.length,
-        totalVotesCast: 0,
-        participationRate: 0.0,
+    // Create UserElectionParticipation records (invitations and participation tracking)
+    const participations = [];
+
+    // Active election - invite all voters, some accepted, some declined, some pending
+    for (let i = 0; i < voters.length; i++) {
+      const voter = voters[i];
+      let inviteStatus: "PENDING" | "ACCEPTED" | "DECLINED" = "PENDING";
+      let respondedAt: Date | undefined = undefined;
+      let votedAt: Date | undefined = undefined;
+      let hasVoted = false;
+
+      if (i < 3) {
+        // First 3 voters have voted
+        inviteStatus = "ACCEPTED";
+        respondedAt = new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000);
+        votedAt = new Date(Date.now() - (5 - i) * 24 * 60 * 60 * 1000);
+        hasVoted = true;
+      } else if (i < 5) {
+        // Next 2 voters accepted but haven't voted yet
+        inviteStatus = "ACCEPTED";
+        respondedAt = new Date(Date.now() - (4 - i) * 24 * 60 * 60 * 1000);
+      } else if (i < 6) {
+        // One voter declined
+        inviteStatus = "DECLINED";
+        respondedAt = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+      }
+      // Remaining voters are still pending
+
+      const participation = await prisma.userElectionParticipation.create({
+        data: {
+          userId: voter.id,
+          electionId: activeElection.id,
+          inviteStatus: inviteStatus,
+          hasVoted: hasVoted,
+          invitedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Invited a week ago
+          respondedAt: respondedAt,
+          votedAt: votedAt,
+          notificationSent: true,
+        },
+      });
+      participations.push(participation);
+    }
+
+    // Ended election - all invited, most participated
+    for (let i = 0; i < Math.min(voters.length, 6); i++) {
+      const voter = voters[i];
+      const hasVoted = i < 5; // 5 out of 6 voted
+
+      const participation = await prisma.userElectionParticipation.create({
+        data: {
+          userId: voter.id,
+          electionId: endedElection.id,
+          inviteStatus: "ACCEPTED",
+          hasVoted: hasVoted,
+          invitedAt: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000),
+          respondedAt: new Date(Date.now() - 32 * 24 * 60 * 60 * 1000),
+          votedAt: hasVoted
+            ? new Date(Date.now() - (30 - i) * 24 * 60 * 60 * 1000)
+            : undefined,
+          notificationSent: true,
+        },
+      });
+      participations.push(participation);
+    }
+
+    console.log(
+      "✅ User election participations created:",
+      participations.length,
+    );
+
+    // Create some votes for the ended election with proper candidate tracking
+    const votesData = [];
+    const voteTransactions = [];
+
+    for (let i = 0; i < 5; i++) {
+      const voter = voters[i];
+      const candidateIndex = i % 2; // Alternate between first two candidates
+      const candidate = endedCandidates[candidateIndex];
+      const transactionHash = `tx_hash_${i + 1}_${Date.now()}`;
+      const blockHash = `block_hash_${i + 1}_${Date.now()}`;
+
+      // Create vote transaction for blockchain
+      const voteTransaction = {
+        voteId: `vote_${endedElection.id}_${voter.id}`,
+        electionId: endedElection.id,
+        voterPublicKey: `voter_public_key_${voter.id}`,
+        candidateId: candidate.id,
+        timestamp: new Date(Date.now() - (30 - i) * 24 * 60 * 60 * 1000),
+        signature: `signature_${i + 1}_${Date.now()}`,
+      };
+      voteTransactions.push(voteTransaction);
+
+      // Create vote record in database
+      const vote = await prisma.vote.create({
+        data: {
+          electionId: endedElection.id,
+          voterId: voter.id,
+          blockHash: blockHash,
+          transactionHash: transactionHash,
+          votedAt: new Date(Date.now() - (30 - i) * 24 * 60 * 60 * 1000),
+        },
+      });
+      votesData.push(vote);
+    }
+
+    // Create blockchain block containing the vote transactions
+    await prisma.blockchainBlock.create({
+      data: {
+        blockIndex: 1,
+        previousHash: "genesis_block_hash",
+        merkleRoot: "merkle_root_" + Date.now(),
+        timestamp: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+        electionId: endedElection.id,
+        nonce: 12345,
+        hash: "block_hash_" + Date.now(),
+        votesData: JSON.stringify(voteTransactions),
       },
     });
-    console.log("✅ Election statistics initialized");
+
+    console.log("✅ Sample votes created:", votesData.length);
+    console.log("✅ Blockchain block created with vote transactions");
+
+    // Create election statistics
+    await prisma.electionStatistics.create({
+      data: {
+        electionId: activeElection.id,
+        totalRegisteredVoters: voters.length,
+        totalVotesCast: 3,
+        participationRate: 3 / voters.length,
+        votingStarted: activeElection.startDate,
+        lastVoteTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        averageVotingTime: 2.5,
+      },
+    });
+
+    await prisma.electionStatistics.create({
+      data: {
+        electionId: endedElection.id,
+        totalRegisteredVoters: 6,
+        totalVotesCast: 5,
+        participationRate: 5 / 6,
+        votingStarted: endedElection.startDate,
+        lastVoteTime: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+        averageVotingTime: 1.8,
+      },
+    });
+
+    console.log("✅ Election statistics created");
 
     // Create system configuration
     const systemConfigs: Array<{
@@ -157,13 +450,14 @@ async function main() {
       { key: "DEFAULT_ELECTION_DURATION_DAYS", value: "7", type: "NUMBER" },
       { key: "MIN_CANDIDATES_PER_ELECTION", value: "2", type: "NUMBER" },
       { key: "MAX_CANDIDATES_PER_ELECTION", value: "10", type: "NUMBER" },
+      { key: "VOTER_INVITATION_EXPIRY_DAYS", value: "30", type: "NUMBER" },
+      { key: "EMAIL_VERIFICATION_REQUIRED", value: "true", type: "BOOLEAN" },
+      { key: "MAX_VOTERS_PER_ELECTION", value: "1000", type: "NUMBER" },
     ];
 
     for (const config of systemConfigs) {
-      await prisma.systemConfig.upsert({
-        where: { key: config.key },
-        update: { value: config.value },
-        create: {
+      await prisma.systemConfig.create({
+        data: {
           key: config.key,
           value: config.value,
           type: config.type,
@@ -177,13 +471,11 @@ async function main() {
     );
 
     // Initialize system statistics
-    await prisma.systemStatistics.upsert({
-      where: { id: 1 },
-      update: {},
-      create: {
+    await prisma.systemStatistics.create({
+      data: {
         totalUsers: await prisma.user.count(),
         totalElections: await prisma.election.count(),
-        totalVotes: 0,
+        totalVotes: await prisma.vote.count(),
         totalBlocks: 0,
         averageBlockTime: 0,
         systemUptime: 0,
@@ -191,49 +483,116 @@ async function main() {
     });
     console.log("✅ System statistics initialized");
 
-    // Create sample audit logs
+    // Create comprehensive audit logs
     const auditLogs = [
       {
         userId: admin.id,
         action: "LOGIN",
         resource: "USER",
         resourceId: admin.id,
-        details: "Admin user logged in",
+        details: "Admin user logged in during system setup",
         ipAddress: "127.0.0.1",
         userAgent: "Mozilla/5.0 (Seeding Script)",
       },
       {
-        userId: organization.id,
+        userId: org1.id,
         action: "CREATE",
         resource: "ELECTION",
-        resourceId: election.id,
-        details: "Created new election: " + election.title,
+        resourceId: activeElection.id,
+        details: `Created new election: ${activeElection.title}`,
+        ipAddress: "10.0.0.15",
+        userAgent: "Mozilla/5.0 (Admin Dashboard)",
+      },
+      {
+        userId: org2.id,
+        action: "CREATE",
+        resource: "ELECTION",
+        resourceId: draftElection.id,
+        details: `Created draft election: ${draftElection.title}`,
+        ipAddress: "10.0.0.22",
+        userAgent: "Mozilla/5.0 (Admin Dashboard)",
+      },
+      {
+        userId: admin.id,
+        action: "UPDATE",
+        resource: "ELECTION",
+        resourceId: activeElection.id,
+        details: "Activated election and sent voter invitations",
         ipAddress: "127.0.0.1",
-        userAgent: "Mozilla/5.0 (Seeding Script)",
+        userAgent: "Mozilla/5.0 (Admin Dashboard)",
+      },
+      {
+        userId: voters[0].id,
+        action: "VOTE",
+        resource: "ELECTION",
+        resourceId: endedElection.id,
+        details: "Cast vote in ended election",
+        ipAddress: "192.168.1.100",
+        userAgent: "Mozilla/5.0 (Voter Portal)",
+      },
+      {
+        userId: admin.id,
+        action: "VIEW",
+        resource: "STATISTICS",
+        details: "Viewed system statistics dashboard",
+        ipAddress: "127.0.0.1",
+        userAgent: "Mozilla/5.0 (Admin Dashboard)",
       },
     ];
 
     for (const log of auditLogs) {
       await prisma.auditLog.create({ data: log });
     }
-    console.log("✅ Sample audit logs created:", auditLogs.length);
+    console.log("✅ Audit logs created:", auditLogs.length);
 
     console.log("\n🎉 Database seeding completed successfully!");
     console.log("\n📋 Summary:");
     console.log(
-      `👤 Users created: ${voters.length + 2} (1 admin, 1 organization, ${voters.length} voters)`,
+      `👤 Users created: ${voters.length + organizations.length + 1} (1 admin, ${organizations.length} organizations, ${voters.length} voters)`,
     );
-    console.log(`🗳️  Elections created: 1`);
-    console.log(`🏃‍♂️ Candidates created: ${candidates.length}`);
-    console.log(`📊 Election voters registered: ${electionVoters.length}`);
-    console.log(`⚙️  System configs created: ${systemConfigs.length}`);
-    console.log(`📈 Statistics initialized: 1`);
-    console.log(`📝 Audit logs created: ${auditLogs.length}`);
+    console.log(
+      `🗳️  Elections created: ${elections.length} (1 active, 1 draft, 1 ended)`,
+    );
+    console.log(
+      `🏃‍♂️ Candidates created: ${activeCandidates.length + draftCandidates.length + endedCandidates.length}`,
+    );
+    console.log(`📨 Election participations: ${participations.length}`);
+    console.log(
+      `🗳️  Votes cast: ${votesData.length} (with candidate choices recorded)`,
+    );
+    console.log(`⚙️  System configs: ${systemConfigs.length}`);
+    console.log(
+      `🔗 Blockchain blocks: 1 (with ${voteTransactions.length} vote transactions)`,
+    );
+    console.log(`📊 Statistics records: 3 (1 system, 2 election)`);
+    console.log(`📝 Audit logs: ${auditLogs.length}`);
 
     console.log("\n🔑 Default login credentials:");
     console.log("Admin: admin@blockvote.com / admin123!");
-    console.log("Organization: org@blockvote.com / org123!");
-    console.log("Voters: voter1@blockvote.com / voter123! (voter1-voter5)");
+    console.log("Organizations:");
+    console.log("  - council@university.edu / org123!");
+    console.log("  - cs-dept@university.edu / org123!");
+    console.log("Voters: alice.johnson@student.edu / voter123! (and others)");
+
+    console.log("\n📊 Election Status:");
+    console.log(
+      `Active Election: "${activeElection.title}" (3 votes cast, ${voters.length - 6} pending invites)`,
+    );
+    console.log(`Draft Election: "${draftElection.title}" (not yet started)`);
+    console.log(
+      `Ended Election: "${endedElection.title}" (5/6 voters participated)`,
+    );
+
+    // Show vote distribution
+    const candidate1Votes = voteTransactions.filter(
+      (vt) => vt.candidateId === endedCandidates[0].id,
+    ).length;
+    const candidate2Votes = voteTransactions.filter(
+      (vt) => vt.candidateId === endedCandidates[1].id,
+    ).length;
+    console.log(`\n📊 Vote Results for "${endedElection.title}":`);
+    console.log(`  - ${endedCandidates[0].name}: ${candidate1Votes} votes`);
+    console.log(`  - ${endedCandidates[1].name}: ${candidate2Votes} votes`);
   } catch (error) {
     console.error("❌ Error during seeding:", error);
     throw error;

@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
       username: user.username,
       role: user.role,
-      organizationName: user.organizationName,
+      organizationName: undefined,
     }).accessToken;
 
     const tokenResponse = {

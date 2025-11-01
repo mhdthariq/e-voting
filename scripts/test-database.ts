@@ -463,14 +463,14 @@ class DatabaseTester {
       }
 
       // Test 2: Check if organization user exists
-      const orgUser = await UserService.findByEmail("org@blockvote.com");
+      const orgUser = await UserService.findByEmail("council@university.edu");
       if (orgUser && orgUser.role === "organization") {
         testsPassed++;
       }
 
       // Test 3: Check if voter users exist
       const voterUsers = await UserService.getUsersByRole("voter");
-      if (voterUsers && voterUsers.length >= 5) {
+      if (voterUsers && voterUsers.length >= 8) {
         testsPassed++;
       }
 

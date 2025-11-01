@@ -12,21 +12,29 @@ datasource db {
 
 // User Management
 model User {
-  id                  Int        @id @default(autoincrement())
-  username            String     @unique
-  email               String     @unique
-  passwordHash        String
-  role                UserRole
-  publicKey           String?
-  privateKeyEncrypted String?
-  status              UserStatus @default(ACTIVE)
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
+  id                     Int        @id @default(autoincrement())
+  studentId              String?    @unique // Student ID or identification number
+  username               String     @unique // Display name/username
+  email                  String     @unique
+  firstName              String?
+  lastName               String?
+  passwordHash           String
+  role                   UserRole
+  publicKey              String?
+  privateKeyEncrypted    String?
+  status                 UserStatus @default(ACTIVE)
+  emailVerified          Boolean    @default(false)
+  emailVerificationToken String?
+  lastLoginAt            DateTime?
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
 
   // Relations
-  organizationElections Election[] @relation("OrganizationElections")
-  votes                 Vote[]
-  auditLogs             AuditLog[]
+  organizationElections     Election[]                  @relation("OrganizationElections")
+  votes                     Vote[]
+  auditLogs                 AuditLog[]
+  electionInvitations       ElectionVoter[]
+  UserElectionParticipation UserElectionParticipation[]
 
   @@map("users")
 }
@@ -44,12 +52,13 @@ model Election {
   updatedAt      DateTime       @updatedAt
 
   // Relations
-  organization User                @relation("OrganizationElections", fields: [organizationId], references: [id], onDelete: Cascade)
-  candidates   Candidate[]
-  voters       ElectionVoter[]
-  votes        Vote[]
-  blocks       BlockchainBlock[]
-  statistics   ElectionStatistics?
+  organization              User                        @relation("OrganizationElections", fields: [organizationId], references: [id], onDelete: Cascade)
+  candidates                Candidate[]
+  voters                    ElectionVoter[]
+  votes                     Vote[]
+  blocks                    BlockchainBlock[]
+  statistics                ElectionStatistics?
+  UserElectionParticipation UserElectionParticipation[]
 
   @@map("elections")
 }
@@ -81,9 +90,31 @@ model ElectionVoter {
 
   // Relations
   election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  User     User?    @relation(fields: [userId], references: [id])
+  userId   Int?
 
   @@unique([electionId, email])
   @@map("election_voters")
+}
+
+// User Election Participation Tracking
+model UserElectionParticipation {
+  id               Int               @id @default(autoincrement())
+  userId           Int
+  electionId       Int
+  inviteStatus     VoterInviteStatus @default(PENDING)
+  hasVoted         Boolean           @default(false)
+  invitedAt        DateTime          @default(now())
+  respondedAt      DateTime?
+  votedAt          DateTime?
+  notificationSent Boolean           @default(false)
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, electionId])
+  @@map("user_election_participation")
 }
 
 // Voting and Blockchain
@@ -208,6 +239,12 @@ enum UserRole {
 enum UserStatus {
   ACTIVE   @map("active")
   INACTIVE @map("inactive")
+}
+
+enum VoterInviteStatus {
+  PENDING  @map("pending")
+  ACCEPTED @map("accepted")
+  DECLINED @map("declined")
 }
 
 enum ElectionStatus {

@@ -1,30 +1,49 @@
 // Core User Types
 export type UserRole = "admin" | "organization" | "voter";
 export type UserStatus = "active" | "inactive";
+export type VoterInviteStatus = "pending" | "accepted" | "declined";
 
 export interface User {
   id: number;
+  studentId?: string; // Student ID or identification number
   username: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
   passwordHash: string;
   role: UserRole;
   publicKey?: string;
   privateKeyEncrypted?: string;
   status: UserStatus;
-  firstName?: string;
-  lastName?: string;
-  organizationName?: string;
-  isActive: boolean;
+  emailVerified: boolean;
+  emailVerificationToken?: string;
   lastLoginAt?: Date;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface CreateUserRequest {
+  studentId?: string;
   username: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
   password: string;
   role: UserRole;
+}
+
+// User Election Participation
+export interface UserElectionParticipation {
+  id: number;
+  userId: number;
+  electionId: number;
+  inviteStatus: VoterInviteStatus;
+  hasVoted: boolean;
+  invitedAt: Date;
+  respondedAt?: Date;
+  votedAt?: Date;
+  notificationSent: boolean;
 }
 
 // Election Types

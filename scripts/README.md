@@ -2,6 +2,10 @@
 
 This directory contains essential scripts for testing, debugging, and managing the BlockVote platform. All scripts are written in TypeScript and can be executed using `ts-node` or through npm scripts.
 
+**✅ Updated for new database design with UserElectionParticipation tracking and enhanced user management.**
+
+**Latest Update**: Scripts have been upgraded to match the newest database design with enhanced user management, permanent accounts, election invitations, and UserElectionParticipation tracking.
+
 ## 📋 Table of Contents
 
 - [Quick Start](#quick-start)
@@ -63,12 +67,13 @@ npm run test:phase3
 - **Command**: `npm run test:database`
 - **Tests**:
   - Database connection and health
-  - Schema validation (11 tables)
-  - CRUD operations
+  - Schema validation (15 tables including UserElectionParticipation)
+  - User CRUD operations with new fields (firstName, lastName, studentId)
   - Data integrity constraints
   - Audit logging functionality
-  - Query performance
-- **Dependencies**: Requires database to be set up
+  - Query performance with pagination
+  - Seeded data validation (11 users, 3 elections, 14 participations)
+- **Dependencies**: Requires database to be set up with latest schema
 
 #### `test-authentication.ts`
 **Purpose**: Authentication and authorization system testing
@@ -106,10 +111,11 @@ npm run test:phase3
   ```
 - **Features**:
   - Multi-environment support (dev, test, staging, prod)
-  - Database migration management
-  - Seed data insertion
-  - Health monitoring
-  - Interactive configuration
+  - Database migration management with Prisma
+  - Comprehensive seed data insertion (realistic user data)
+  - Health monitoring and diagnostics
+  - Interactive configuration with updated credentials
+  - Clean database reset capabilities
 
 ### 🐛 Development Scripts
 
@@ -140,8 +146,11 @@ npx ts-node scripts/test-blockchain.ts
 ### Database Management
 
 ```bash
-# Set up development database
+# Set up development database with new schema
 npm run db:setup:dev
+
+# Clean and reseed database with updated data
+npm run db:seed
 
 # Check database health
 npm run db:health
@@ -167,16 +176,21 @@ DEBUG=1 npm run test:database
 
 ### Database Tests (9 categories)
 - ✅ Connection & Health (2 tests)
-- ✅ Schema & Structure (2 tests)
-- ✅ User Management (2 tests)
+- ✅ Schema & Structure (2 tests) - Now includes UserElectionParticipation model
+- ✅ User Management (2 tests) - Enhanced with firstName, lastName, studentId fields
 - ✅ Audit System (1 test)
-- ✅ Data & Performance (2 tests)
+- ✅ Data & Performance (2 tests) - Tests with realistic seeded data
 
 ### Authentication Tests (18 tests)
-- ✅ Authentication Flow (8 tests)
+- ✅ Authentication Flow (8 tests) - Updated with new user credentials
 - ✅ Token Management (6 tests)
 - ✅ Security & Validation (3 tests)
 - ✅ Audit System (2 tests)
+
+**Test Credentials (Updated)**:
+- Admin: `admin@blockvote.com` / `admin123!`
+- Organization: `council@university.edu` / `org123!`
+- Voter: `alice.johnson@student.edu` / `voter123!`
 
 ### Phase 3 Enhancement Tests (6 categories)
 - ✅ File Structure (All required files exist)
@@ -267,8 +281,8 @@ NODE_ENV=development npm run test:auth
 ## 📈 Performance Benchmarks
 
 ### Expected Test Times
-- Database Tests: ~3-5 seconds
-- Authentication Tests: ~8-12 seconds
+- Database Tests: ~3-5 seconds (includes new participation tracking tests)
+- Authentication Tests: ~8-12 seconds (with updated credentials)
 - Phase 3 Enhancement Tests: ~4-8 seconds
 - Blockchain Tests: ~1-3 seconds
 - Comprehensive Suite: ~20-30 seconds
@@ -281,9 +295,22 @@ NODE_ENV=development npm run test:auth
 ## 🔐 Security Considerations
 
 ### Test Data
-- All test credentials are randomized
+- All test credentials use the updated seeded data format
 - No production data is used in tests
 - Sensitive information is excluded from logs
+
+### Updated Credentials (2024)
+```
+Admin: admin@blockvote.com / admin123!
+Organizations:
+  - council@university.edu / org123! (University Student Council)  
+  - cs-dept@university.edu / org123! (Computer Science Department)
+Voters: 
+  - alice.johnson@student.edu / voter123! (Alice Johnson)
+  - bob.smith@student.edu / voter123! (Bob Smith)
+  - carol.davis@student.edu / voter123! (Carol Davis)
+  - (and 5 more with similar pattern)
+```
 
 ### Environment Isolation
 - Tests use separate database schemas
@@ -309,8 +336,32 @@ Planned script additions:
 - [ ] `security-audit.ts` - Security vulnerability scanning
 - [ ] `load-test.ts` - Load testing utilities
 
+## 🔄 Recent Updates (Latest)
+
+### Database Schema Enhancements
+- ✅ Added `UserElectionParticipation` model for invitation tracking
+- ✅ Enhanced `User` model with `firstName`, `lastName`, `studentId`, `emailVerified`, `lastLoginAt`
+- ✅ Updated seeder with realistic multi-organization scenario
+- ✅ Comprehensive election lifecycle data (draft, active, ended)
+- ✅ Voter invitation and participation tracking
+
+### Updated Features
+- ✅ Clean database reset before seeding
+- ✅ Realistic user profiles with student IDs
+- ✅ Multiple organization types (Student Council, Department)
+- ✅ Enhanced election scenarios with participation tracking
+- ✅ Audit logs with comprehensive action history
+
+### Fixed Issues
+- ✅ Resolved TypeScript type mismatches in AdminDashboard
+- ✅ Fixed UserElectionService null/undefined conversions
+- ✅ Updated test credentials across all scripts
+- ✅ Removed unused variables and linting warnings
+- ✅ Successful build with zero errors/warnings
+
 ---
 
-**Last Updated**: October 2025  
+**Last Updated**: December 2024  
+**Database Schema Version**: 2.0 (UserElectionParticipation)  
 **Maintainers**: BlockVote Development Team  
 **License**: MIT

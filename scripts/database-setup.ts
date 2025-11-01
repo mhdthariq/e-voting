@@ -292,8 +292,10 @@ DEBUG_MODE="${this.environment === "development" ? "true" : "false"}"
     if (this.environment === "development") {
       console.log(`\n🔑 Default Login Credentials:`);
       console.log(`Admin: admin@blockvote.com / admin123!`);
-      console.log(`Organization: org@blockvote.com / org123!`);
-      console.log(`Voters: voter1@blockvote.com / voter123! (voter1-voter5)`);
+      console.log(`Organizations:`);
+      console.log(`  - council@university.edu / org123!`);
+      console.log(`  - cs-dept@university.edu / org123!`);
+      console.log(`Voters: alice.johnson@student.edu / voter123! (and others)`);
     }
 
     console.log(`\n🛠️  Next Steps:`);
