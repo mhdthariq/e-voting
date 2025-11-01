@@ -116,7 +116,7 @@ export default function AdminDashboard() {
     checkAuth();
     if (activeTab === "overview") {
       loadDashboardData();
-    } else if (activeTab === "users") {
+    } else if (activeTab === "users" || activeTab === "organizations") {
       loadUserManagementData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -207,11 +207,19 @@ export default function AdminDashboard() {
         "Content-Type": "application/json",
       };
 
+      // Set role filter based on active tab
+      const roleFilter =
+        activeTab === "organizations"
+          ? "organization"
+          : activeTab === "users"
+            ? filters.role || ""
+            : "";
+
       const queryParams = new URLSearchParams({
         page: filters.search ? "1" : pagination.page.toString(),
         limit: pagination.limit.toString(),
         ...(filters.search && { search: filters.search }),
-        ...(filters.role && { role: filters.role }),
+        ...(roleFilter && { role: roleFilter }),
         ...(filters.status && { status: filters.status }),
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
@@ -232,7 +240,7 @@ export default function AdminDashboard() {
 
   // Reload user data when filters change
   useEffect(() => {
-    if (activeTab === "users") {
+    if (activeTab === "users" || activeTab === "organizations") {
       loadUserManagementData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -417,7 +425,7 @@ export default function AdminDashboard() {
           <div className="flex space-x-8">
             {[
               { key: "overview", label: "Overview" },
-              { key: "users", label: "User Management" },
+              { key: "users", label: "Users & Voters" },
               { key: "organizations", label: "Organizations" },
               { key: "system", label: "System Settings" },
               { key: "logs", label: "Audit Logs" },
@@ -742,17 +750,27 @@ export default function AdminDashboard() {
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    User Management
+                    Users & Voters Management
                   </h3>
                   <button
-                    onClick={() => setShowCreateUserModal(true)}
+                    onClick={() => {
+                      setCreateUserForm((prev) => ({ ...prev, role: "voter" }));
+                      setShowCreateUserModal(true);
+                    }}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
                   >
                     Create New User
                   </button>
                 </div>
 
-                {/* Search and Filters */}
+                <div className="mb-6">
+                  <p className="text-sm text-gray-600">
+                    Manage admin users and voter accounts. Organizations are
+                    managed separately in the Organizations tab.
+                  </p>
+                </div>
+
+                {/* Search and Filters for Users & Voters */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                   <div>
                     <input
@@ -773,7 +791,6 @@ export default function AdminDashboard() {
                     >
                       <option value="">All Roles</option>
                       <option value="admin">Admin</option>
-                      <option value="organization">Organization</option>
                       <option value="voter">Voter</option>
                     </select>
                   </div>
@@ -963,20 +980,194 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Other tabs placeholder */}
-        {activeTab !== "overview" && activeTab !== "users" && (
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}{" "}
-                Management
-              </h3>
-              <p className="text-gray-600">
-                This section is under development. Coming soon!
-              </p>
+        {/* Organizations Management Tab */}
+        {activeTab === "organizations" && (
+          <div className="space-y-6">
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Organizations Management
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setCreateUserForm((prev) => ({
+                        ...prev,
+                        role: "organization",
+                      }));
+                      setShowCreateUserModal(true);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    Create Organization Account
+                  </button>
+                </div>
+
+                <div className="mb-6">
+                  <p className="text-sm text-gray-600">
+                    Manage organization accounts that can create and manage
+                    elections. Each organization can host multiple elections and
+                    manage their own voter lists.
+                  </p>
+                </div>
+
+                {/* Search and Filters for Organizations */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Search organizations..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      value={filters.search}
+                      onChange={(e) => handleSearchUsers(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      value={filters.status}
+                      onChange={(e) =>
+                        handleFilterUsers("status", e.target.value)
+                      }
+                    >
+                      <option value="">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                  <div>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      value={`${filters.sortBy}-${filters.sortOrder}`}
+                      onChange={(e) => {
+                        const [sortBy, sortOrder] = e.target.value.split("-");
+                        setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
+                      }}
+                    >
+                      <option value="createdAt-desc">Newest First</option>
+                      <option value="createdAt-asc">Oldest First</option>
+                      <option value="username-asc">Name A-Z</option>
+                      <option value="username-desc">Name Z-A</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Organizations Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Organization
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Elections Created
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Created
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {users
+                        .filter((user) => user.role === "organization")
+                        .map((org) => (
+                          <tr key={org.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-10 w-10">
+                                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span className="text-sm font-medium text-blue-700">
+                                      {org.username.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {org.username}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {org.email}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  org.status === "active"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-red-100 text-red-800"
+                                }`}
+                              >
+                                {org.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              0 {/* TODO: Get actual election count */}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(org.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedUser(org);
+                                  setShowEditUserModal(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDeleteUser(org.id, org.username)
+                                }
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {users.filter((user) => user.role === "organization").length ===
+                  0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No organizations found. Create your first organization
+                    account above.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
+
+        {/* Other tabs placeholder */}
+        {activeTab !== "overview" &&
+          activeTab !== "users" &&
+          activeTab !== "organizations" && (
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}{" "}
+                  Management
+                </h3>
+                <p className="text-gray-600">
+                  This section is under development. Coming soon!
+                </p>
+              </div>
+            </div>
+          )}
 
         {/* Create User Modal */}
         {showCreateUserModal && (
@@ -1056,10 +1247,13 @@ export default function AdminDashboard() {
                               | "voter",
                           }))
                         }
+                        disabled={activeTab === "organizations"}
                       >
                         <option value="voter">Voter</option>
                         <option value="organization">Organization</option>
-                        <option value="admin">Admin</option>
+                        {activeTab !== "organizations" && (
+                          <option value="admin">Admin</option>
+                        )}
                       </select>
                     </div>
                   </div>
