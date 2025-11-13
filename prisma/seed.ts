@@ -1,5 +1,6 @@
 import { PrismaClient, ConfigType } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 const prisma = new PrismaClient();
 
@@ -483,6 +484,69 @@ async function main() {
     });
     console.log("✅ System statistics initialized");
 
+    // Create pending organization registrations (for admin approval workflow demonstration)
+    const pendingOrgPassword = await bcrypt.hash("PendingOrg123!", 12);
+    
+    const pendingOrg1Data = {
+      organizationName: "Engineering Department",
+      contactEmail: "engineering@university.edu",
+      contactName: "Dr. Emily Chen",
+      phone: "+1-555-0102",
+      website: "https://engineering.university.edu",
+      description: "Engineering Department for conducting departmental elections and votes on curriculum changes.",
+      address: {
+        street: "200 Engineering Building",
+        city: "University City",
+        state: "CA",
+        zipCode: "90210",
+        country: "USA",
+      },
+      username: "engineering-dept",
+      passwordHash: pendingOrgPassword,
+      status: "pending_approval",
+      submittedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+      ipAddress: "10.0.5.42",
+      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    };
+
+    const pendingOrg2Data = {
+      organizationName: "Business School Student Association",
+      contactEmail: "bssa@university.edu",
+      contactName: "Michael Rodriguez",
+      phone: "+1-555-0103",
+      website: "https://business.university.edu/bssa",
+      description: "Student association representing business school students for elections and governance.",
+      address: {
+        street: "150 Business Hall",
+        city: "University City",
+        state: "CA",
+        zipCode: "90210",
+        country: "USA",
+      },
+      username: "business-student-assoc",
+      passwordHash: pendingOrgPassword,
+      status: "pending_approval",
+      submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+      ipAddress: "10.0.5.88",
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+    };
+
+    await prisma.systemConfig.createMany({
+      data: [
+        {
+          key: `org_registration_${crypto.randomUUID().split('-')[0]}`,
+          value: JSON.stringify(pendingOrg1Data),
+          type: "JSON",
+        },
+        {
+          key: `org_registration_${crypto.randomUUID().split('-')[0]}`,
+          value: JSON.stringify(pendingOrg2Data),
+          type: "JSON",
+        },
+      ],
+    });
+    console.log("✅ Pending organization registrations created: 2");
+
     // Create comprehensive audit logs
     const auditLogs = [
       {
@@ -561,6 +625,7 @@ async function main() {
       `🗳️  Votes cast: ${votesData.length} (with candidate choices recorded)`,
     );
     console.log(`⚙️  System configs: ${systemConfigs.length}`);
+    console.log(`🏢 Pending organization registrations: 2 (awaiting admin approval)`);
     console.log(
       `🔗 Blockchain blocks: 1 (with ${voteTransactions.length} vote transactions)`,
     );
