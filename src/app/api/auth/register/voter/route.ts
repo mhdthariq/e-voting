@@ -14,6 +14,7 @@ import crypto from "crypto";
 import { password } from "@/lib/auth/password";
 import prisma from "@/lib/database/client";
 import { log } from "@/utils/logger";
+import { supabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/client";
 
 // Validation schema for voter registration
 const voterRegistrationSchema = z.object({
@@ -134,14 +135,42 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // TODO: Send verification email
-    // In production, send email with link: 
-    // ${APP_URL}/auth/verify-email?token=${verificationToken}
+    // Send verification email via Supabase or provide manual link
+    let emailSent = false;
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'signup',
+          email: email,
+          options: {
+            data: {
+              userId: user.id,
+              username: username,
+              fullName: fullName,
+            },
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/verify-email`,
+          }
+        });
+
+        if (!error && data) {
+          emailSent = true;
+          log.auth("Verification email sent via Supabase", {
+            userId: user.id,
+            email: user.email,
+          });
+        } else {
+          log.error("Supabase email error:", error);
+        }
+      } catch (error) {
+        log.error("Failed to send Supabase email:", error);
+      }
+    }
 
     log.auth("Voter registration submitted", {
       userId: user.id,
       email: user.email,
       username: user.username,
+      emailSent,
       ipAddress: clientInfo.ipAddress,
     });
 
@@ -152,14 +181,18 @@ export async function POST(request: NextRequest) {
       userId: number;
       verificationToken?: string;
       verificationUrl?: string;
+      emailSent?: boolean;
     } = {
       success: true,
-      message: "Registration successful! Please check your email to verify your account.",
+      message: emailSent 
+        ? "Registration successful! Please check your email to verify your account."
+        : "Registration successful! Check your email for verification link (or use manual link below in development).",
       userId: user.id,
+      emailSent,
     };
 
-    // In development, include the verification token for testing
-    if (process.env.NODE_ENV === "development") {
+    // In development or if Supabase not configured, include the manual verification token
+    if (process.env.NODE_ENV === "development" || !emailSent) {
       response.verificationToken = verificationToken;
       response.verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/verify-email?token=${verificationToken}`;
     }
