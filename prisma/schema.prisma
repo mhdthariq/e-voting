@@ -16,8 +16,7 @@ model User {
   studentId              String?    @unique // Student ID or identification number
   username               String     @unique // Display name/username
   email                  String     @unique
-  firstName              String?
-  lastName               String?
+  fullName               String?    // Combined first and last name
   passwordHash           String
   role                   UserRole
   publicKey              String?

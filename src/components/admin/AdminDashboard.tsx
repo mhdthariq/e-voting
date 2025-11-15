@@ -46,8 +46,7 @@ interface CreateUserForm {
   studentId: string;
   username: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   password: string;
   role: "admin" | "organization" | "voter";
 }
@@ -86,8 +85,7 @@ export default function AdminDashboard() {
     studentId: "",
     username: "",
     email: "",
-    firstName: "",
-    lastName: "",
+    fullName: "",
     password: "",
     role: "voter",
   });

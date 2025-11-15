@@ -8,8 +8,7 @@ export interface User {
   studentId?: string; // Student ID or identification number
   username: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  fullName?: string; // Combined first and last name
   passwordHash: string;
   role: UserRole;
   publicKey?: string;
@@ -27,8 +26,7 @@ export interface CreateUserRequest {
   studentId?: string;
   username: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  fullName?: string; // Combined first and last name
   password: string;
   role: UserRole;
 }

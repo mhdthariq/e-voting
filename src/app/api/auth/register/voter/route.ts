@@ -17,8 +17,7 @@ import { log } from "@/utils/logger";
 
 // Validation schema for voter registration
 const voterRegistrationSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  fullName: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -66,7 +65,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { firstName, lastName, email, username, password: userPassword, studentId } = validation.data;
+    const { fullName, email, username, password: userPassword, studentId } = validation.data;
 
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
@@ -123,8 +122,7 @@ export async function POST(request: NextRequest) {
     // Create user account (inactive until email verified)
     const user = await prisma.user.create({
       data: {
-        firstName,
-        lastName,
+        fullName,
         email,
         username,
         passwordHash: hashedPassword,

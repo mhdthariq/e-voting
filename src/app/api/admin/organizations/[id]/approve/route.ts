@@ -86,8 +86,7 @@ export async function POST(
       data: {
         username: registrationData.username,
         email: registrationData.contactEmail,
-        firstName: registrationData.contactName.split(" ")[0] || registrationData.contactName,
-        lastName: registrationData.contactName.split(" ").slice(1).join(" ") || "",
+        fullName: registrationData.contactName,
         passwordHash: registrationData.passwordHash,
         role: "ORGANIZATION",
         status: "ACTIVE",
