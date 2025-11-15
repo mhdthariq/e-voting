@@ -412,6 +412,12 @@ export default function AdminDashboard() {
                 <p className="text-gray-500">{user?.email}</p>
               </div>
               <button
+                onClick={() => router.push("/settings")}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Settings
+              </button>
+              <button
                 onClick={handleLogout}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
               >
