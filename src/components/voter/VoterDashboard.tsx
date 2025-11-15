@@ -8,8 +8,7 @@ interface User {
   studentId?: string;
   username: string;
   email: string;
-  firstName?: string;
-  lastName: string;
+  fullName?: string;
   role: "admin" | "organization" | "voter";
   status: "active" | "inactive";
   emailVerified: boolean;
@@ -224,9 +223,7 @@ export default function VoterDashboard() {
               </h1>
               <p className="text-sm text-gray-600">
                 Welcome back,{" "}
-                {user?.firstName && user?.lastName
-                  ? `${user.firstName} ${user.lastName}`
-                  : user?.username}
+                {user?.fullName || user?.username}
                 {user?.studentId && ` (${user.studentId})`}
               </p>
             </div>

@@ -16,8 +16,9 @@ import { log } from "@/utils/logger";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     // Verify authentication
     const authHeader = request.headers.get("authorization");
@@ -52,7 +53,7 @@ export async function POST(
 
     // Get registration from system_config
     const registration = await prisma.systemConfig.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     });
 
     if (!registration) {
@@ -66,7 +67,7 @@ export async function POST(
     let registrationData;
     try {
       registrationData = JSON.parse(registration.value);
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { success: false, message: "Invalid registration data" },
         { status: 400 },
@@ -86,8 +87,7 @@ export async function POST(
       data: {
         username: registrationData.username,
         email: registrationData.contactEmail,
-        firstName: registrationData.contactName.split(" ")[0] || registrationData.contactName,
-        lastName: registrationData.contactName.split(" ").slice(1).join(" ") || "",
+        fullName: registrationData.contactName,
         passwordHash: registrationData.passwordHash,
         role: "ORGANIZATION",
         status: "ACTIVE",
@@ -147,7 +147,7 @@ export async function POST(
   } catch (error) {
     log.exception(error as Error, "ADMIN", {
       operation: "approveOrganization",
-      registrationId: params.id,
+      registrationId: id,
     });
 
     return NextResponse.json(

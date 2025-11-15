@@ -85,8 +85,7 @@ export const userSchemas = {
       username: baseSchemas.username,
       email: baseSchemas.email,
       password: baseSchemas.password,
-      firstName: baseSchemas.name,
-      lastName: baseSchemas.name,
+      fullName: baseSchemas.name,
       role: z.enum(["admin", "organization", "voter"]),
       organizationName: z.string().min(1).max(255).optional(),
     })
@@ -120,8 +119,7 @@ export const userSchemas = {
 
   // Profile update
   profileUpdate: z.object({
-    firstName: baseSchemas.name.optional(),
-    lastName: baseSchemas.name.optional(),
+    fullName: baseSchemas.name.optional(),
     email: baseSchemas.email.optional(),
     phone: baseSchemas.phone.optional(),
     organizationName: z.string().min(1).max(255).optional(),
@@ -195,8 +193,7 @@ export const electionSchemas = {
   // Voter invitation
   inviteVoter: z.object({
     email: baseSchemas.email,
-    firstName: baseSchemas.name,
-    lastName: baseSchemas.name,
+    fullName: baseSchemas.name,
   }),
 
   // Bulk voter invitation
@@ -205,8 +202,7 @@ export const electionSchemas = {
       .array(
         z.object({
           email: baseSchemas.email,
-          firstName: baseSchemas.name,
-          lastName: baseSchemas.name,
+          fullName: baseSchemas.name,
         }),
       )
       .min(1, "At least one voter is required")

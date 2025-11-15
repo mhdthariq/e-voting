@@ -1,5 +1,5 @@
-import RegistrationForm from '@/components/auth/RegistrationForm';
+import TabbedRegistrationForm from '@/components/auth/TabbedRegistrationForm';
 
 export default function RegistrationPage() {
-  return <RegistrationForm />;
+  return <TabbedRegistrationForm />;
 }

@@ -361,8 +361,7 @@ export async function PUT(request: NextRequest) {
       "email",
       "role",
       "status",
-      "firstName",
-      "lastName",
+      "fullName",
       "organizationName",
     ];
     const updateKeys = Object.keys(updates);

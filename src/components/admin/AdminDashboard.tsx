@@ -46,8 +46,7 @@ interface CreateUserForm {
   studentId: string;
   username: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   password: string;
   role: "admin" | "organization" | "voter";
 }
@@ -86,8 +85,7 @@ export default function AdminDashboard() {
     studentId: "",
     username: "",
     email: "",
-    firstName: "",
-    lastName: "",
+    fullName: "",
     password: "",
     role: "voter",
   });
@@ -265,8 +263,7 @@ export default function AdminDashboard() {
           studentId: "",
           username: "",
           email: "",
-          firstName: "",
-          lastName: "",
+          fullName: "",
           password: "",
           role: "voter",
         });
@@ -759,8 +756,7 @@ export default function AdminDashboard() {
                         studentId: "",
                         username: "",
                         email: "",
-                        firstName: "",
-                        lastName: "",
+                        fullName: "",
                         password: "",
                         role: "voter",
                       });
@@ -868,7 +864,7 @@ export default function AdminDashboard() {
                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                                   <span className="text-sm font-medium text-gray-700">
                                     {(
-                                      user.firstName?.charAt(0) ||
+                                      user.fullName?.charAt(0) ||
                                       user.username.charAt(0)
                                     ).toUpperCase()}
                                   </span>
@@ -876,9 +872,7 @@ export default function AdminDashboard() {
                               </div>
                               <div className="ml-4">
                                 <div className="text-sm font-medium text-gray-900">
-                                  {user.firstName && user.lastName
-                                    ? `${user.firstName} ${user.lastName}`
-                                    : user.username}
+                                  {user.fullName || user.username}
                                 </div>
                                 <div className="text-sm text-gray-500">
                                   {user.email}
@@ -1018,8 +1012,7 @@ export default function AdminDashboard() {
                         studentId: "",
                         username: "",
                         email: "",
-                        firstName: "",
-                        lastName: "",
+                        fullName: "",
                         password: "",
                         role: "organization",
                       });
@@ -1118,9 +1111,7 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="ml-4">
                                   <div className="text-sm font-medium text-gray-900">
-                                    {org.firstName && org.lastName
-                                      ? `${org.firstName} ${org.lastName}`
-                                      : org.username}
+                                    {org.fullName || org.username}
                                   </div>
                                   <div className="text-sm text-gray-500">
                                     {org.email}
@@ -1249,36 +1240,20 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          First Name
+                          Full Name
                         </label>
                         <input
                           type="text"
                           required
                           className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          value={createUserForm.firstName}
+                          value={createUserForm.fullName}
                           onChange={(e) =>
                             setCreateUserForm((prev) => ({
                               ...prev,
-                              firstName: e.target.value,
+                              fullName: e.target.value,
                             }))
                           }
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Last Name
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          value={createUserForm.lastName}
-                          onChange={(e) =>
-                            setCreateUserForm((prev) => ({
-                              ...prev,
-                              lastName: e.target.value,
-                            }))
-                          }
+                          placeholder="John Doe"
                         />
                       </div>
                     </div>

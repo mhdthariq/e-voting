@@ -14,11 +14,11 @@ import crypto from "crypto";
 import { password } from "@/lib/auth/password";
 import prisma from "@/lib/database/client";
 import { log } from "@/utils/logger";
+import { supabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/client";
 
 // Validation schema for voter registration
 const voterRegistrationSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  fullName: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { firstName, lastName, email, username, password: userPassword, studentId } = validation.data;
+    const { fullName, email, username, password: userPassword, studentId } = validation.data;
 
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
@@ -123,8 +123,7 @@ export async function POST(request: NextRequest) {
     // Create user account (inactive until email verified)
     const user = await prisma.user.create({
       data: {
-        firstName,
-        lastName,
+        fullName,
         email,
         username,
         passwordHash: hashedPassword,
@@ -136,26 +135,64 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // TODO: Send verification email
-    // In production, send email with link: 
-    // ${APP_URL}/auth/verify-email?token=${verificationToken}
+    // Send verification email via Supabase or provide manual link
+    let emailSent = false;
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'signup',
+          email: email,
+          options: {
+            data: {
+              userId: user.id,
+              username: username,
+              fullName: fullName,
+            },
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/verify-email`,
+          }
+        });
+
+        if (!error && data) {
+          emailSent = true;
+          log.auth("Verification email sent via Supabase", {
+            userId: user.id,
+            email: user.email,
+          });
+        } else {
+          log.error("Supabase email error:", error);
+        }
+      } catch (error) {
+        log.error("Failed to send Supabase email:", error);
+      }
+    }
 
     log.auth("Voter registration submitted", {
       userId: user.id,
       email: user.email,
       username: user.username,
+      emailSent,
       ipAddress: clientInfo.ipAddress,
     });
 
     // Return verification token in development (in production, only send via email)
-    const response: any = {
+    const response: {
+      success: boolean;
+      message: string;
+      userId: number;
+      verificationToken?: string;
+      verificationUrl?: string;
+      emailSent?: boolean;
+    } = {
       success: true,
-      message: "Registration successful! Please check your email to verify your account.",
+      message: emailSent 
+        ? "Registration successful! Please check your email to verify your account."
+        : "Registration successful! Check your email for verification link (or use manual link below in development).",
       userId: user.id,
+      emailSent,
     };
 
-    // In development, include the verification token for testing
-    if (process.env.NODE_ENV === "development") {
+    // In development or if Supabase not configured, include the manual verification token
+    if (process.env.NODE_ENV === "development" || !emailSent) {
       response.verificationToken = verificationToken;
       response.verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/verify-email?token=${verificationToken}`;
     }
