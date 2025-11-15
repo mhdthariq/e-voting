@@ -444,7 +444,7 @@ Cast a vote in an election.
 ```
 
 #### GET /api/voter/dashboard
-Get voter dashboard statistics.
+Get comprehensive voter dashboard data including elections, invitations, and voting history.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -453,11 +453,111 @@ Get voter dashboard statistics.
 {
   success: boolean;
   data: {
-    totalElections: number;
-    activeElections: number;
-    votesCount: number;
-    pendingInvitations: number;
+    participations: Array<{
+      id: number;
+      userId: number;
+      electionId: number;
+      inviteStatus: "pending" | "accepted" | "declined";
+      hasVoted: boolean;
+      invitedAt: string;
+      respondedAt?: string;
+      votedAt?: string;
+      election?: Election;
+    }>;
+    activeElections: Array<Election>;
+    votingHistory: Array<UserElectionParticipation>;
+    pendingInvitations: Array<UserElectionParticipation>;
+    statistics: {
+      totalInvitations: number;
+      totalVoted: number;
+      participationRate: number;
+      pendingInvitations: number;
+    };
   };
+}
+```
+
+#### POST /api/voter/invitations
+Respond to an election invitation (accept or decline).
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```typescript
+{
+  participationId: number;
+  action: "accept" | "decline";
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  message: string;
+  data: {
+    participationId: number;
+    electionId: number;
+    inviteStatus: "accepted" | "declined";
+    respondedAt: string;
+  };
+}
+```
+
+### User Profile & Settings Endpoints
+
+#### PUT /api/user/profile
+Update user profile (username, fullName, profileImage).
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```typescript
+{
+  username?: string;
+  fullName?: string;
+  profileImage?: string;
+  profileImagePath?: string;
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  message: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    fullName?: string;
+    profileImage?: string;
+    profileImagePath?: string;
+    role: string;
+    updatedAt: string;
+  };
+}
+```
+
+#### PUT /api/user/password
+Change user password.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```typescript
+{
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  message: string;
 }
 ```
 
@@ -612,80 +712,245 @@ Reject an organization registration.
 ```
 
 #### GET /api/admin/users
-Get all users in the system.
+Get all users in the system with filtering and pagination.
 
 **Headers:** `Authorization: Bearer <token>` (Admin only)
 
 **Query Parameters:**
-- `role?: "ADMIN" | "ORGANIZATION" | "VOTER"`
-- `status?: "ACTIVE" | "INACTIVE"`
+- `role?: "admin" | "organization" | "voter"`
+- `status?: "active" | "inactive"`
+- `search?: string` (searches username, email, fullName)
 - `page?: number` (default: 1)
 - `limit?: number` (default: 20)
+- `sortBy?: string` (default: "createdAt")
+- `sortOrder?: "asc" | "desc"` (default: "desc")
 
 **Response:**
 ```typescript
 {
   success: boolean;
-  data: {
-    users: Array<{
-      id: number;
-      username: string;
-      email: string;
-      firstName?: string;
-      lastName?: string;
-      studentId?: string;
-      role: string;
-      status: string;
-      emailVerified: boolean;
-      lastLoginAt: string;
-      createdAt: string;
-    }>;
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-    };
+  data: Array<{
+    id: number;
+    username: string;
+    email: string;
+    fullName?: string;
+    studentId?: string;
+    role: string;
+    status: string;
+    emailVerified: boolean;
+    lastLoginAt?: string;
+    createdAt: string;
+  }>;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
   };
 }
 ```
 
+#### POST /api/admin/users
+Create a new user account (Admin only).
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Request:**
+```typescript
+{
+  studentId?: string;
+  username: string;
+  email: string;
+  fullName: string;
+  password: string;
+  role: "admin" | "organization" | "voter";
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  message: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    fullName: string;
+    role: string;
+    status: string;
+    createdAt: string;
+  };
+}
+```
+
+#### PUT /api/admin/users
+Update user account (Admin only).
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Request:**
+```typescript
+{
+  userId: number;
+  updates: {
+    username?: string;
+    email?: string;
+    fullName?: string;
+    role?: "admin" | "organization" | "voter";
+    status?: "active" | "inactive";
+  };
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  message: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    role: string;
+    status: string;
+    updatedAt: string;
+  };
+}
+```
+
+#### DELETE /api/admin/users
+Delete user account (Admin only).
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Query Parameters:**
+- `userId: number`
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  message: string;
+}
+```
+
 #### GET /api/admin/audit
-Get audit logs.
+Get audit logs with filtering and pagination.
 
 **Headers:** `Authorization: Bearer <token>` (Admin only)
 
 **Query Parameters:**
 - `userId?: number`
 - `action?: string`
-- `entityType?: string`
-- `startDate?: string`
-- `endDate?: string`
-- `page?: number`
-- `limit?: number`
+- `resource?: string`
+- `resourceId?: number`
+- `startDate?: string` (ISO 8601 format)
+- `endDate?: string` (ISO 8601 format)
+- `ipAddress?: string`
+- `page?: number` (default: 1)
+- `limit?: number` (default: 50)
+- `export?: boolean` (if true, exports all matching logs without pagination)
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  message: string;
+  data: Array<{
+    id: number;
+    userId: number;
+    action: string;
+    resource: string;
+    resourceId?: number;
+    details: string;
+    ipAddress: string;
+    userAgent: string;
+    createdAt: string;
+    user: {
+      id: number;
+      username: string;
+      email: string;
+      role: string;
+    };
+  }>;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  meta: {
+    query: object;
+    accessedBy: {
+      id: number;
+      username: string;
+      email: string;
+    };
+  };
+}
+```
+
+#### DELETE /api/admin/audit
+Delete old audit logs (maintenance operation).
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Request:**
+```typescript
+{
+  daysToKeep: number; // Between 30 and 3650 days
+  confirm: true;      // Must be true to proceed
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  message: string;
+  data: {
+    deletedCount: number;
+    daysToKeep: number;
+    cleanupDate: string;
+    performedBy: {
+      id: number;
+      username: string;
+      email: string;
+    };
+  };
+}
+```
+
+#### GET /api/admin/audit/stats
+Get audit log statistics and summaries.
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Query Parameters:**
+- `startDate?: string` (ISO 8601 format)
+- `endDate?: string` (ISO 8601 format)
+- `groupBy?: 'action' | 'resource' | 'user' | 'day'`
 
 **Response:**
 ```typescript
 {
   success: boolean;
   data: {
-    logs: Array<{
-      id: number;
-      userId: number;
+    totalLogs: number;
+    uniqueUsers: number;
+    topActions: Array<{
       action: string;
-      entityType: string;
-      entityId?: number;
-      details?: string;
-      ipAddress: string;
-      userAgent: string;
-      createdAt: string;
+      count: number;
     }>;
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-    };
+    topResources: Array<{
+      resource: string;
+      count: number;
+    }>;
+    activityByDay: Array<{
+      date: string;
+      count: number;
+    }>;
   };
 }
 ```
