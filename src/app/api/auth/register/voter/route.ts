@@ -146,7 +146,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Return verification token in development (in production, only send via email)
-    const response: any = {
+    const response: {
+      success: boolean;
+      message: string;
+      userId: number;
+      verificationToken?: string;
+      verificationUrl?: string;
+    } = {
       success: true,
       message: "Registration successful! Please check your email to verify your account.",
       userId: user.id,
