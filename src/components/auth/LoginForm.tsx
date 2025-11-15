@@ -45,8 +45,8 @@ export default function LoginForm({ onSuccess, redirectPath }: LoginFormProps) {
   // Quick login presets for testing
   const quickLogin = {
     admin: { identifier: "admin@blockvote.com", password: "admin123!" },
-    org: { identifier: "org@blockvote.com", password: "org123!" },
-    voter: { identifier: "voter1@blockvote.com", password: "voter123!" },
+    org: { identifier: "council@university.edu", password: "org123!" },
+    voter: { identifier: "alice.johnson@student.edu", password: "voter123!" },
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

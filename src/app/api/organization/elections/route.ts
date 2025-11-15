@@ -21,21 +21,51 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = auth.verifyToken(token).payload;
+    let decoded;
 
-    if (!decoded || !decoded.userId) {
+    try {
+      decoded = auth.verifyToken(token).payload;
+    } catch (error) {
+      console.error("Token verification failed:", error);
       return NextResponse.json(
         { success: false, message: "Invalid token" },
         { status: 401 },
       );
     }
 
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json(
+        { success: false, message: "Invalid token payload" },
+        { status: 401 },
+      );
+    }
+
+    // Convert userId to number
+    const userId =
+      typeof decoded.userId === "string"
+        ? parseInt(decoded.userId, 10)
+        : decoded.userId;
+
+    if (isNaN(userId)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid user ID in token" },
+        { status: 401 },
+      );
+    }
+
     // Get user and verify organization role
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(decoded.userId) },
+      where: { id: userId },
     });
 
-    if (!user || user.role !== "ORGANIZATION") {
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    if (user.role !== "ORGANIZATION") {
       return NextResponse.json(
         { success: false, message: "Organization access required" },
         { status: 403 },
@@ -62,18 +92,22 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Create audit log
-    await AuditService.createAuditLog(
-      user.id,
-      "VIEW",
-      "ORGANIZATION_ELECTIONS",
-      undefined,
-      `Viewed ${elections.length} elections`,
-      request.headers.get("x-forwarded-for") ||
-        request.headers.get("x-real-ip") ||
-        "unknown",
-      request.headers.get("user-agent") || "unknown",
-    );
+    // Create audit log (don't fail if this errors)
+    try {
+      await AuditService.createAuditLog(
+        user.id,
+        "VIEW",
+        "ORGANIZATION_ELECTIONS",
+        undefined,
+        `Viewed ${elections.length} elections`,
+        request.headers.get("x-forwarded-for") ||
+          request.headers.get("x-real-ip") ||
+          "unknown",
+        request.headers.get("user-agent") || "unknown",
+      );
+    } catch (auditError) {
+      console.error("Failed to create audit log:", auditError);
+    }
 
     return NextResponse.json({
       success: true,
@@ -81,6 +115,14 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error fetching organization elections:", error);
+
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+
     return NextResponse.json(
       {
         success: false,
@@ -115,21 +157,51 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = auth.verifyToken(token).payload;
+    let decoded;
 
-    if (!decoded || !decoded.userId) {
+    try {
+      decoded = auth.verifyToken(token).payload;
+    } catch (error) {
+      console.error("Token verification failed:", error);
       return NextResponse.json(
         { success: false, message: "Invalid token" },
         { status: 401 },
       );
     }
 
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json(
+        { success: false, message: "Invalid token payload" },
+        { status: 401 },
+      );
+    }
+
+    // Convert userId to number
+    const userId =
+      typeof decoded.userId === "string"
+        ? parseInt(decoded.userId, 10)
+        : decoded.userId;
+
+    if (isNaN(userId)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid user ID in token" },
+        { status: 401 },
+      );
+    }
+
     // Get user and verify organization role
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(decoded.userId) },
+      where: { id: userId },
     });
 
-    if (!user || user.role !== "ORGANIZATION") {
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    if (user.role !== "ORGANIZATION") {
       return NextResponse.json(
         { success: false, message: "Organization access required" },
         { status: 403 },
@@ -228,18 +300,22 @@ export async function POST(request: NextRequest) {
       return { election, candidates: createdCandidates };
     });
 
-    // Create audit log
-    await AuditService.createAuditLog(
-      user.id,
-      "CREATE",
-      "ELECTION",
-      result.election.id,
-      `Created election: ${title}`,
-      request.headers.get("x-forwarded-for") ||
-        request.headers.get("x-real-ip") ||
-        "unknown",
-      request.headers.get("user-agent") || "unknown",
-    );
+    // Create audit log (don't fail if this errors)
+    try {
+      await AuditService.createAuditLog(
+        user.id,
+        "CREATE",
+        "ELECTION",
+        result.election.id,
+        `Created election: ${title}`,
+        request.headers.get("x-forwarded-for") ||
+          request.headers.get("x-real-ip") ||
+          "unknown",
+        request.headers.get("user-agent") || "unknown",
+      );
+    } catch (auditError) {
+      console.error("Failed to create audit log:", auditError);
+    }
 
     return NextResponse.json({
       success: true,
@@ -251,6 +327,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error creating election:", error);
+
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+
     return NextResponse.json(
       {
         success: false,

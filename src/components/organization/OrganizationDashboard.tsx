@@ -7,8 +7,8 @@ interface User {
   id: number;
   username: string;
   email: string;
-  role: "ADMIN" | "ORGANIZATION" | "VOTER";
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
+  role: "admin" | "organization" | "voter";
+  status: "active" | "inactive" | "suspended";
   createdAt: string;
 }
 
@@ -16,7 +16,7 @@ interface Election {
   id: number;
   title: string;
   description: string;
-  status: "DRAFT" | "ACTIVE" | "ENDED";
+  status: "draft" | "active" | "ended";
   startDate: string;
   endDate: string;
   organizationId: number;
@@ -78,7 +78,7 @@ export default function OrganizationDashboard() {
       }
 
       const userData = JSON.parse(storedUser);
-      if (userData.role !== "ORGANIZATION") {
+      if (userData.role !== "organization") {
         router.push("/auth/login");
         return;
       }
