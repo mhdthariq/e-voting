@@ -1,9 +1,37 @@
 # 🚀 BlockVote Development Roadmap
 
-**Version**: 0.3
+**Version**: 0.4
 **Last Updated**: November 2025
-**Status**: Phase 5 Complete - Authentication Flow Finalized & Documentation Complete
+**Status**: Phase 5+ - Schema Refactoring Complete & Supabase Integration Added
 **Project**: E-voting system with blockchain technology built on Next.js
+
+## 🎉 **BREAKING UPDATE: Database Schema Refactored (November 2025)**
+
+### 🔄 **Major Changes:**
+
+1. **Database Schema v3.0** - User Model Simplified:
+   - ✅ Replaced `firstName` and `lastName` with single `fullName` field
+   - ✅ Added `profileImage` and `profileImagePath` for profile photos
+   - ✅ Updated all components, APIs, and services
+   - ✅ Successful production build with zero errors
+
+2. **Enhanced Registration System**:
+   - ✅ **Tabbed Registration**: New UI with tabs for User vs Organization registration
+   - ✅ Single registration page with improved UX
+   - ✅ Form validation and error handling
+
+3. **Supabase Integration** - NEW:
+   - ✅ **SUPABASE_INTEGRATION.md**: Complete integration guide
+   - ✅ Email verification with Supabase Auth
+   - ✅ Profile image storage with Supabase Storage
+   - ✅ Image optimization (WebP conversion)
+   - ✅ Settings pages for all user roles
+
+4. **Build Quality**:
+   - ✅ Fixed all ESLint warnings
+   - ✅ Fixed all TypeScript errors
+   - ✅ Successful Next.js production build
+   - ✅ Next.js 15 compatibility (async params)
 
 ## 📋 Table of Contents
 
@@ -415,7 +443,7 @@ The database has been upgraded to **Schema v2.0** with significant improvements 
 - [ ] **Multi-stage election support**
 - [ ] **Election templates and reusability**
 
-#### 📊 Analytics & Reporting (Enhanced by Schema v2.0):
+#### 📊 Analytics & Reporting (Enhanced by Schema v3.0):
 - [ ] **Real-time election statistics** ✅ *Database ready with participation tracking*
 - [ ] **Voter participation analytics** 🔥 *Enhanced with invite status, response times*
   - [ ] Invitation acceptance rate
@@ -429,22 +457,24 @@ The database has been upgraded to **Schema v2.0** with significant improvements 
 
 ---
 
-### 📧 Phase 7: Email & Communication System (30% - Database Ready)
-**Duration**: 3-4 weeks (Estimated)
-**Status**: Enhanced by Schema v2.0 improvements
+### 📧 Phase 7: Email & Communication System (40% - Supabase Integration Ready)
+**Duration**: 2-3 weeks (Estimated)
+**Status**: Enhanced by Schema v3.0 + Supabase Integration
 
-#### ✅ **Foundation Completed** (Thanks to Schema v2.0):
+#### ✅ **Foundation Completed** (Thanks to Schema v3.0 + Supabase):
 - [x] **Email verification database fields** - emailVerified, emailVerificationToken ready
-- [x] **User profiles with full names** - Personalized emails possible (firstName, lastName)
+- [x] **User profiles with full names** - Personalized emails possible (fullName)
 - [x] **Notification tracking** - notificationSent field in UserElectionParticipation
 - [x] **Email logging infrastructure** - EmailLog table ready for tracking sent emails
+- [x] **✨ NEW: Supabase Auth Integration** - Email verification via Supabase
+- [x] **✨ NEW: Complete Supabase documentation** - SUPABASE_INTEGRATION.md
 
-#### 📝 TODO (Updated based on new schema):
-- [ ] **Email Service Integration** 🔥 *Database ready for verification workflow*
-  - [ ] SendGrid/AWS SES integration
-  - [ ] Email verification flow (frontend + backend)
-  - [ ] Resend verification email functionality
-  - [ ] Email template engine setup
+#### 📝 TODO (Updated with Supabase):
+- [ ] **Supabase Email Verification** 🔥 *Implementation guide ready*
+  - [ ] Integrate Supabase Auth for email verification
+  - [ ] Create verification page with magic links
+  - [ ] Implement resend verification functionality
+  - [ ] Test email delivery and verification flow
 - [ ] **Voter Invitation Emails** 🔥 *UserElectionParticipation ready*
   - [ ] Invitation email with accept/decline links
   - [ ] Reminder emails for non-responders
@@ -470,6 +500,81 @@ The database has been upgraded to **Schema v2.0** with significant improvements 
 - [ ] **Election results notification**
 - [ ] Vote confirmation receipts
 - [ ] Election results notifications
+
+---
+
+### 🎨 Phase 7.5: Supabase Integration & User Settings (NEW - 25% Complete)
+**Duration**: 2-3 weeks (Estimated)
+**Priority**: High
+**Status**: Documentation Complete, Implementation Pending
+
+#### ✅ **Completed**:
+- [x] **Comprehensive Integration Guide** - SUPABASE_INTEGRATION.md created
+- [x] **Database Schema Updated** - Added profileImage and profileImagePath fields
+- [x] **Image Optimization Strategy** - WebP conversion approach documented
+- [x] **Settings Page Design** - UI/UX patterns documented
+
+#### 📝 **Implementation TODO**:
+
+**Supabase Setup**:
+- [ ] Create Supabase project and configure
+- [ ] Set up Storage bucket for profile images
+- [ ] Configure Storage policies (RLS)
+- [ ] Create Supabase client utilities
+- [ ] Configure environment variables
+
+**Email Verification**:
+- [ ] Integrate Supabase Auth for email verification
+- [ ] Create email verification page (`/auth/verify-email`)
+- [ ] Update registration endpoints to use Supabase
+- [ ] Implement resend verification functionality
+- [ ] Test email delivery flow
+
+**Profile Image Upload**:
+- [ ] Create image upload service (`/lib/supabase/storage.ts`)
+- [ ] Implement WebP conversion (`/lib/utils/imageOptimizer.ts`)
+- [ ] Create image upload API endpoint (`/api/user/upload-image`)
+- [ ] Add image validation and size limits
+- [ ] Implement image deletion when updating
+
+**Settings Pages**:
+- [ ] **User Settings** (`/app/settings/page.tsx`)
+  - [ ] Change username (allowed for users and admins)
+  - [ ] Upload/change profile photo
+  - [ ] Change password
+  - [ ] Update full name
+  - [ ] Preview image before upload
+- [ ] **Organization Settings** (`/app/organization/settings/page.tsx`)
+  - [ ] Upload/change organization logo
+  - [ ] Change password only (username locked)
+  - [ ] Update organization details
+- [ ] **Admin Settings** (`/app/admin/settings/page.tsx`)
+  - [ ] Change username
+  - [ ] Upload/change profile photo
+  - [ ] Change password
+  - [ ] System preferences
+
+**Image Optimization**:
+- [ ] Implement client-side WebP conversion
+- [ ] Add image compression (quality: 80%)
+- [ ] Generate thumbnails (optional)
+- [ ] Add loading states and progress indicators
+- [ ] Error handling for unsupported formats
+
+**API Endpoints**:
+- [ ] `POST /api/user/profile` - Update user profile
+- [ ] `POST /api/user/upload-image` - Upload profile image
+- [ ] `DELETE /api/user/delete-image` - Delete profile image
+- [ ] `PUT /api/user/password` - Change password
+- [ ] Similar endpoints for organizations
+
+#### 🎯 **Success Criteria**:
+- ✅ Users can upload and change profile photos
+- ✅ Images automatically converted to WebP format
+- ✅ Email verification works via Supabase
+- ✅ Settings pages work for all user roles
+- ✅ Images stored securely in Supabase Storage
+- ✅ Old images deleted when uploading new ones
 
 ---
 

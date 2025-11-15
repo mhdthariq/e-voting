@@ -17,6 +17,8 @@ model User {
   username               String     @unique // Display name/username
   email                  String     @unique
   fullName               String?    // Combined first and last name
+  profileImage           String?    // Public URL to profile image
+  profileImagePath       String?    // Storage path for image deletion
   passwordHash           String
   role                   UserRole
   publicKey              String?
