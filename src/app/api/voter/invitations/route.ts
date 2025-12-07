@@ -15,9 +15,7 @@ const prisma = new PrismaClient();
 // Validation schema for invitation response
 const invitationResponseSchema = z.object({
   participationId: z.number().int().positive("Participation ID must be a positive integer"),
-  action: z.enum(["accept", "decline"], {
-    errorMap: () => ({ message: "Action must be either 'accept' or 'decline'" }),
-  }),
+  action: z.enum(["accept", "decline"]),
 });
 
 /**
@@ -84,7 +82,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (user.role !== "voter") {
+    if (user.role !== "VOTER") {
       return NextResponse.json(
         { success: false, message: "Voter access required" },
         { status: 403 }
@@ -138,18 +136,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already responded
-    if (participation.inviteStatus !== "pending") {
+    if (participation.inviteStatus !== "PENDING") {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: `You have already ${participation.inviteStatus} this invitation` 
+        {
+          success: false,
+          message: `You have already ${participation.inviteStatus.toLowerCase()} this invitation`
         },
         { status: 400 }
       );
     }
 
     // Update participation status
-    const inviteStatus = action === "accept" ? "accepted" : "declined";
+    const inviteStatus = action === "accept" ? "ACCEPTED" : "DECLINED";
     const updatedParticipation = await prisma.userElectionParticipation.update({
       where: { id: participationId },
       data: {
@@ -225,6 +223,5 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   } finally {
-    await prisma.$disconnect();
   }
 }

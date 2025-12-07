@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 import ProfileSettingsModal from "@/components/voter/ProfileSettingsModal";
+import VoteModal from "@/components/voter/VoteModal";
 
 
 interface User {
@@ -20,6 +21,14 @@ interface User {
   createdAt: Date;
 }
 
+interface Candidate {
+  id: number;
+  name: string;
+  vision: string;
+  mission: string;
+  photoUrl?: string;
+}
+
 interface Election {
   id: number;
   title: string;
@@ -32,10 +41,13 @@ interface Election {
     username: string;
     email: string;
   };
+  candidates: Candidate[];
   _count: {
     votes: number;
     voters: number;
   };
+  hasVoted?: boolean;
+  canVote?: boolean;
 }
 
 interface UserElectionParticipation {
@@ -140,6 +152,8 @@ export default function VoterDashboard() {
     }
   };
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [voteModalOpen, setVoteModalOpen] = useState(false);
+  const [selectedElection, setSelectedElection] = useState<Election | null>(null);
   const [userData, setUserData] = useState<{
     id: number;
     username: string;
@@ -565,12 +579,29 @@ const loadUserProfile = async () => {
                           </div>
                         </div>
 
-                        <div className="ml-6">
+                        <div className="ml-6 flex flex-col items-end space-y-3">
                           {isElectionActive(election) && (
                             <div className="text-right">
                               <div className="text-sm font-medium text-green-400">{formatTimeRemaining(election.endDate)}</div>
                               <div className="text-xs text-gray-400 mt-1">Time remaining</div>
                             </div>
+                          )}
+                          
+                          {isElectionActive(election) && (
+                            <button
+                              onClick={() => {
+                                setSelectedElection(election);
+                                setVoteModalOpen(true);
+                              }}
+                              className={`px-4 py-2 rounded-md text-sm font-bold shadow-md transition-all ${
+                                election.hasVoted 
+                                  ? "bg-gray-400 cursor-not-allowed opacity-50" 
+                                  : "bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-lg"
+                              }`}
+                              disabled={election.hasVoted}
+                            >
+                              {election.hasVoted ? "Voted ✅" : "Vote Now"}
+                            </button>
                           )}
                         </div>
                       </div>
@@ -815,6 +846,17 @@ const loadUserProfile = async () => {
   onClose={() => setSettingsOpen(false)}
   darkMode={darkMode}
   user={userData}
+/>
+
+<VoteModal
+  open={voteModalOpen}
+  onClose={() => setVoteModalOpen(false)}
+  election={selectedElection}
+  darkMode={darkMode}
+  onVoteCast={() => {
+    loadDashboardData();
+    loadVoteHistory();
+  }}
 />
 
       </main>

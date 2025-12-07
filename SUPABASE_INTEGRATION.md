@@ -16,6 +16,7 @@
 - [Settings Pages Implementation](#settings-pages-implementation)
 - [Environment Configuration](#environment-configuration)
 - [API Integration](#api-integration)
+- [Vercel Deployment](#vercel-deployment)
 - [Security Best Practices](#security-best-practices)
 - [Troubleshooting](#troubleshooting)
 
@@ -81,8 +82,8 @@ Before starting, ensure you have:
 1. In your Supabase project dashboard, go to **Settings** → **API**
 2. Copy the following:
    - **Project URL**: `https://xxxxxxxxxxxxx.supabase.co`
-   - **anon/public key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
-   - **service_role key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` (keep secret!)
+   - **anon/public key** (or **Publishable Default Key**): `sb_publishable_...`
+   - **service_role key** (or **Secret API Key**): Scroll down to the "Project API keys" section. Look for the `service_role` (secret) key. You may need to click "Reveal" to see it. `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` (keep secret!)
 
 ### Step 3: Install Supabase Client
 
@@ -97,8 +98,15 @@ Add to your `.env` file:
 ```env
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=sb_publishable_...
+SUPABASE_SECRET_API_KEY=sb_secret_...
+
+# Database Configuration (Prisma)
+# Connect to Supabase via connection pooling with Supavisor.
+DATABASE_URL="postgres://postgres.xxxx:password@aws-0-region.pooler.supabase.com:6543/postgres?pgbouncer=true"
+
+# Direct connection to the database. Used for migrations.
+DIRECT_URL="postgres://postgres.xxxx:password@aws-0-region.pooler.supabase.com:5432/postgres"
 
 # Email Configuration (Supabase handles this automatically)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -117,14 +125,16 @@ Create `src/lib/supabase/client.ts`:
 ```typescript
 import { createClient } from '@supabase/supabase-js';
 
+
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!;
 
-// Client-side Supabase client (uses anon key)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Client-side Supabase client (uses publishable key)
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Server-side Supabase client (uses service role key)
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Server-side Supabase client (uses secret service role key)
+const supabaseServiceRoleKey = process.env.SUPABASE_SECRET_API_KEY!;
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
   auth: {
     autoRefreshToken: false,
@@ -132,6 +142,40 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
   }
 });
 ```
+
+### Step 6: Configure Prisma
+
+1. Update `prisma/schema.prisma` to use PostgreSQL:
+
+```prisma
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+```
+
+2. Generate Prisma Client:
+
+```bash
+npx prisma generate
+```
+
+### Step 7: Database Migration Workflow
+
+Since you are switching from SQLite to PostgreSQL, you need to initialize the database schema in Supabase.
+
+1. **Run Migration**:
+   ```bash
+   npx prisma migrate dev --name init_supabase
+   ```
+   This will create the tables in your Supabase project.
+
+2. **Troubleshooting**:
+   - If you encounter timeout errors, ensure you are using the `DIRECT_URL` for migrations (Supabase port 5432).
+   - If you see "prepared statement" errors, ensure `pgbouncer=true` is in your `DATABASE_URL`.
+   - If you encounter "Tenant or user not found" or "unexpected message from server" with the pooler URL (port 6543), try using the Direct URL (port 5432) for `DATABASE_URL` temporarily, especially for local development or seeding.
+   - Ensure your `DATABASE_URL` username for the pooler is in the format `postgres.[project-ref]` (e.g., `postgres.cmzuxogejwajifwqetvs`) if using a shared pooler.
 
 ## 📧 Email Verification with Supabase Auth
 
@@ -378,6 +422,39 @@ USING (bucket_id = 'profile-images' AND auth.uid()::text = (storage.foldername(n
 CREATE POLICY "User Delete Own Image"
 ON storage.objects FOR DELETE
 USING (bucket_id = 'profile-images' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+### Step 3: Create Candidate Images Bucket
+
+1. In Supabase dashboard, go to **Storage**
+2. Click "Create a new bucket"
+3. Bucket name: `candidate-images`
+4. **Public bucket**: ✅ Yes
+5. Click "Create bucket"
+
+### Step 4: Set Up Candidate Storage Policies
+
+In Supabase dashboard, go to **Storage** → **Policies**:
+
+```sql
+-- Allow anyone to read candidate images
+CREATE POLICY "Public Access Candidates"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'candidate-images');
+
+-- Allow authenticated users (admins/orgs) to upload candidate images
+CREATE POLICY "Authenticated Upload Candidates"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'candidate-images' AND auth.role() = 'authenticated');
+
+-- Allow users to update/delete candidate images
+CREATE POLICY "Authenticated Update Candidates"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'candidate-images' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated Delete Candidates"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'candidate-images' AND auth.role() = 'authenticated');
+```
 ```
 
 ### Step 3: Create Image Upload Service
@@ -497,9 +574,18 @@ export function getImageUrl(filePath: string): string {
 
 ## 🎨 Image Optimization (WebP Conversion)
 
-### Client-Side WebP Conversion
+### Automatic Optimization
 
-Create `src/lib/utils/imageOptimizer.ts`:
+The storage utility functions `uploadProfileImage` and `uploadCandidateImage` automatically convert all uploaded images to WebP format before sending them to Supabase. This ensures:
+- Smaller file sizes
+- Faster loading times
+- Consistent file format
+
+You don't need to manually optimize images in your frontend components. Just pass the `File` object to the upload function.
+
+### Client-Side WebP Conversion Utility
+
+The optimization logic is handled by `src/lib/utils/imageOptimizer.ts`:
 
 ```typescript
 export interface OptimizeImageOptions {
@@ -655,13 +741,10 @@ export default function SettingsPage() {
 
     setLoading(true);
     try {
-      // Optimize image
-      const optimized = await optimizeImage({ file });
-      
-      // Upload to Supabase
+      // Upload to Supabase (optimization is handled automatically)
       const result = await uploadProfileImage({
         userId: user.id,
-        file: optimized.file,
+        file: file,
       });
 
       if (result.success) {
@@ -888,7 +971,45 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+## 🚀 Vercel Deployment
+
+Hosting your Next.js app on Vercel while using Supabase and Prisma requires specific environment configuration.
+
+### 1. Configure Vercel Project
+
+1. Go to [vercel.com](https://vercel.com) and import your repository.
+2. In the **Configure Project** screen, go to **Environment Variables**.
+3. Add all variables from your `.env` file:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
+   - `SUPABASE_SECRET_API_KEY`
+   - `DATABASE_URL` (The pooled connection string, port 6543)
+   - `DIRECT_URL` (The direct connection string, port 5432)
+   - `NEXT_PUBLIC_APP_URL` (Set to your Vercel production URL, e.g., `https://your-project.vercel.app`)
+
+### 2. Build Settings
+
+Vercel automatically detects Next.js and Prisma.
+- **Build Command**: `prisma generate && next build` (or just `next build` if `postinstall` is configured)
+- **Install Command**: `npm install`
+
+> **Note**: Ensure `prisma generate` runs during the build process so the Prisma Client is generated for the Vercel environment.
+
+### 3. Database Migrations on Production
+
+Do **NOT** run `prisma migrate dev` in production. Instead, use `prisma migrate deploy`.
+
+You can add a script to `package.json`:
+```json
+"scripts": {
+  "db:migrate:prod": "prisma migrate deploy"
+}
 ```
+
+Run this command locally (pointing to prod DB) or in a Vercel build step if you have a CI/CD pipeline.
+
+---
 
 ## 🔐 Security Best Practices
 

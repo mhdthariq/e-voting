@@ -254,8 +254,8 @@ export async function GET(request: NextRequest) {
       undefined,
       "Viewed system statistics dashboard",
       request.headers.get("x-forwarded-for") ||
-        request.headers.get("x-real-ip") ||
-        "unknown",
+      request.headers.get("x-real-ip") ||
+      "unknown",
       request.headers.get("user-agent") || "unknown",
     );
 
@@ -283,6 +283,5 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   } finally {
-    await prisma.$disconnect();
   }
 }

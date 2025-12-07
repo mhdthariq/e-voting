@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         { status: 401 },
       );
     }
-    
+
 
     if (!decoded || !decoded.userId) {
       return NextResponse.json(
@@ -41,10 +41,10 @@ export async function GET(request: NextRequest) {
 
     const userId = parseInt(decoded.userId, 10);
     if (isNaN(userId)) {
-        return NextResponse.json(
-            { success: false, message: "Invalid user ID" },
-            { status: 401 },
-        );
+      return NextResponse.json(
+        { success: false, message: "Invalid user ID" },
+        { status: 401 },
+      );
     }
 
     // Get user and verify voter role
@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
       if (orderA !== orderB) {
         return orderA - orderB;
       }
-      
+
       // 2. Jika status sama, urutkan berdasarkan tanggal mulai (terbaru dulu)
       return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
     });
@@ -150,8 +150,8 @@ export async function GET(request: NextRequest) {
       undefined,
       `Viewed ${sortedElections.length} available elections`,
       request.headers.get("x-forwarded-for") ||
-        request.headers.get("x-real-ip") ||
-        "unknown",
+      request.headers.get("x-real-ip") ||
+      "unknown",
       request.headers.get("user-agent") || "unknown",
     );
 
@@ -175,6 +175,5 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   } finally {
-    await prisma.$disconnect();
   }
 }

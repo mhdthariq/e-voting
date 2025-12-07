@@ -3,6 +3,40 @@ import { auth } from '@/lib/auth/jwt';
 import prisma from '@/lib/database/client';
 import { AuditService } from '@/lib/database/services/audit.service';
 
+// GET /api/user/profile
+export async function GET(request: NextRequest) {
+  try {
+    const token = request.headers.get("authorization")?.split(" ")[1];
+    if (!token) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+
+    const verification = auth.verifyToken(token);
+    if (!verification.isValid || !verification.payload) {
+      return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
+    }
+
+    const userId = Number(verification.payload.userId);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        fullName: true,
+        profileImage: true,
+        role: true,
+        publicKey: true,
+        privateKeyEncrypted: true, // Needed for client-side signing
+      }
+    });
+
+    if (!user) return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
+
+    return NextResponse.json({ success: true, user });
+  } catch (error) {
+    return NextResponse.json({ success: false, message: "Internal Error" }, { status: 500 });
+  }
+}
+
 /**
  * PUT /api/user/profile
  * Update user profile (username, fullName, profileImage)
@@ -67,7 +101,7 @@ export async function PUT(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { username, fullName, profileImage, profileImagePath } = body;
+    const { username, fullName, profileImage, profileImagePath, publicKey, privateKeyEncrypted } = body;
 
     // Prepare update data
     const updateData: {
@@ -75,6 +109,8 @@ export async function PUT(request: NextRequest) {
       fullName?: string;
       profileImage?: string;
       profileImagePath?: string;
+      publicKey?: string;
+      privateKeyEncrypted?: string;
     } = {};
 
     // Organizations cannot change username
@@ -104,6 +140,14 @@ export async function PUT(request: NextRequest) {
 
     if (profileImagePath !== undefined) {
       updateData.profileImagePath = profileImagePath;
+    }
+    
+    if (publicKey !== undefined) {
+      updateData.publicKey = publicKey;
+    }
+    
+    if (privateKeyEncrypted !== undefined) {
+      updateData.privateKeyEncrypted = privateKeyEncrypted;
     }
 
     // Update user

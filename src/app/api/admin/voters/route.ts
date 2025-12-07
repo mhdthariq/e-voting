@@ -1,13 +1,14 @@
 /**
  * Bulk Voter Creation API Endpoints
- * Handles bulk voter account creation and management
+ * Handles bulk voter creation and management
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { voterCreation } from "@/lib/auth/voter-creation";
 import { log } from "@/utils/logger";
-import { auth } from "@/lib/auth/jwt";
+import { withAdminOrOrgAuth, withAuth } from "@/lib/auth/guard";
+import { AuthenticatedRequest } from "@/lib/auth/middleware";
 
 // Validation schemas
 const voterDataSchema = z.object({
@@ -49,53 +50,17 @@ function getClientInfo(request: NextRequest) {
   };
 }
 
-// Helper to get user from token
-async function getUserFromToken(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  const token = auth.extractToken(authHeader || undefined);
-
-  if (!token) {
-    return null;
-  }
-
-  const verification = auth.verifyToken(token);
-  if (!verification.isValid || !verification.payload) {
-    return null;
-  }
-
-  return verification.payload;
-}
-
 /**
  * POST /api/voters - Create bulk voters
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminOrOrgAuth(async (req) => {
+  const request = req as AuthenticatedRequest;
   try {
     const body = await request.json();
     const clientInfo = getClientInfo(request);
-
-    // Authenticate user
-    const user = await getUserFromToken(request);
-    if (!user) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Authentication required",
-        },
-        { status: 401 },
-      );
-    }
-
-    // Check if user is admin or organization
-    if (user.role !== "admin" && user.role !== "organization") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Insufficient permissions",
-        },
-        { status: 403 },
-      );
-    }
+    
+    // User is guaranteed to exist by the guard
+    const user = request.user!;
 
     // Validate request body
     const validation = bulkVoterCreationSchema.safeParse(body);
@@ -160,38 +125,18 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
 /**
  * PUT /api/voters - Upload CSV and create voters
  */
-export async function PUT(request: NextRequest) {
+export const PUT = withAdminOrOrgAuth(async (req) => {
+  const request = req as AuthenticatedRequest;
   try {
     const body = await request.json();
     const clientInfo = getClientInfo(request);
-
-    // Authenticate user
-    const user = await getUserFromToken(request);
-    if (!user) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Authentication required",
-        },
-        { status: 401 },
-      );
-    }
-
-    // Check if user is admin or organization
-    if (user.role !== "admin" && user.role !== "organization") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Insufficient permissions",
-        },
-        { status: 403 },
-      );
-    }
+    
+    const user = request.user!;
 
     // Validate request body
     const validation = csvUploadSchema.safeParse(body);
@@ -284,28 +229,32 @@ export async function PUT(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
 /**
  * GET /api/voters?electionId=... - Get voter statistics
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (req) => {
+  // Use generic withAuth because this might be accessible by multiple roles if we expand it
+  // But for now it's mostly admin/org. Original code just checked login.
+  // Original allowed any logged in user? No, original checked:
+  // if (user.role !== "admin" && user.role !== "organization") (implied by bulk/csv endpoints? No GET also checked?)
+  // Wait, GET is for stats. Original GET code:
+  // Authenticate user -> getUserFromToken
+  // No role check explicit in GET logic in original code I pasted?
+  // Let me check the original GET code again.
+  // "const user = await getUserFromToken(request); if (!user) ... return 401;"
+  // Then "if (action === 'stats' ...)"
+  // Does it check role? No. So any user could get stats?
+  // The POST/PUT checked role.
+  // I will check if I should restrict GET. The audit didn't specify. I'll stick to preserving original behavior which was just "Authenticated".
+  // Actually, I should probably restrict stats to admin/org too for consistency, but to be safe I'll just use withAuth (any authenticated user).
+  
+  const request = req as AuthenticatedRequest;
   try {
     const { searchParams } = new URL(request.url);
     const electionId = searchParams.get("electionId");
     const action = searchParams.get("action");
-
-    // Authenticate user
-    const user = await getUserFromToken(request);
-    if (!user) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Authentication required",
-        },
-        { status: 401 },
-      );
-    }
 
     if (action === "stats" && electionId) {
       // Get voter statistics
@@ -340,4 +289,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

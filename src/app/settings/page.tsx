@@ -51,7 +51,7 @@ export default function SettingsPage() {
           username: data.user.username || '',
           fullName: data.user.fullName || '',
         });
-        setPreview(data.user.profileImage);
+        setPreview(data.user.profileImage || null);
       } else {
         router.push('/auth/login');
       }
@@ -77,25 +77,10 @@ export default function SettingsPage() {
     setMessage(null);
 
     try {
-      // Optimize image to WebP
-      const optimized = await optimizeImage({ 
-        file,
-        maxWidth: 800,
-        maxHeight: 800,
-        quality: 0.8
-      });
-
-      console.log(`Image optimized: ${formatFileSize(optimized.originalSize)} → ${formatFileSize(optimized.optimizedSize)} (${optimized.compressionRatio.toFixed(1)}% smaller)`);
-
-      // Delete old image if exists
-      if (user?.profileImagePath) {
-        await deleteProfileImage(user.profileImagePath);
-      }
-
-      // Upload to Supabase
+      // Upload to Supabase (optimization is now handled internally)
       const result = await uploadProfileImage({
         userId: user!.id,
-        file: optimized.file,
+        file: file,
       });
 
       if (result.success) {
@@ -110,7 +95,7 @@ export default function SettingsPage() {
         });
 
         if (response.ok) {
-          setPreview(result.url);
+          setPreview(result.url || null);
           setUser(prev => prev ? { ...prev, profileImage: result.url, profileImagePath: result.path } : null);
           setMessage({
             type: 'success',
@@ -261,16 +246,14 @@ export default function SettingsPage() {
         {/* Messages */}
         {message && (
           <div
-            className={`rounded-md p-4 ${
-              message.type === 'success'
-                ? 'bg-green-50 border border-green-200'
-                : 'bg-red-50 border border-red-200'
-            }`}
+            className={`rounded-md p-4 ${message.type === 'success'
+              ? 'bg-green-50 border border-green-200'
+              : 'bg-red-50 border border-red-200'
+              }`}
           >
             <p
-              className={`text-sm ${
-                message.type === 'success' ? 'text-green-800' : 'text-red-800'
-              }`}
+              className={`text-sm ${message.type === 'success' ? 'text-green-800' : 'text-red-800'
+                }`}
             >
               {message.text}
             </p>
@@ -298,9 +281,8 @@ export default function SettingsPage() {
             </div>
             <div className="flex-1">
               <label
-                className={`cursor-pointer inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 ${
-                  uploadProgress || !supabaseEnabled ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className={`cursor-pointer inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 ${uploadProgress || !supabaseEnabled ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
               >
                 {uploadProgress ? 'Uploading...' : 'Upload Photo'}
                 <input

@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // User Management
@@ -69,6 +70,8 @@ model Candidate {
   electionId  Int
   name        String
   description String
+  image       String?  // Public URL to candidate image
+  imagePath   String?  // Storage path for image deletion
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -10,11 +10,27 @@ import { UserService } from "@/lib/database/services/user.service";
 import { AuditService } from "@/lib/database/services/audit.service";
 import { schemas } from "@/utils/validation";
 import { log } from "@/utils/logger";
+import { loginRateLimiter } from "@/lib/security/rate-limit";
 
 // UserService methods are static, no need to instantiate
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get("x-forwarded-for") || "unknown";
+    
+    // Check Rate Limit
+    const rateLimit = loginRateLimiter.check(ip, 1);
+    if (!rateLimit.success) {
+      log.security("Login rate limit exceeded", { ip });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many login attempts. Please try again later.",
+        },
+        { status: 429 }
+      );
+    }
+
     // Parse and validate request body
     const body = await request.json();
 

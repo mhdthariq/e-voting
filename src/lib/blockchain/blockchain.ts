@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { Block } from "./block";
 import { CryptoUtils, BlockchainSecurity } from "./crypto-utils";
+import { FileMutex } from "../utils/mutex";
 // MerkleTree import removed as it's not used directly in this file
 import { VoteTransaction, BlockchainValidationResult } from "../../types";
 
@@ -15,6 +16,7 @@ export class Blockchain {
   private difficulty: number = 2;
   private maxVotesPerBlock: number = 100;
   private storagePath: string;
+  private mutex: FileMutex;
 
   constructor(
     electionId: number,
@@ -23,6 +25,7 @@ export class Blockchain {
   ) {
     this.difficulty = difficulty;
     this.storagePath = storagePath;
+    this.mutex = new FileMutex(`election-${electionId}`, storagePath);
 
     // Initialize with genesis block
     this.createGenesisBlock(electionId);
@@ -63,43 +66,61 @@ export class Blockchain {
 
   /**
    * Add a vote transaction to pending votes
+   * NOW ASYNC with Mutex locking
    */
-  addVoteTransaction(vote: VoteTransaction): boolean {
-    try {
-      // Validate vote format
-      if (!this.validateVoteFormat(vote)) {
-        console.error("Invalid vote format");
+  async addVoteTransaction(vote: VoteTransaction): Promise<boolean> {
+    return await this.mutex.run(async () => {
+      try {
+        // Reload chain from storage to ensure we have latest state (concurrency check)
+        this.reloadFromStorage();
+
+        // Validate vote format
+        if (!this.validateVoteFormat(vote)) {
+          console.error("Invalid vote format");
+          return false;
+        }
+
+        // Check if voter has already voted
+        if (this.hasVoterAlreadyVoted(vote.voterPublicKey, vote.electionId)) {
+          console.error("Voter has already voted in this election");
+          return false;
+        }
+
+        // Validate vote signature
+        if (!BlockchainSecurity.validateVoteSignature(vote)) {
+          console.error("Invalid vote signature");
+          return false;
+        }
+
+        // Add to pending votes
+        this.pendingVotes.push(vote);
+        console.log(
+          `Vote transaction added for voter: ${vote.voterPublicKey.substring(0, 10)}...`,
+        );
+
+        // Auto-mine block if we have enough votes
+        if (this.pendingVotes.length >= this.maxVotesPerBlock) {
+          this.mineBlock();
+        } else {
+            // Save pending votes even if not mining yet
+            this.saveToStorage();
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Error adding vote transaction:", error);
         return false;
       }
+    });
+  }
 
-      // Check if voter has already voted
-      if (this.hasVoterAlreadyVoted(vote.voterPublicKey, vote.electionId)) {
-        console.error("Voter has already voted in this election");
-        return false;
+  // Ensure internal reload doesn't break if file missing
+  private reloadFromStorage() {
+      const loaded = Blockchain.loadFromStorage(this.storagePath);
+      if (loaded) {
+          this.chain = loaded.chain;
+          this.pendingVotes = loaded.pendingVotes; // merge? simpler to replace for single-writer consistency
       }
-
-      // Validate vote signature
-      if (!BlockchainSecurity.validateVoteSignature(vote)) {
-        console.error("Invalid vote signature");
-        return false;
-      }
-
-      // Add to pending votes
-      this.pendingVotes.push(vote);
-      console.log(
-        `Vote transaction added for voter: ${vote.voterPublicKey.substring(0, 10)}...`,
-      );
-
-      // Auto-mine block if we have enough votes
-      if (this.pendingVotes.length >= this.maxVotesPerBlock) {
-        this.mineBlock();
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error adding vote transaction:", error);
-      return false;
-    }
   }
 
   /**
@@ -458,8 +479,8 @@ export class Blockchain {
     pendingVotes: VoteTransaction[];
     difficulty: number;
     maxVotesPerBlock?: number;
-  }): Blockchain {
-    const blockchain = new Blockchain(0, data.difficulty);
+  }, storagePath: string = "./data/blockchain"): Blockchain {
+    const blockchain = new Blockchain(0, data.difficulty, storagePath);
     blockchain.difficulty = data.difficulty;
     blockchain.maxVotesPerBlock = data.maxVotesPerBlock || 100;
     blockchain.pendingVotes = data.pendingVotes || [];
@@ -498,7 +519,7 @@ export class Blockchain {
       }
 
       const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
-      const blockchain = Blockchain.import(data);
+      const blockchain = Blockchain.import(data, storagePath);
 
       console.log("Blockchain loaded from storage");
       return blockchain;
@@ -568,7 +589,28 @@ export class BlockchainManager {
    */
   static getBlockchain(electionId: number): Blockchain {
     if (!this.blockchains.has(electionId)) {
-      const blockchain = new Blockchain(electionId);
+      // Use unique storage path for each election to prevent overwrites
+      const storagePath = `./data/blockchain/${electionId}`;
+      
+      // Try to load existing blockchain from storage
+      let blockchain = Blockchain.loadFromStorage(storagePath);
+      
+      if (!blockchain) {
+        console.log(`Creating new blockchain for election ${electionId} at ${storagePath}`);
+        blockchain = new Blockchain(electionId, 2, storagePath);
+      } else {
+        console.log(`Loaded existing blockchain for election ${electionId} from ${storagePath}`);
+        // Ensure the loaded blockchain has the correct storage path set (in case it was just imported data)
+        // Accessing private property via any cast or we assume loadFromStorage sets it?
+        // loadFromStorage -> import -> new Blockchain(0, ...). It doesn't set storagePath! 
+        // We need to fix Blockchain.import too or set it here if possible. 
+        // But storagePath is private.
+        // Let's rely on Blockchain.loadFromStorage creating a blockchain. 
+        // Wait, Blockchain.import creates `new Blockchain(0, data.difficulty)`. 
+        // It uses default storage path!
+        // We must fix Blockchain.import or Blockchain.loadFromStorage to accept storagePath.
+      }
+      
       this.blockchains.set(electionId, blockchain);
     }
 

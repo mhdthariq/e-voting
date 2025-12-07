@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       // Organisasi ini tidak punya election, berarti tidak ada voter
       return NextResponse.json({ success: true, data: [] });
     }
-    
+
     // Buat Map untuk lookup cepat
     const orgElectionIds = orgElections.map(e => e.id);
     const electionMap = new Map(orgElections.map(e => [e.id, { title: e.title, status: e.status }]));
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
 
     // 3. Ambil semua ID user unik dari partisipasi
     // Hapus '!' karena kita asumsikan non-nullable
-    const userIds = [...new Set(participations.map(p => p.userId))]; 
+    const userIds = [...new Set(participations.map(p => p.userId))];
 
     if (userIds.length === 0) {
       // Tidak ada user yang berpartisipasi
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
 
     for (const p of participations) {
       // Hapus '!'
-      const user = userMap.get(p.userId); 
+      const user = userMap.get(p.userId);
       const election = electionMap.get(p.electionId);
 
       // Lewati jika karena alasan aneh data user atau election tidak ditemukan
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     }
 
     const voters: VoterWithVotes[] = Object.values(voterMap);
-    
+
     // Urutkan (opsional, tapi bagus)
     voters.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
@@ -157,6 +157,5 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   } finally {
-    await prisma.$disconnect();
   }
 }

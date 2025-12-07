@@ -1,93 +1,59 @@
-/**
- * Voter Voting API Route for BlockVote
- * POST /api/voter/vote - Cast a vote in an election
- */
-
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { auth } from "@/lib/auth/jwt";
+import prisma from "@/lib/database/client";
 import { AuditService } from "@/lib/database/services/audit.service";
-import { BlockchainService } from "@/lib/blockchain/blockchain.service";
+import { BlockchainManager } from "@/lib/blockchain/blockchain";
+import { BlockchainSecurity } from "@/lib/blockchain/crypto-utils";
 import { log } from "@/utils/logger";
 import { z } from "zod";
-
-const prisma = new PrismaClient();
+import { withVoterAuth } from "@/lib/auth/guard";
+import { AuthenticatedRequest } from "@/lib/auth/middleware";
+import { UserService } from "@/lib/database/services/user.service";
+import { voteRateLimiter } from "@/lib/security/rate-limit";
 
 // Validation schema for vote request
 const voteSchema = z.object({
+  voteId: z.string().uuid("Invalid vote ID format"),
   electionId: z.number().int().positive("Election ID must be a positive integer"),
   candidateId: z.number().int().positive("Candidate ID must be a positive integer"),
-  signature: z.string().optional(),
+  timestamp: z.string().datetime("Invalid timestamp format"),
+  signature: z.string().min(1, "Signature is required"),
 });
 
 /**
  * POST /api/voter/vote
  * Cast a vote in an election
  */
-export async function POST(request: NextRequest) {
+export const POST = withVoterAuth(async (req) => {
+  const request = req as AuthenticatedRequest;
+  
+  // Check Rate Limit (User ID based if authenticated, or IP fallback)
+  const identifier = request.user ? `user:${request.user.userId}` : (request.headers.get("x-forwarded-for") || "unknown");
+  const rateLimit = voteRateLimiter.check(identifier, 1);
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { success: false, message: "Vote rate limit exceeded. Please wait." },
+      { status: 429 }
+    );
+  }
+
   try {
-    // Get token from cookie or header
-    let token = null;
-    const authHeader = request.headers.get("authorization");
-
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      token = authHeader.substring(7);
-    } else {
-      const cookieHeader = request.headers.get("cookie");
-      if (cookieHeader) {
-        const cookies = cookieHeader
-          .split(";")
-          .map((c) => c.trim())
-          .reduce(
-            (acc, cookie) => {
-              const [key, value] = cookie.split("=");
-              if (key && value) {
-                acc[key] = decodeURIComponent(value);
-              }
-              return acc;
-            },
-            {} as Record<string, string>,
-          );
-        token = cookies.accessToken;
-      }
-    }
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
-    const tokenResult = auth.verifyToken(token);
-    if (!tokenResult.isValid || !tokenResult.payload?.userId) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: tokenResult.expired ? "Token expired" : "Invalid token",
-        },
-        { status: 401 }
-      );
-    }
-
-    const userId = parseInt(tokenResult.payload.userId);
-
-    // Get user and verify voter role
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+    // User is guaranteed to exist and have voter role by the guard
+    // But we need the full user object for publicKey
+    const userId = parseInt(request.user!.userId);
+    const user = await UserService.findById(userId);
 
     if (!user) {
-      return NextResponse.json(
+       return NextResponse.json(
         { success: false, message: "User not found" },
         { status: 404 }
       );
     }
-
-    if (user.role !== "voter") {
+    
+    if (!user.publicKey) {
       return NextResponse.json(
-        { success: false, message: "Voter access required" },
-        { status: 403 }
+        { success: false, message: "No public key found. Please generate keys in settings." },
+        { status: 400 }
       );
     }
 
@@ -106,7 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { electionId, candidateId, signature } = validation.data;
+    const { voteId, electionId, candidateId, timestamp, signature } = validation.data;
 
     // Check if election exists
     const election = await prisma.election.findUnique({
@@ -125,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     // Check if election is active
     const now = new Date();
-    if (election.status !== "active") {
+    if (election.status !== "ACTIVE") {
       return NextResponse.json(
         { success: false, message: "Election is not active" },
         { status: 400 }
@@ -178,34 +144,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the vote with blockchain transaction
-    const blockchain = BlockchainService.getInstance();
-    
-    // Create vote transaction data
+    // Verify Signature
     const voteData = {
+      voteId,
       electionId,
+      voterPublicKey: user.publicKey,
       candidateId,
-      voterId: userId,
-      timestamp: new Date().toISOString(),
-      signature: signature || "",
+      timestamp: new Date(timestamp),
+      signature
     };
+    
+    // Validate Signature
+    const isValidSignature = BlockchainSecurity.validateVoteSignature(voteData);
+    
+    if (!isValidSignature) {
+      log.warn("Invalid vote signature detected", "VOTE_SECURITY", { userId, electionId });
+      return NextResponse.json(
+        { success: false, message: "Invalid cryptographic signature" },
+        { status: 401 }
+      );
+    }
 
     // Add vote to blockchain
-    const transaction = await blockchain.addVoteToElection(
+    const blockchain = BlockchainManager.getBlockchain(electionId);
+
+    // We pass the verified transaction data directly
+    const voteTransaction = {
+      voteId,
       electionId,
-      voteData,
-      user.publicKey || "",
-      signature || ""
-    );
+      voterPublicKey: user.publicKey,
+      candidateId,
+      timestamp: new Date(timestamp),
+      signature, 
+    };
+
+    const addedToChain = await blockchain.addVoteTransaction(voteTransaction);
+
+    if (!addedToChain) {
+      return NextResponse.json(
+        { success: false, message: "Failed to add vote to blockchain" },
+        { status: 500 }
+      );
+    }
 
     // Create vote record in database
     const vote = await prisma.vote.create({
       data: {
         electionId,
-        candidateId,
         voterId: userId,
-        blockHash: transaction.blockHash,
-        transactionHash: transaction.hash,
+        blockHash: blockchain.getLatestBlock().hash,
+        transactionHash: voteId,
         votedAt: new Date(),
       },
     });
@@ -214,7 +202,7 @@ export async function POST(request: NextRequest) {
     await prisma.electionVoter.update({
       where: { id: voterRegistration.id },
       data: {
-        votedAt: new Date(),
+        hasVoted: true,
       },
     });
 
@@ -246,7 +234,7 @@ export async function POST(request: NextRequest) {
       electionId,
       candidateId,
       voteId: vote.id,
-      blockHash: transaction.blockHash,
+      blockHash: vote.blockHash,
     });
 
     return NextResponse.json({
@@ -255,7 +243,6 @@ export async function POST(request: NextRequest) {
       data: {
         voteId: vote.id,
         electionId: vote.electionId,
-        candidateId: vote.candidateId,
         votedAt: vote.votedAt.toISOString(),
         blockHash: vote.blockHash,
         transactionHash: vote.transactionHash,
@@ -270,7 +257,5 @@ export async function POST(request: NextRequest) {
       { success: false, message: "Internal server error" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
-}
+});

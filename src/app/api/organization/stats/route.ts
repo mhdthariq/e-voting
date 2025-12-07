@@ -92,16 +92,16 @@ export async function GET(request: NextRequest) {
     } catch (e) { console.error("Error fetching election statistics:", e); }
 
     // ---------- Calculate Totals FROM Statistics ----------
-    
+
     // Gunakan data statistik yang sudah di-fetch sebagai sumber kebenaran
     // const totalVoters = electionStatistics.reduce((sum, stat) => sum + stat.totalRegisteredVoters, 0); // <-- Logika LAMA (SUM)
-    
+
     // Logika BARU: Ambil nilai voters terbanyak dari salah satu election, sesuai permintaan
     const totalVoters = Math.max(0, ...electionStatistics.map(stat => stat.totalRegisteredVoters));
-    
+
     // totalVotes tetap SUM dari semua election
     const totalVotes = electionStatistics.reduce((sum, stat) => sum + stat.totalVotesCast, 0);
-    
+
     // --- Perhitungan BARU untuk Participation Rate ---
     // Ambil TOTAL gabungan pemilih (SUM) HANYA untuk perhitungan rate
     const totalVotersForRateCalc = electionStatistics.reduce((sum, stat) => sum + stat.totalRegisteredVoters, 0); // e.g., 14
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
 
       for (const election of recent) {
         // HAPUS kueri N+1: const voterCount = await prisma.electionVoter.count({ where: { electionId: election.id } });
-        
+
         // GANTI dengan mencari data dari electionStatistics yang sudah kita fetch
         const stat = electionStatistics.find(s => s.electionId === election.id);
 
@@ -227,7 +227,5 @@ export async function GET(request: NextRequest) {
       { success: false, message: "Internal server error", error: process.env.NODE_ENV === "development" && error instanceof Error ? error.message : undefined },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

@@ -52,3 +52,5 @@ next-env.d.ts
 dev.db*
 test.db*
 /prisma/migrations/
+
+# /references

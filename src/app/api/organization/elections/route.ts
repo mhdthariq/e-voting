@@ -101,8 +101,8 @@ export async function GET(request: NextRequest) {
         undefined,
         `Viewed ${elections.length} elections`,
         request.headers.get("x-forwarded-for") ||
-          request.headers.get("x-real-ip") ||
-          "unknown",
+        request.headers.get("x-real-ip") ||
+        "unknown",
         request.headers.get("user-agent") || "unknown",
       );
     } catch (auditError) {
@@ -136,8 +136,6 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 },
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -309,8 +307,8 @@ export async function POST(request: NextRequest) {
         result.election.id,
         `Created election: ${title}`,
         request.headers.get("x-forwarded-for") ||
-          request.headers.get("x-real-ip") ||
-          "unknown",
+        request.headers.get("x-real-ip") ||
+        "unknown",
         request.headers.get("user-agent") || "unknown",
       );
     } catch (auditError) {
@@ -348,7 +346,5 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 },
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
