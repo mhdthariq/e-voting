@@ -278,7 +278,7 @@ export default function ProfileSettingsModal({ open, onClose, darkMode, user }: 
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as "profile" | "security" | "keys")}
                 className={cn(
                   "flex-1 py-4 text-sm font-medium transition-colors flex justify-center items-center gap-2",
                   activeTab === tab.id

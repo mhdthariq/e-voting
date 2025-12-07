@@ -78,9 +78,9 @@ async function testBlockchainFunctionality(): Promise<void> {
 
     // Test 4: Add votes to blockchain
     console.log("4. Adding votes to blockchain...");
-    const result1 = blockchain.addVoteTransaction(vote1);
-    const result2 = blockchain.addVoteTransaction(vote2);
-    const result3 = blockchain.addVoteTransaction(vote3);
+    const result1 = await blockchain.addVoteTransaction(vote1);
+    const result2 = await blockchain.addVoteTransaction(vote2);
+    const result3 = await blockchain.addVoteTransaction(vote3);
 
     console.log(`Vote 1 added: ${result1 ? "✅" : "❌"}`);
     console.log(`Vote 2 added: ${result2 ? "✅" : "❌"}`);
@@ -156,7 +156,7 @@ async function testBlockchainFunctionality(): Promise<void> {
       voter1Keys.privateKey,
     );
 
-    const duplicateResult = blockchain.addVoteTransaction(duplicateVote);
+    const duplicateResult = await blockchain.addVoteTransaction(duplicateVote);
     console.log(
       `Duplicate vote prevented: ${duplicateResult ? "❌ Failed" : "✅ Success"}\n`,
     );

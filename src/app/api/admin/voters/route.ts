@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Bulk Voter Creation API Endpoints
  * Handles bulk voter creation and management
@@ -18,6 +19,7 @@ const voterDataSchema = z.object({
     .string()
     .min(3, "Username must be at least 3 characters")
     .optional(),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -53,8 +55,9 @@ function getClientInfo(request: NextRequest) {
 /**
  * POST /api/voters - Create bulk voters
  */
-export const POST = withAdminOrOrgAuth(async (req) => {
-  const request = req as AuthenticatedRequest;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const POST = withAdminOrOrgAuth(async (req: AuthenticatedRequest) => {
+  const request = req;
   try {
     const body = await request.json();
     const clientInfo = getClientInfo(request);

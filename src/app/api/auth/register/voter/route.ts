@@ -142,6 +142,7 @@ export async function POST(request: NextRequest) {
         const { data, error } = await supabaseAdmin.auth.admin.generateLink({
           type: 'signup',
           email: email,
+          password: userPassword,
           options: {
             data: {
               userId: user.id,
@@ -159,10 +160,10 @@ export async function POST(request: NextRequest) {
             email: user.email,
           });
         } else {
-          log.error("Supabase email error:", error);
+          log.error(`Supabase email error: ${error?.message || "Unknown"}`, "AUTH");
         }
       } catch (error) {
-        log.error("Failed to send Supabase email:", error);
+        log.error(`Failed to send Supabase email: ${String(error)}`, "AUTH");
       }
     }
 

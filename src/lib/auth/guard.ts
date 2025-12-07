@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { protect, MiddlewareConfig, AuthenticatedRequest } from "./middleware";
 
-type RouteHandler = (req: AuthenticatedRequest, context?: any) => Promise<NextResponse>;
+type RouteHandler = (req: AuthenticatedRequest, context?: unknown) => Promise<NextResponse>;
 
 /**
  * Wrapper for API routes to enforce authentication and access control.
@@ -16,7 +16,7 @@ export function withAuth(
   handler: RouteHandler,
   config: MiddlewareConfig = { requireAuth: true }
 ) {
-  return async (req: NextRequest, context?: any) => {
+  return async (req: NextRequest, context?: unknown) => {
     const middleware = protect.api(config);
     return middleware(req, (authenticatedReq) => handler(authenticatedReq, context));
   };

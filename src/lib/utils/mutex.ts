@@ -39,8 +39,9 @@ export class FileMutex {
         fs.closeSync(fd);
         
         return; // Lock acquired
-      } catch (error: any) {
-        if (error.code === "EEXIST") {
+      } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((error as any).code === "EEXIST") {
             // Lock exists, check if stale
             this.checkStale();
             
