@@ -1,25 +1,15 @@
 "use client";
 
+import { User } from "@/types";
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 import ProfileSettingsModal from "@/components/voter/ProfileSettingsModal";
 import VoteModal from "@/components/voter/VoteModal";
+import VotingAnalytics from "@/components/voter/VotingAnalytics";
 
-
-interface User {
-  id: number;
-  studentId?: string;
-  username: string;
-  email: string;
-  fullName?: string;
-  role: "admin" | "organization" | "voter";
-  status: "active" | "inactive";
-  emailVerified: boolean;
-  lastLoginAt?: Date;
-  createdAt: Date;
-}
 
 interface Candidate {
   id: number;
@@ -125,7 +115,7 @@ export default function VoterDashboard() {
     },
   });
   const [activeTab, setActiveTab] = useState<
-    "overview" | "active" | "history" | "invitations"
+    "overview" | "active" | "history" | "invitations" | "results"
   >("overview");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -383,13 +373,14 @@ const loadUserProfile = async () => {
               { key: "overview", label: "Overview" },
               { key: "active", label: "Active Elections" },
               { key: "invitations", label: `Invitations (${dashboardData.statistics.pendingInvitations})` },
+              { key: "results", label: "Results" },
               { key: "history", label: "Voting History" },
             ].map((tab) => (
               <button
                 key={tab.key}
                 onClick={() =>
                   setActiveTab(
-                    tab.key as "overview" | "active" | "history" | "invitations"
+                    tab.key as "overview" | "active" | "history" | "invitations" | "results"
                   )
                 }
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -614,6 +605,7 @@ const loadUserProfile = async () => {
         )}
 
         {/* Invitations Tab */}
+        {/* Invitations Tab */}
         {activeTab === "invitations" && (
           <div className={darkMode ? "bg-neutral-900 border border-emerald-800 rounded-lg shadow-lg" : "bg-white shadow rounded-lg"}>
             <div className="px-4 py-5 sm:p-6">
@@ -680,6 +672,11 @@ const loadUserProfile = async () => {
               )}
             </div>
           </div>
+        )}
+
+        {/* Results Tab */}
+        {activeTab === "results" && (
+           <VotingAnalytics />
         )}
 
         {/* Voting History */}

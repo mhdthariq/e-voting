@@ -268,32 +268,64 @@ export default function VoteModal({
                     Select a candidate below. This action is irreversible once confirmed.
                   </p>
                   
-                  <div className="grid gap-3">
+                  <div className="grid gap-4">
                     {election.candidates.map(candidate => (
-                      <div 
+                      <motion.div 
                         key={candidate.id}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
                         onClick={() => setSelectedCandidate(candidate.id)}
                         className={cn(
-                          "relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-4",
+                          "relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 flex flex-col md:flex-row gap-4 group",
                           selectedCandidate === candidate.id 
-                            ? "border-brand-primary bg-brand-primary/10 shadow-sm"
+                            ? "border-emerald-500 bg-emerald-500/5 shadow-md"
                             : darkMode ? "border-white/10 hover:border-white/20 hover:bg-white/5" : "border-gray-100 hover:border-gray-300 hover:bg-gray-50"
                         )}
                       >
-                         <div className={cn(
-                           "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                           selectedCandidate === candidate.id ? "border-brand-primary bg-brand-primary" : "border-gray-400"
-                         )}>
-                            {selectedCandidate === candidate.id && <CheckCircle size={14} className="text-white" />}
+                         <div className="flex-shrink-0">
+                           <div className={cn(
+                             "w-16 h-16 rounded-full border-2 overflow-hidden flex items-center justify-center bg-gray-800",
+                             selectedCandidate === candidate.id ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-gray-600"
+                           )}>
+                              {candidate.photoUrl ? (
+                                <img src={candidate.photoUrl} alt={candidate.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-xl font-bold text-gray-400">{candidate.name.charAt(0)}</span>
+                              )}
+                           </div>
                          </div>
                          
-                         <div>
-                            <h3 className={cn("font-bold text-lg", darkMode ? "text-white" : "text-gray-900")}>{candidate.name}</h3>
-                            <p className={cn("text-sm line-clamp-2", darkMode ? "text-gray-400" : "text-gray-500")}>
-                              {candidate.vision}
-                            </p>
+                         <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <h3 className={cn("font-bold text-lg group-hover:text-emerald-400 transition-colors", darkMode ? "text-white" : "text-gray-900")}>
+                                {candidate.name}
+                              </h3>
+                              {selectedCandidate === candidate.id && (
+                                <motion.div 
+                                  initial={{ scale: 0 }} 
+                                  animate={{ scale: 1 }}
+                                  className="bg-emerald-500 text-white p-1 rounded-full shadow-lg"
+                                >
+                                  <CheckCircle size={16} />
+                                </motion.div>
+                              )}
+                            </div>
+                            
+                            <div className="mt-2 space-y-2">
+                              <div>
+                                <p className="text-xs font-bold uppercase text-gray-500 tracking-wider">Vision</p>
+                                <p className={cn("text-sm", darkMode ? "text-gray-300" : "text-gray-600")}>{candidate.vision}</p>
+                              </div>
+                              {candidate.mission && (
+                                <div>
+                                  <p className="text-xs font-bold uppercase text-gray-500 tracking-wider mt-2">Mission</p>
+                                  <p className={cn("text-sm", darkMode ? "text-gray-400" : "text-gray-500")}>{candidate.mission}</p>
+                                </div>
+                              )}
+                            </div>
                          </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
               </motion.div>

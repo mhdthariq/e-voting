@@ -11,6 +11,7 @@ export interface User {
   fullName?: string; // Combined first and last name
   passwordHash: string;
   role: UserRole;
+  profileImage?: string;
   publicKey?: string;
   privateKeyEncrypted?: string;
   status: UserStatus;
@@ -242,6 +243,11 @@ export interface AuditLog {
   ipAddress: string;
   userAgent: string;
   createdAt: Date;
+  user?: {
+    username: string;
+    email: string;
+    role: UserRole;
+  };
 }
 
 // Dashboard Types
@@ -338,4 +344,16 @@ export interface SystemStatistics {
   totalBlocks: number;
   averageBlockTime: number;
   systemUptime: number;
+}
+
+export interface OrganizationRegistration {
+  id: number;
+  organizationName: string;
+  contactName: string;
+  contactEmail: string;
+  username: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: number;
 }

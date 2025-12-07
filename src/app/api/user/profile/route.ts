@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/jwt';
-import prisma from '@/lib/database/client';
+import { UserService } from '@/services/UserService';
 import { AuditService } from '@/lib/database/services/audit.service';
+
+const userService = new UserService();
 
 // GET /api/user/profile
 export async function GET(request: NextRequest) {
@@ -15,23 +17,23 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = Number(verification.payload.userId);
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        fullName: true,
-        profileImage: true,
-        role: true,
-        publicKey: true,
-        privateKeyEncrypted: true, // Needed for client-side signing
-      }
-    });
+    const user = await userService.getUserProfile(userId);
 
     if (!user) return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
 
-    return NextResponse.json({ success: true, user });
+    // Filter sensitive data
+    const safeUser = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      fullName: user.fullName,
+      profileImage: user.profileImage,
+      role: user.role,
+      publicKey: user.publicKey,
+      privateKeyEncrypted: user.privateKeyEncrypted,
+    };
+
+    return NextResponse.json({ success: true, user: safeUser });
   } catch (error) {
     return NextResponse.json({ success: false, message: "Internal Error" }, { status: 500 });
   }
@@ -88,9 +90,7 @@ export async function PUT(request: NextRequest) {
     const userId = parseInt(tokenResult.payload.userId);
 
     // Get user
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+    const user = await userService.getUserProfile(userId);
 
     if (!user) {
       return NextResponse.json(
@@ -114,11 +114,11 @@ export async function PUT(request: NextRequest) {
     } = {};
 
     // Organizations cannot change username
-    if (username && user.role !== 'ORGANIZATION') {
+    // Note: Prisma usually returns uppercase Enums. Ensure comparison matches or cast if necessary.
+    // We compare case-insensitively or check specific known values.
+    if (username && (user.role as string).toUpperCase() !== 'ORGANIZATION') {
       // Check if username is already taken
-      const existingUser = await prisma.user.findUnique({
-        where: { username },
-      });
+      const existingUser = await userService.findByUsername(username);
 
       if (existingUser && existingUser.id !== userId) {
         return NextResponse.json(
@@ -151,10 +151,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update user
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-    });
+    const updatedUser = await userService.updateUserProfile(userId, updateData);
 
     // Create audit log
     await AuditService.createAuditLog(

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth/jwt";
+import { UserService } from "@/services/UserService";
+import { ElectionService } from "@/services/ElectionService";
 import { AuditService } from "@/lib/database/services/audit.service";
 
-const prisma = new PrismaClient();
+const userService = new UserService();
+const electionService = new ElectionService();
 
 /**
  * GET /api/organization/elections
@@ -54,9 +56,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user and verify organization role
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+    const user = await userService.getUserProfile(userId);
 
     if (!user) {
       return NextResponse.json(
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (user.role !== "ORGANIZATION") {
+    if ((user.role as string).toUpperCase() !== "ORGANIZATION") {
       return NextResponse.json(
         { success: false, message: "Organization access required" },
         { status: 403 },
@@ -73,24 +73,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get organization elections with related data
-    const elections = await prisma.election.findMany({
-      where: {
-        organizationId: user.id,
-      },
-      include: {
-        candidates: {
-          orderBy: { id: "asc" },
-        },
-        _count: {
-          select: {
-            votes: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const elections = await electionService.getElectionsByOrganizationWithStats(user.id);
 
     // Create audit log (don't fail if this errors)
     try {
@@ -188,9 +171,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user and verify organization role
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+    const user = await userService.getUserProfile(userId);
 
     if (!user) {
       return NextResponse.json(
@@ -199,7 +180,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (user.role !== "ORGANIZATION") {
+    if ((user.role as string).toUpperCase() !== "ORGANIZATION") {
       return NextResponse.json(
         { success: false, message: "Organization access required" },
         { status: 403 },
@@ -258,45 +239,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create election with candidates in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create the election
-      const election = await tx.election.create({
-        data: {
-          title,
-          description,
-          startDate: start,
-          endDate: end,
-          organizationId: user.id,
-          status: "DRAFT",
-        },
-      });
-
-      // Create candidates
-      const createdCandidates = await Promise.all(
-        candidates.map((candidate: { name: string; description: string }) =>
-          tx.candidate.create({
-            data: {
-              electionId: election.id,
-              name: candidate.name,
-              description: candidate.description,
-            },
-          }),
-        ),
-      );
-
-      // Initialize election statistics
-      await tx.electionStatistics.create({
-        data: {
-          electionId: election.id,
-          totalRegisteredVoters: 0,
-          totalVotesCast: 0,
-          participationRate: 0.0,
-        },
-      });
-
-      return { election, candidates: createdCandidates };
-    });
+    // Create election with candidates through Service
+    const result = await electionService.createElectionWithCandidates(
+      {
+        title,
+        description,
+        startDate: start,
+        endDate: end,
+        organization: { connect: { id: user.id } },
+        status: "DRAFT",
+      },
+      candidates
+    );
 
     // Create audit log (don't fail if this errors)
     try {
