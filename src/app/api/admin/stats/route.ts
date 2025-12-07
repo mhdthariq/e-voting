@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/database/client";
 import { auth } from "@/lib/auth/jwt";
 import { AuditService } from "@/lib/database/services/audit.service";
-
-const prisma = new PrismaClient();
 
 /**
  * GET /api/admin/stats
