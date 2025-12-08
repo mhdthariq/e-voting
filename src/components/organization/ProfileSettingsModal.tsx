@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Camera, LogOut, Lock, Save, Loader2 } from "lucide-react";
 import ChangePasswordModal from "./ChangePasswordModal";
 
@@ -10,21 +10,28 @@ interface Props {
   darkMode: boolean;
   user: {
     username: string;
-    fullName: string | null;
+    email: string;
     profileImage?: string | null;
-    studentId?: string; // Menambahkan studentId jika ada di schema
   } | null;
-  onLogout: () => void; // Prop baru untuk handle logout
+  onLogout: () => void;
+  // --- TAMBAHKAN BARIS INI ---
+  onUpdateSuccess?: () => void; 
 }
 
-export default function ProfileSettingsModal({ open, onClose, darkMode, user, onLogout }: Props) {
+export default function ProfileSettingsModal({ open, onClose, darkMode, user, onLogout, onUpdateSuccess }: Props) {
   const [username, setUsername] = useState(user?.username || "");
-  const [fullName, setFullName] = useState(user?.fullName || "");
   const [profileImage, setProfileImage] = useState(user?.profileImage || "");
   
-  // State untuk Change Password Modal
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Sync state saat modal dibuka atau user berubah
+  useEffect(() => {
+    if (open && user) {
+      setUsername(user.username);
+      setProfileImage(user.profileImage || "");
+    }
+  }, [open, user]);
 
   if (!open) return null;
 
@@ -52,15 +59,18 @@ export default function ProfileSettingsModal({ open, onClose, darkMode, user, on
         },
         body: JSON.stringify({
           username,
-          fullName,
           profileImage,
         }),
       });
 
       const json = await res.json();
       if (json.success) {
-        alert("Profile updated successfully!");
-        // Opsional: onClose(); // Tutup modal setelah save jika diinginkan
+        alert("Organization profile updated successfully!");
+        
+        // --- PANGGIL CALLBACK DISINI ---
+        if (onUpdateSuccess) {
+            onUpdateSuccess();
+        }
       } else {
         alert(json.message);
       }
@@ -73,19 +83,16 @@ export default function ProfileSettingsModal({ open, onClose, darkMode, user, on
 
   return (
     <>
-      {/* BACKDROP */}
       <div className="fixed inset-0 bg-black/60 z-[9998]" onClick={onClose}></div>
-
-      {/* MODAL CONTAINER */}
       <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none p-4">
         <div
           className={`pointer-events-auto w-full max-w-md rounded-2xl p-6 shadow-2xl border relative flex flex-col max-h-[90vh] overflow-y-auto
           ${darkMode ? "bg-neutral-900 border-emerald-700 text-emerald-100" : "bg-white border-gray-200 text-gray-900"}
         `}
         >
-          {/* HEADER: TITLE & CLOSE BUTTON */}
+          {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold">Edit Profile</h2>
+            <h2 className="text-xl font-bold">Organization Profile</h2>
             <button 
               onClick={onClose} 
               className={`p-2 rounded-full transition-colors ${darkMode ? "hover:bg-neutral-800 text-gray-400 hover:text-white" : "hover:bg-gray-100 text-gray-500 hover:text-black"}`}
@@ -94,7 +101,7 @@ export default function ProfileSettingsModal({ open, onClose, darkMode, user, on
             </button>
           </div>
 
-          {/* PROFILE IMAGE SECTION */}
+          {/* Image Upload */}
           <div className="flex flex-col items-center mb-8">
             <div className="relative group cursor-pointer">
               <img
@@ -113,14 +120,14 @@ export default function ProfileSettingsModal({ open, onClose, darkMode, user, on
               </label>
             </div>
             <p className={`mt-3 text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-              Click camera icon to upload
+              Organization Logo
             </p>
           </div>
 
-          {/* FORM INPUTS */}
+          {/* Form Fields */}
           <div className="space-y-4 mb-8">
             <div>
-              <label className="text-sm font-medium opacity-80 mb-1 block">Username</label>
+              <label className="text-sm font-medium opacity-80 mb-1 block">Organization Name</label>
               <input
                 className={`w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all ${
                   darkMode
@@ -131,22 +138,21 @@ export default function ProfileSettingsModal({ open, onClose, darkMode, user, on
                 onChange={(e) => setUsername(e.target.value)}
               />
             </div>
-
             <div>
-              <label className="text-sm font-medium opacity-80 mb-1 block">Full Name</label>
+              <label className="text-sm font-medium opacity-80 mb-1 block">Email</label>
               <input
-                className={`w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all ${
+                disabled
+                className={`w-full px-4 py-2.5 rounded-lg border opacity-60 cursor-not-allowed ${
                   darkMode
-                    ? "bg-neutral-800 border-emerald-800 text-emerald-100 focus:border-emerald-500"
-                    : "bg-gray-50 border-gray-300 text-gray-900 focus:border-emerald-500"
+                    ? "bg-neutral-800 border-emerald-800 text-emerald-100"
+                    : "bg-gray-50 border-gray-300 text-gray-900"
                 }`}
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                value={user?.email || ""}
               />
             </div>
           </div>
 
-          {/* ACTION BUTTONS (Change Password & Logout) */}
+          {/* Actions */}
           <div className="space-y-3 pt-6 border-t border-gray-200 dark:border-gray-800">
             <button
               onClick={() => setIsPasswordModalOpen(true)}
@@ -162,7 +168,7 @@ export default function ProfileSettingsModal({ open, onClose, darkMode, user, on
                 </div>
                 <div className="text-left">
                   <span className="block text-sm font-semibold">Change Password</span>
-                  <span className="block text-xs opacity-60">Update your security credentials</span>
+                  <span className="block text-xs opacity-60">Update security credentials</span>
                 </div>
               </div>
               <span className="text-xs opacity-50">Edit</span>
@@ -189,7 +195,7 @@ export default function ProfileSettingsModal({ open, onClose, darkMode, user, on
             </button>
           </div>
 
-          {/* MAIN SAVE BUTTON */}
+          {/* Save Button */}
           <button
             onClick={handleSaveProfile}
             disabled={loading}
@@ -199,7 +205,6 @@ export default function ProfileSettingsModal({ open, onClose, darkMode, user, on
             Save Changes
           </button>
 
-          {/* NESTED MODAL FOR PASSWORD */}
           <ChangePasswordModal 
             open={isPasswordModalOpen} 
             onClose={() => setIsPasswordModalOpen(false)} 
