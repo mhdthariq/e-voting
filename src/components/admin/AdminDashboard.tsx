@@ -59,7 +59,23 @@ interface SystemChartData {
   volume: { label: string; value: number }[];
 }
 
-type Tab = "Overview" | "Users" | "Organizations" | "System" | "Logs";
+// ... existing types
+interface Election {
+  id: number;
+  title: string;
+  organization: {
+    username: string;
+    email: string;
+  };
+  status: "DRAFT" | "ACTIVE" | "ENDED";
+  startDate: string;
+  endDate: string;
+  _count: {
+    votes: number;
+  };
+}
+
+type Tab = "Overview" | "Users" | "Organizations" | "Elections" | "System" | "Logs";
 
 // --- COMPONENT ---
 export default function AdminDashboard() {
@@ -91,7 +107,8 @@ export default function AdminDashboard() {
 
   // Lists State
   const [usersList, setUsersList] = useState<User[]>([]);
-  const [orgsList, setOrgsList] = useState<User[]>([]); // New: Daftar Organisasi
+  const [orgsList, setOrgsList] = useState<User[]>([]); 
+  const [electionsList, setElectionsList] = useState<Election[]>([]); // New: Daftar Pemilu
 
   // Modals
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -170,6 +187,18 @@ export default function AdminDashboard() {
       const data = await res.json();
       if(data.success) setOrgsList(data.data);
     } catch(e) { console.error(e); }
+  };
+
+  const loadElections = async () => {
+    const token = localStorage.getItem("accessToken");
+    if(!token) return;
+    try {
+      const res = await fetch("/api/admin/elections", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if(data.success) setElectionsList(data.data);
+    } catch(e) { console.error("Failed loading elections:", e); }
   };
 
   const loadSystemChartData = async () => {
@@ -368,7 +397,8 @@ export default function AdminDashboard() {
   // Lazy Load Data per Tab
   useEffect(() => {
       if(activeTab === "Users") loadUsers();
-      if(activeTab === "Organizations") loadOrganizations(); // Load list org
+      if(activeTab === "Organizations") loadOrganizations();
+      if(activeTab === "Elections") loadElections();
       if(activeTab === "System") loadSystemChartData();
       if(activeTab === "Logs") {
           setLogPage(1); 
@@ -434,7 +464,7 @@ export default function AdminDashboard() {
       <nav className={darkMode ? "bg-neutral-900/40 border-b border-emerald-800/30" : "bg-white border-b border-gray-200"}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-6 overflow-x-auto pb-1 scrollbar-hide">
-            {["Overview", "Users", "Organizations", "System", "Logs"].map(tab => (
+            {["Overview", "Users", "Organizations", "Elections", "System", "Logs"].map(tab => (
                <button key={tab} onClick={() => setActiveTab(tab as Tab)} className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${activeTab === tab ? (darkMode ? "border-emerald-400 text-emerald-300" : "border-emerald-600 text-emerald-700") : "border-transparent opacity-60"}`}>
                  {tab}
                </button>
@@ -598,6 +628,57 @@ export default function AdminDashboard() {
                           </tbody>
                       </table>
                    </div>
+                </div>
+            </motion.div>
+        )}
+
+        {/* 3.5 ELECTIONS TAB */}
+        {activeTab === "Elections" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <div className="flex justify-between items-center">
+                    <h3 className="font-bold text-lg flex items-center gap-2"><FileText size={18}/> All Elections</h3>
+                    <button onClick={loadElections} className="p-2 rounded-full hover:bg-gray-500/20"><RefreshCw size={18}/></button>
+                </div>
+
+                <div className={`overflow-hidden rounded-xl border ${darkMode ? "border-emerald-900" : "border-gray-200"}`}>
+                    <table className={`min-w-full text-sm ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        <thead className={darkMode ? "bg-neutral-900" : "bg-gray-50"}>
+                            <tr>
+                                <th className="px-6 py-4 text-left">Election Title</th>
+                                <th className="px-6 py-4 text-left">Organization</th>
+                                <th className="px-6 py-4 text-left">Status</th>
+                                <th className="px-6 py-4 text-left">Duration</th>
+                                <th className="px-6 py-4 text-right">Votes</th>
+                            </tr>
+                        </thead>
+                        <tbody className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-gray-200 bg-white"}`}>
+                            {electionsList.length === 0 ? (
+                                <tr><td colSpan={5} className="px-6 py-8 text-center opacity-50">No elections found.</td></tr>
+                            ) : electionsList.map(election => (
+                                <tr key={election.id} className={darkMode ? "hover:bg-neutral-800" : "hover:bg-gray-50"}>
+                                    <td className="px-6 py-4 font-bold">{election.title}</td>
+                                    <td className="px-6 py-4">
+                                        <p className="font-medium text-emerald-600">{election.organization.username}</p>
+                                        <p className="text-xs opacity-50">{election.organization.email}</p>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`px-2 py-1 rounded text-xs border ${
+                                            election.status === 'ACTIVE' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
+                                            election.status === 'ENDED' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
+                                            'bg-gray-500/10 text-gray-500 border-gray-500/20'
+                                        }`}>{election.status}</span>
+                                    </td>
+                                    <td className="px-6 py-4 text-xs opacity-70">
+                                        <p>{new Date(election.startDate).toLocaleDateString()} -</p>
+                                        <p>{new Date(election.endDate).toLocaleDateString()}</p>
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-mono font-bold text-emerald-500">
+                                        {election._count.votes}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </motion.div>
         )}
