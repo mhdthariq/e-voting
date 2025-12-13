@@ -17,10 +17,12 @@ const createPrismaClient = () => {
 };
 
 // 3. Use global variable in development to prevent hot reload issues
-const prisma = globalThis.__prisma ?? createPrismaClient();
+const globalForPrisma = globalThis as unknown as { __prisma: PrismaClient | undefined };
 
-if (process.env.NODE_ENV === "development") {
-  globalThis.__prisma = prisma;
+const prisma = globalForPrisma.__prisma ?? createPrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.__prisma = prisma;
 }
 
 // ==============================================================================
