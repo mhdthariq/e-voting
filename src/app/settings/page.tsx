@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { uploadProfileImage, deleteProfileImage } from '@/lib/supabase/storage';
-import { optimizeImage, formatFileSize } from '@/lib/utils/imageOptimizer';
-import { isSupabaseConfigured } from '@/lib/supabase/client';
+
 
 interface User {
   id: number;
@@ -37,7 +35,7 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    setSupabaseEnabled(isSupabaseConfigured());
+    setSupabaseEnabled(false); // Feature disabled
     fetchUserData();
   }, []);
 
@@ -62,75 +60,12 @@ export default function SettingsPage() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!supabaseEnabled) {
-      setMessage({
-        type: 'error',
-        text: 'Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env file.',
-      });
-      return;
-    }
-
-    setUploadProgress(true);
-    setMessage(null);
-
-    try {
-      // Optimize image to WebP
-      const optimized = await optimizeImage({ 
-        file,
-        maxWidth: 800,
-        maxHeight: 800,
-        quality: 0.8
-      });
-
-      console.log(`Image optimized: ${formatFileSize(optimized.originalSize)} → ${formatFileSize(optimized.optimizedSize)} (${optimized.compressionRatio.toFixed(1)}% smaller)`);
-
-      // Delete old image if exists
-      if (user?.profileImagePath) {
-        await deleteProfileImage(user.profileImagePath);
-      }
-
-      // Upload to Supabase
-      const result = await uploadProfileImage({
-        userId: user!.id,
-        file: optimized.file,
-      });
-
-      if (result.success) {
-        // Update user profile in database
-        const response = await fetch('/api/user/profile', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            profileImage: result.url,
-            profileImagePath: result.path,
-          }),
-        });
-
-        if (response.ok) {
-          setPreview(result.url);
-          setUser(prev => prev ? { ...prev, profileImage: result.url, profileImagePath: result.path } : null);
-          setMessage({
-            type: 'success',
-            text: 'Profile photo updated successfully!',
-          });
-        } else {
-          throw new Error('Failed to update profile in database');
-        }
-      } else {
-        throw new Error(result.error || 'Failed to upload image');
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to upload image',
-      });
-    } finally {
-      setUploadProgress(false);
-    }
+    // Feature disabled
+    setMessage({
+      type: 'error',
+      text: 'Image upload is currently disabled.',
+    });
+    return;
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {

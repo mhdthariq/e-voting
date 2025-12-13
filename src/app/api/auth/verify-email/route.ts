@@ -5,7 +5,7 @@ import { log } from '@/utils/logger';
 /**
  * POST /api/auth/verify-email
  * Verify user email and activate account
- * Works with both Supabase and manual token verification
+
  */
 export async function POST(request: NextRequest) {
   try {
@@ -14,41 +14,12 @@ export async function POST(request: NextRequest) {
 
     let user;
 
-    // Supabase verification (has userId and email)
+    // Supabase verification removed
     if (userId && email) {
-      user = await prisma.user.findFirst({
-        where: {
-          id: parseInt(userId),
-          email: email,
-        },
-      });
-
-      if (!user) {
-        return NextResponse.json(
-          { success: false, message: 'User not found' },
-          { status: 404 }
-        );
-      }
-
-      // Activate user account
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          emailVerified: true,
-          status: 'ACTIVE',
-          emailVerificationToken: null,
-        },
-      });
-
-      log.auth('User email verified via Supabase', {
-        userId: user.id,
-        email: user.email,
-      });
-
       return NextResponse.json({
-        success: true,
-        message: 'Email verified successfully',
-      });
+        success: false,
+        message: "Supabase verification is no longer supported. Please use the manual token link."
+      }, { status: 400 });
     }
 
     // Manual token verification (fallback)

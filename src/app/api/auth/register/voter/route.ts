@@ -14,7 +14,7 @@ import crypto from "crypto";
 import { password } from "@/lib/auth/password";
 import prisma from "@/lib/database/client";
 import { log } from "@/utils/logger";
-import { supabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/client";
+
 
 // Validation schema for voter registration
 const voterRegistrationSchema = z.object({
@@ -135,43 +135,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Send verification email via Supabase or provide manual link
-    let emailSent = false;
-    if (isSupabaseConfigured()) {
-      try {
-        const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-          type: 'signup',
-          email: email,
-          options: {
-            data: {
-              userId: user.id,
-              username: username,
-              fullName: fullName,
-            },
-            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/verify-email`,
-          }
-        });
-
-        if (!error && data) {
-          emailSent = true;
-          log.auth("Verification email sent via Supabase", {
-            userId: user.id,
-            email: user.email,
-          });
-        } else {
-          log.error("Supabase email error:", error);
-        }
-      } catch (error) {
-        log.error("Failed to send Supabase email:", error);
-      }
-    }
-
-    log.auth("Voter registration submitted", {
+    // In development or if no email service configured, include the manual verification token
+    const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${verificationToken}`;
+    const emailSent = false;
+    
+    log.auth("Voter registration successful (Manual Verification)", {
       userId: user.id,
       email: user.email,
-      username: user.username,
-      emailSent,
-      ipAddress: clientInfo.ipAddress,
+      verificationToken
     });
 
     // Return verification token in development (in production, only send via email)
