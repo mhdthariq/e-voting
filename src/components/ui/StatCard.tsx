@@ -37,7 +37,7 @@ export function StatCard({
       <div className="p-5">
         <div className="flex items-center">
           {icon && (
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <div
                 className={`w-12 h-12 ${colorClasses[color]} rounded-md flex items-center justify-center`}
               >
@@ -61,7 +61,7 @@ export function StatCard({
                     }`}
                   >
                     <svg
-                      className={`self-center flex-shrink-0 h-5 w-5 ${
+                      className={`self-center shrink-0 h-5 w-5 ${
                         trend.isPositive ? "" : "transform rotate-180"
                       }`}
                       fill="currentColor"

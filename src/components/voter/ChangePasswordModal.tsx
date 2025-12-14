@@ -9,10 +9,14 @@ interface Props {
   darkMode: boolean;
 }
 
-export default function ChangePasswordModal({ open, onClose, darkMode }: Props) {
+export default function ChangePasswordModal({
+  open,
+  onClose,
+  darkMode,
+}: Props) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  
+
   // State untuk toggle visibilitas password
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -66,15 +70,25 @@ export default function ChangePasswordModal({ open, onClose, darkMode }: Props) 
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 z-[10000]" onClick={onClose}></div>
-      <div className="fixed inset-0 z-[10001] flex items-center justify-center pointer-events-none p-4">
-        <div className={`pointer-events-auto w-full max-w-md rounded-xl p-6 shadow-2xl border relative ${
-          darkMode ? "bg-neutral-900 border-emerald-700 text-emerald-100" : "bg-white border-gray-200 text-gray-900"
-        }`}>
+      <div
+        className="fixed inset-0 bg-black/60 z-10000"
+        onClick={onClose}
+      ></div>
+      <div className="fixed inset-0 z-10001 flex items-center justify-center pointer-events-none p-4">
+        <div
+          className={`pointer-events-auto w-full max-w-md rounded-xl p-6 shadow-2xl border relative ${
+            darkMode
+              ? "bg-neutral-900 border-emerald-700 text-emerald-100"
+              : "bg-white border-gray-200 text-gray-900"
+          }`}
+        >
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-bold">Change Password</h3>
-            <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-500/20 transition-colors">
+            <button
+              onClick={onClose}
+              className="p-1 rounded-full hover:bg-gray-500/20 transition-colors"
+            >
               <X size={20} />
             </button>
           </div>
@@ -87,16 +101,17 @@ export default function ChangePasswordModal({ open, onClose, darkMode }: Props) 
 
           {/* Form */}
           <div className="space-y-4">
-            
             {/* Current Password Field */}
             <div>
-              <label className="text-sm opacity-70 block mb-1">Current Password</label>
+              <label className="text-sm opacity-70 block mb-1">
+                Current Password
+              </label>
               <div className="relative">
                 <input
                   type={showCurrentPassword ? "text" : "password"}
                   className={`w-full px-3 py-2 pr-10 rounded-md border outline-none focus:ring-1 focus:ring-emerald-500 ${
-                    darkMode 
-                      ? "bg-neutral-800 border-emerald-700 focus:border-emerald-500" 
+                    darkMode
+                      ? "bg-neutral-800 border-emerald-700 focus:border-emerald-500"
                       : "bg-white border-gray-300 focus:border-emerald-500"
                   }`}
                   value={currentPassword}
@@ -106,25 +121,31 @@ export default function ChangePasswordModal({ open, onClose, darkMode }: Props) 
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors ${
-                    darkMode 
-                      ? "text-gray-400 hover:text-white hover:bg-neutral-700" 
+                    darkMode
+                      ? "text-gray-400 hover:text-white hover:bg-neutral-700"
                       : "text-gray-500 hover:text-black hover:bg-gray-100"
                   }`}
                 >
-                  {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showCurrentPassword ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </button>
               </div>
             </div>
 
             {/* New Password Field */}
             <div>
-              <label className="text-sm opacity-70 block mb-1">New Password</label>
+              <label className="text-sm opacity-70 block mb-1">
+                New Password
+              </label>
               <div className="relative">
                 <input
                   type={showNewPassword ? "text" : "password"}
                   className={`w-full px-3 py-2 pr-10 rounded-md border outline-none focus:ring-1 focus:ring-emerald-500 ${
-                    darkMode 
-                      ? "bg-neutral-800 border-emerald-700 focus:border-emerald-500" 
+                    darkMode
+                      ? "bg-neutral-800 border-emerald-700 focus:border-emerald-500"
                       : "bg-white border-gray-300 focus:border-emerald-500"
                   }`}
                   value={newPassword}
@@ -134,8 +155,8 @@ export default function ChangePasswordModal({ open, onClose, darkMode }: Props) 
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                   className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors ${
-                    darkMode 
-                      ? "text-gray-400 hover:text-white hover:bg-neutral-700" 
+                    darkMode
+                      ? "text-gray-400 hover:text-white hover:bg-neutral-700"
                       : "text-gray-500 hover:text-black hover:bg-gray-100"
                   }`}
                 >
@@ -143,12 +164,14 @@ export default function ChangePasswordModal({ open, onClose, darkMode }: Props) 
                 </button>
               </div>
             </div>
-
           </div>
 
           {/* Actions */}
           <div className="mt-6 flex justify-end gap-3">
-            <button onClick={onClose} className="px-4 py-2 text-sm rounded-md hover:bg-gray-500/10 transition-colors">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm rounded-md hover:bg-gray-500/10 transition-colors"
+            >
               Cancel
             </button>
             <button

@@ -21,7 +21,7 @@ export default function CreateElectionPage() {
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  
+
   // State untuk manajemen kandidat
   const [candidates, setCandidates] = useState<CandidateInput[]>([]);
   const [newCandidateName, setNewCandidateName] = useState("");
@@ -44,7 +44,10 @@ export default function CreateElectionPage() {
   // Handler untuk menambah kandidat baru
   const handleAddCandidate = () => {
     if (newCandidateName.trim() && newCandidateDesc.trim()) {
-      setCandidates([...candidates, { name: newCandidateName, description: newCandidateDesc }]);
+      setCandidates([
+        ...candidates,
+        { name: newCandidateName, description: newCandidateDesc },
+      ]);
       setNewCandidateName("");
       setNewCandidateDesc("");
     } else {
@@ -65,7 +68,9 @@ export default function CreateElectionPage() {
 
     // --- Validasi Front-end ---
     if (!title || !description || !startDate || !endDate) {
-      setError("Please fill in all election details (title, description, start date, end date).");
+      setError(
+        "Please fill in all election details (title, description, start date, end date).",
+      );
       return;
     }
     if (candidates.length < 2) {
@@ -97,7 +102,7 @@ export default function CreateElectionPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           title,
@@ -111,7 +116,9 @@ export default function CreateElectionPage() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccessMessage("Election created successfully! Redirecting to dashboard...");
+        setSuccessMessage(
+          "Election created successfully! Redirecting to dashboard...",
+        );
         // Reset form (opsional)
         setTitle("");
         setDescription("");
@@ -127,7 +134,9 @@ export default function CreateElectionPage() {
       }
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -137,8 +146,8 @@ export default function CreateElectionPage() {
     <div
       className={
         darkMode
-          ? "min-h-screen flex flex-col bg-gradient-to-br from-black via-neutral-900 to-emerald-950 text-white"
-          : "min-h-screen flex flex-col bg-gradient-to-br from-gray-100 via-gray-50 to-white text-gray-900"
+          ? "min-h-screen flex flex-col bg-linear-to-br from-black via-neutral-900 to-emerald-950 text-white"
+          : "min-h-screen flex flex-col bg-linear-to-br from-gray-100 via-gray-50 to-white text-gray-900"
       }
     >
       {/* Theme toggle (opsional, tapi konsisten) */}
@@ -157,7 +166,7 @@ export default function CreateElectionPage() {
       </div>
 
       {/* Konten Utama */}
-      <main className="flex-grow max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8 space-y-8 w-full">
+      <main className="grow max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8 space-y-8 w-full">
         <div
           className={`p-8 rounded-lg border shadow-lg transition-all duration-300 ${
             darkMode
@@ -168,7 +177,9 @@ export default function CreateElectionPage() {
           <button
             onClick={() => router.back()}
             className={`flex items-center space-x-2 text-sm mb-6 ${
-              darkMode ? "text-emerald-300 hover:text-emerald-200" : "text-emerald-700 hover:text-emerald-600"
+              darkMode
+                ? "text-emerald-300 hover:text-emerald-200"
+                : "text-emerald-700 hover:text-emerald-600"
             }`}
           >
             <ArrowLeft size={16} />
@@ -197,7 +208,9 @@ export default function CreateElectionPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
+                <label className="block text-sm font-medium mb-1">
+                  Description
+                </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -212,7 +225,9 @@ export default function CreateElectionPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Start Date</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Start Date
+                  </label>
                   <input
                     type="datetime-local"
                     value={startDate}
@@ -226,7 +241,9 @@ export default function CreateElectionPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">End Date</label>
+                  <label className="block text-sm font-medium mb-1">
+                    End Date
+                  </label>
                   <input
                     type="datetime-local"
                     value={endDate}
@@ -260,7 +277,9 @@ export default function CreateElectionPage() {
                   >
                     <div>
                       <p className="font-semibold">{candidate.name}</p>
-                      <p className="text-sm opacity-80">{candidate.description}</p>
+                      <p className="text-sm opacity-80">
+                        {candidate.description}
+                      </p>
                     </div>
                     <button
                       type="button"
@@ -272,14 +291,18 @@ export default function CreateElectionPage() {
                   </motion.div>
                 ))}
                 {candidates.length < 2 && (
-                  <p className="text-yellow-500 text-sm">Please add at least 2 candidates.</p>
+                  <p className="text-yellow-500 text-sm">
+                    Please add at least 2 candidates.
+                  </p>
                 )}
               </div>
 
               {/* Form untuk menambah kandidat baru */}
               <div
                 className={`p-3 rounded-lg border space-y-3 ${
-                  darkMode ? "bg-neutral-950/50 border-emerald-800" : "bg-gray-50 border-gray-200"
+                  darkMode
+                    ? "bg-neutral-950/50 border-emerald-800"
+                    : "bg-gray-50 border-gray-200"
                 }`}
               >
                 <h3 className="text-md font-medium">Add New Candidate</h3>
