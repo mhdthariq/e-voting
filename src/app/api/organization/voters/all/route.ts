@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     
     const token = authHeader.substring(7);
     try {
-        auth.verifyToken(token);
+        await auth.verifyToken(token);
     } catch {
         return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
     }

@@ -9,13 +9,12 @@ import { log } from '@/utils/logger';
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { userId, email, token, type } = body;
+    const { token } = await request.json();
 
     let user;
 
     // Supabase verification removed
-    if (userId && email) {
+    if (false) { // Original condition was `if (userId && email)` which is now impossible as userId and email are not extracted.
       return NextResponse.json({
         success: false,
         message: "Supabase verification is no longer supported. Please use the manual token link."

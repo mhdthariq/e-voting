@@ -47,7 +47,7 @@ async function verifyAdminAuth(request: NextRequest) {
     return { error: "Authentication required", status: 401 };
   }
 
-  const tokenResult = auth.verifyToken(token);
+  const tokenResult = await auth.verifyToken(token);
   if (!tokenResult.isValid || !tokenResult.payload?.userId) {
     return {
       error: tokenResult.expired ? "Token expired" : "Invalid token",

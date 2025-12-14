@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sun, Moon, Users, FileText, CheckCircle, Database, 
-  Activity, Shield, AlertTriangle, Search, Plus, Trash2, Edit, X, RefreshCw,
+  Activity, Shield, AlertTriangle, Search, Plus, Trash2, Edit, RefreshCw,
   ChevronLeft, ChevronRight, ChevronDown, HardDrive, Server, Building2
 } from "lucide-react";
 import AdminProfileModal from "@/components/admin/AdminProfileModal";
@@ -274,7 +274,7 @@ export default function AdminDashboard() {
           } else {
               alert("Operation failed: " + data.message);
           }
-      } catch(e) {
+      } catch {
           alert("Error performing system action");
       }
   };
@@ -329,8 +329,8 @@ export default function AdminDashboard() {
       loadUsers();
       loadOrganizations(); // Refresh org table if needed
       alert("Operation successful");
-    } catch (e: any) {
-      alert(e.message || "Error saving user");
+    } catch (e) {
+      alert((e as Error).message || "Error saving user");
     }
   };
 
@@ -383,7 +383,7 @@ export default function AdminDashboard() {
         setUser(userDataLocal);
         loadDashboardData(token);
         loadAdminProfile(); 
-      } catch (error) {
+      } catch {
         router.push("/auth/login");
       } finally {
         setIsCheckingAuth(false);
@@ -446,7 +446,8 @@ export default function AdminDashboard() {
               <button onClick={() => setSettingsOpen(true)} className={`flex items-center gap-3 pl-1 pr-3 py-1 rounded-full border ${darkMode ? "border-emerald-800/50 bg-neutral-900/50" : "bg-white border-gray-300"}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center border overflow-hidden ${darkMode ? "bg-emerald-900 border-emerald-700 text-emerald-300" : "bg-emerald-100 text-emerald-700"}`}>
                   {currentUser?.profileImage ? (
-                    <img src={currentUser.profileImage} className="w-full h-full object-cover"/>
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={currentUser.profileImage} alt="Profile" className="w-full h-full object-cover"/>
                   ) : (
                     <span className="text-xs font-bold">{getInitials(currentUser?.username || "AD")}</span>
                   )}

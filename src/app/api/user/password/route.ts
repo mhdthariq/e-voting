@@ -44,7 +44,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verify token
-    const tokenResult = auth.verifyToken(token);
+    const tokenResult = await auth.verifyToken(token);
     if (!tokenResult.isValid || !tokenResult.payload?.userId) {
       return NextResponse.json(
         { success: false, message: 'Invalid token' },

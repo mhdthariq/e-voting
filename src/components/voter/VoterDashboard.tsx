@@ -118,7 +118,7 @@ const VotingModal: React.FC<VotingModalProps> = ({ isOpen, onClose, election, da
       setSelectedCandidate(null);
       setError(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [isOpen, election]);
 
   const loadCandidates = async (electionId: number) => {
@@ -452,7 +452,7 @@ export default function VoterDashboard() {
     loadDashboardData();
     loadVoteHistory();
     loadUserProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [router]);
 
   const handleInvitationResponse = async (participationId: number, action: "accept" | "decline") => {
@@ -597,11 +597,14 @@ export default function VoterDashboard() {
                   darkMode ? "bg-emerald-900 border-emerald-700 text-emerald-300" : "bg-emerald-100 border-emerald-200 text-emerald-700"
                 }`}>
                   {userData?.profileImage || user?.profileImage ? (
-                    <img 
-                      src={userData?.profileImage || user?.profileImage || ""} 
-                      alt="Profile" 
-                      className="w-full h-full object-cover" 
-                    />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img 
+                        src={userData?.profileImage || user?.profileImage || ""} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover" 
+                      />
+                    </>
                   ) : (
                     <span className="text-xs font-bold">
                       {getInitials(userData?.fullName || user?.fullName || user?.username || "U")}

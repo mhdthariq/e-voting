@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sun, Moon, Plus, X, Calendar, Users, FileText, CheckCircle, 
-  AlertCircle, ChevronDown, UserPlus, Search, BarChart2, PieChart, 
-  Loader2, Save, LogOut 
+  AlertCircle, ChevronDown, UserPlus, Search, BarChart2, PieChart
 } from "lucide-react";
 import ProfileSettingsModal from "@/components/organization/ProfileSettingsModal";
 import { BarChart } from "@/components/charts/BarChart";
@@ -249,7 +248,7 @@ export default function OrganizationDashboard() {
         } else {
             alert(data.message || "Failed to update status");
         }
-    } catch (error) { 
+    } catch { 
         alert("Error updating status"); 
     } finally { 
         setUpdateLoading(null); 
@@ -372,7 +371,7 @@ export default function OrganizationDashboard() {
         } else {
             alert(data.message || "Failed to assign voters");
         }
-    } catch(e) { 
+    } catch { 
         alert("Error assigning voters"); 
     } finally { 
         setAssignLoading(false); 
@@ -425,7 +424,7 @@ export default function OrganizationDashboard() {
     setUser(userDataLocal);
     loadStats(token);
     loadUserProfile(); // Initial load for fresh image
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadUserProfile(); // Initial load for fresh image
   }, [router]);
 
   useEffect(() => {
@@ -470,6 +469,7 @@ export default function OrganizationDashboard() {
               >
                 <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden border ${darkMode ? "bg-emerald-900 border-emerald-700 text-emerald-300" : "bg-emerald-100 border-emerald-200 text-emerald-700"}`}>
                   {currentUser?.profileImage ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img src={currentUser.profileImage} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-xs font-bold">{getInitials(currentUser?.username || "ORG")}</span>

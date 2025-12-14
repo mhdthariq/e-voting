@@ -8,7 +8,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { protect } from "@/lib/auth/middleware";
 import { AuditService } from "@/lib/database/services/audit.service";
 import { UserService } from "@/lib/database/services/user.service";
-import { log } from "@/utils/logger";
 import { z } from "zod";
 import prisma from "@/lib/database/client";
 import { Prisma, UserRole } from "@prisma/client";
@@ -150,7 +149,7 @@ export async function DELETE(request: NextRequest) {
     const deletedCount = await AuditService.deleteOldAuditLogs(daysToKeep);
 
     return NextResponse.json({ success: true, message: `Deleted ${deletedCount} logs`, data: { deletedCount } });
-  } catch (error) {
-    return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
-  }
+    } catch {
+      return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+    }
 }

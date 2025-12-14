@@ -18,10 +18,10 @@ export default function SettingsPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(false);
+  const [uploadProgress] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [supabaseEnabled, setSupabaseEnabled] = useState(false);
+
 
   const [profileData, setProfileData] = useState({
     username: '',
@@ -35,8 +35,8 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    setSupabaseEnabled(false); // Feature disabled
     fetchUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchUserData = async () => {
@@ -59,7 +59,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async () => {
     // Feature disabled
     setMessage({
       type: 'error',
@@ -220,11 +220,14 @@ export default function SettingsPage() {
           <div className="flex items-center space-x-6">
             <div className="h-24 w-24 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
               {preview ? (
+                <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={preview}
-                  alt="Profile"
+                  alt="Profile Preview"
                   className="h-full w-full object-cover"
                 />
+                </>
               ) : (
                 <div className="h-full w-full flex items-center justify-center text-3xl font-bold text-gray-400">
                   {user.fullName?.charAt(0) || user.username?.charAt(0) || '?'}
@@ -234,7 +237,7 @@ export default function SettingsPage() {
             <div className="flex-1">
               <label
                 className={`cursor-pointer inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 ${
-                  uploadProgress || !supabaseEnabled ? 'opacity-50 cursor-not-allowed' : ''
+                  uploadProgress ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
                 {uploadProgress ? 'Uploading...' : 'Upload Photo'}
@@ -242,18 +245,16 @@ export default function SettingsPage() {
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  disabled={uploadProgress || !supabaseEnabled}
+                  disabled={uploadProgress}
                   className="hidden"
                 />
               </label>
               <p className="mt-2 text-sm text-gray-500">
                 JPG, PNG, GIF or WebP. Max 5MB. Auto-converted to WebP.
               </p>
-              {!supabaseEnabled && (
-                <p className="mt-1 text-sm text-amber-600">
-                  ⚠️ Supabase not configured. Image upload disabled.
-                </p>
-              )}
+              <p className="mt-1 text-sm text-gray-500">
+                Image upload is currently not implemented.
+              </p>
             </div>
           </div>
         </div>

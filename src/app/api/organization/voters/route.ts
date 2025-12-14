@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7);
     let decoded;
     try {
-      decoded = auth.verifyToken(token).payload;
+      const verification = await auth.verifyToken(token);
+      decoded = verification.payload;
     } catch {
       return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
     }

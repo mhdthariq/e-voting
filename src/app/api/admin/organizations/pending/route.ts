@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = auth.verifyToken(token).payload;
+    const verification = await auth.verifyToken(token);
+    const decoded = verification.payload;
 
     if (!decoded || !decoded.userId) {
       return NextResponse.json(

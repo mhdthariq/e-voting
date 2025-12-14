@@ -6,7 +6,7 @@ import { AuditService } from '@/lib/database/services/audit.service';
 const prisma = new PrismaClient();
 
 // Helper to verify token and return userId
-function verifyAuth(request: NextRequest) {
+async function verifyAuth(request: NextRequest) {
   let token = null;
   const authHeader = request.headers.get('authorization');
 
@@ -25,7 +25,7 @@ function verifyAuth(request: NextRequest) {
   }
 
   if (!token) return null;
-  const result = auth.verifyToken(token);
+  const result = await auth.verifyToken(token);
   return result.isValid && result.payload?.userId ? parseInt(result.payload.userId) : null;
 }
 
@@ -35,7 +35,7 @@ function verifyAuth(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = verifyAuth(request);
+    const userId = await verifyAuth(request);
     if (!userId) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    const userId = verifyAuth(request);
+    const userId = await verifyAuth(request);
     if (!userId) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }

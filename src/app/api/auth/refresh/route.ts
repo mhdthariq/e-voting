@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify refresh token
-    const refreshResult = auth.verifyRefreshToken(refreshToken);
+    const refreshResult = await auth.verifyRefreshToken(refreshToken);
 
     if (!refreshResult.isValid || !refreshResult.payload) {
       log.security("Invalid refresh token used", {
@@ -107,13 +107,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate new access token directly
-    const accessToken = auth.login({
+    const loginResult = await auth.login({
       userId: user.id.toString(),
       email: user.email,
       username: user.username,
       role: user.role,
       organizationName: undefined,
-    }).accessToken;
+    });
+    const accessToken = loginResult.accessToken;
 
     const tokenResponse = {
       accessToken,

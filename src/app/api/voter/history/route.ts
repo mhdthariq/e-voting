@@ -34,7 +34,7 @@ return NextResponse.json(
 }
 
 
-const tokenResult = auth.verifyToken(token);
+const tokenResult = await auth.verifyToken(token);
 if (!tokenResult.isValid || !tokenResult.payload?.userId) {
 return NextResponse.json(
 { success: false, message: "Invalid or expired token" },
@@ -61,7 +61,7 @@ _count: { select: { votes: true } },
 
 
 return NextResponse.json({ success: true, data: votes });
-} catch (error) {
+} catch {
 return NextResponse.json(
 { success: false, message: "Internal server error" },
 { status: 500 }
