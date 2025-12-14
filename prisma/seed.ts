@@ -196,7 +196,7 @@ async function main() {
         endDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000), // Ends in 3 weeks
       },
     });
-    elections.push(draftElection1,draftElection2);
+    elections.push(draftElection1, draftElection2);
 
     // Ended election
     const endedElection = await prisma.election.create({
@@ -208,7 +208,7 @@ async function main() {
         status: "ENDED",
         startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Started 30 days ago
         endDate: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000), // Ended 23 days ago
-      }
+      },
     });
     elections.push(endedElection);
 
@@ -366,6 +366,18 @@ async function main() {
         },
       });
       participations.push(participation);
+
+      // Also create ElectionVoter record for the ended election
+      await prisma.electionVoter.create({
+        data: {
+          electionId: endedElection.id,
+          name: voter.fullName || voter.username,
+          email: voter.email,
+          username: voter.username,
+          userId: voter.id,
+          hasVoted: hasVoted,
+        },
+      });
     }
 
     console.log(
@@ -501,14 +513,15 @@ async function main() {
 
     // Create pending organization registrations (for admin approval workflow demonstration)
     const pendingOrgPassword = await bcrypt.hash("PendingOrg123!", 12);
-    
+
     const pendingOrg1Data = {
       organizationName: "Engineering Department",
       contactEmail: "engineering@university.edu",
       contactName: "Dr. Emily Chen",
       phone: "+1-555-0102",
       website: "https://engineering.university.edu",
-      description: "Engineering Department for conducting departmental elections and votes on curriculum changes.",
+      description:
+        "Engineering Department for conducting departmental elections and votes on curriculum changes.",
       address: {
         street: "200 Engineering Building",
         city: "University City",
@@ -530,7 +543,8 @@ async function main() {
       contactName: "Michael Rodriguez",
       phone: "+1-555-0103",
       website: "https://business.university.edu/bssa",
-      description: "Student association representing business school students for elections and governance.",
+      description:
+        "Student association representing business school students for elections and governance.",
       address: {
         street: "150 Business Hall",
         city: "University City",
@@ -543,18 +557,19 @@ async function main() {
       status: "pending_approval",
       submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
       ipAddress: "10.0.5.88",
-      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
     };
 
     await prisma.systemConfig.createMany({
       data: [
         {
-          key: `org_registration_${crypto.randomUUID().split('-')[0]}`,
+          key: `org_registration_${crypto.randomUUID().split("-")[0]}`,
           value: JSON.stringify(pendingOrg1Data),
           type: "JSON",
         },
         {
-          key: `org_registration_${crypto.randomUUID().split('-')[0]}`,
+          key: `org_registration_${crypto.randomUUID().split("-")[0]}`,
           value: JSON.stringify(pendingOrg2Data),
           type: "JSON",
         },
@@ -640,7 +655,9 @@ async function main() {
       `🗳️  Votes cast: ${votesData.length} (with candidate choices recorded)`,
     );
     console.log(`⚙️  System configs: ${systemConfigs.length}`);
-    console.log(`🏢 Pending organization registrations: 2 (awaiting admin approval)`);
+    console.log(
+      `🏢 Pending organization registrations: 2 (awaiting admin approval)`,
+    );
     console.log(
       `🔗 Blockchain blocks: 1 (with ${voteTransactions.length} vote transactions)`,
     );

@@ -89,16 +89,16 @@ export default function Home() {
         setError("Invalid response from server");
       }
     } catch (err: unknown) {
-        if (err instanceof Error) {
-          console.error(err);
-          setError(err.message || "Unexpected error occurred");
+      if (err instanceof Error) {
+        console.error(err);
+        setError(err.message || "Unexpected error occurred");
       } else {
-          console.error("Unknown error:", err);
-          setError("Unexpected error occurred");
-        }
-      } finally {
-        setLoading(false); // Pastikan loading mati walau error
+        console.error("Unknown error:", err);
+        setError("Unexpected error occurred");
       }
+    } finally {
+      setLoading(false); // Pastikan loading mati walau error
+    }
   };
 
   return (
@@ -121,7 +121,7 @@ export default function Home() {
       </motion.button>
 
       {/* MOBILE ANIMATION LAYOUT */}
-      <div className="flex-1 flex md:hidden justify-center items-center perspective-[1200px] relative overflow-hidden">
+      <div className="flex-1 flex md:hidden justify-center items-center perspective-distant relative overflow-hidden">
         <motion.div
           key={showLogin ? "login" : "info"}
           initial={{ rotateY: showLogin ? 180 : -180, opacity: 0 }}
@@ -132,12 +132,13 @@ export default function Home() {
         >
           {!showLogin ? (
             // Info side
-            <motion.div className="flex flex-col justify-center items-center text-center px-6 py-16 bg-gradient-to-br from-emerald-700 to-black text-white rounded-2xl mx-4">
+            <motion.div className="flex flex-col justify-center items-center text-center px-6 py-16 bg-linear-to-br from-emerald-700 to-black text-white rounded-2xl mx-4">
               <h1 className="text-4xl font-extrabold mb-3 text-emerald-400">
                 Welcome to BlockVote
               </h1>
               <p className="text-base mb-6 max-w-sm opacity-90">
-                A secure blockchain-based voting system — designed for trust and transparency.
+                A secure blockchain-based voting system — designed for trust and
+                transparency.
               </p>
               <ul className="text-emerald-200 text-sm mb-6 space-y-2">
                 <li>🔐 Secure and verifiable</li>
@@ -173,7 +174,9 @@ export default function Home() {
 
               <form onSubmit={handleLogin} className="space-y-5">
                 <div>
-                  <label className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  <label
+                    className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                  >
                     Username
                   </label>
                   <input
@@ -191,7 +194,9 @@ export default function Home() {
 
                 {/* Password Input Mobile */}
                 <div>
-                  <label className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  <label
+                    className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                  >
                     Password
                   </label>
                   <div className="relative">
@@ -210,7 +215,9 @@ export default function Home() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors ${
-                        darkMode ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-black"
+                        darkMode
+                          ? "text-gray-400 hover:text-white"
+                          : "text-gray-500 hover:text-black"
                       }`}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -236,7 +243,11 @@ export default function Home() {
                   {loading ? (
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 1,
+                        ease: "linear",
+                      }}
                       className="w-5 h-5 border-2 border-black border-t-transparent rounded-full"
                     />
                   ) : (
@@ -264,14 +275,14 @@ export default function Home() {
           initial={{ x: -80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex-1 flex flex-col justify-center bg-gradient-to-br from-emerald-700 to-black text-white p-16"
+          className="flex-1 flex flex-col justify-center bg-linear-to-br from-emerald-700 to-black text-white p-16"
         >
           <h1 className="text-5xl font-extrabold mb-4 text-emerald-400">
             Welcome to BlockVote
           </h1>
           <p className="text-lg mb-6 max-w-md opacity-90">
-            A secure, decentralized voting system built on blockchain technology.
-            Designed for trust, transparency, and digital democracy.
+            A secure, decentralized voting system built on blockchain
+            technology. Designed for trust, transparency, and digital democracy.
           </p>
           <ul className="space-y-3 text-base list-disc list-inside text-emerald-200">
             <li>🔐 Blockchain-backed vote integrity</li>
@@ -304,7 +315,9 @@ export default function Home() {
 
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
+                <label
+                  className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                >
                   Username
                 </label>
                 <input
@@ -322,7 +335,9 @@ export default function Home() {
 
               {/* Password Input Desktop */}
               <div>
-                <label className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
+                <label
+                  className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -341,7 +356,9 @@ export default function Home() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors ${
-                      darkMode ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-black"
+                      darkMode
+                        ? "text-gray-400 hover:text-white"
+                        : "text-gray-500 hover:text-black"
                     }`}
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -367,7 +384,11 @@ export default function Home() {
                 {loading ? (
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 1,
+                      ease: "linear",
+                    }}
                     className="w-5 h-5 border-2 border-black border-t-transparent rounded-full"
                   />
                 ) : (

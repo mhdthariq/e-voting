@@ -75,12 +75,13 @@ class JwtManager {
     payload: Omit<JwtPayload, "iat" | "exp" | "iss" | "aud">,
   ): Promise<string> {
     try {
+      const expiresIn = this.normalizeExpirationTime(JWT_CONFIG.expiresIn);
       const token = await new SignJWT({ ...payload })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
         .setIssuer(JWT_CONFIG.issuer)
         .setAudience(JWT_CONFIG.audience)
-        .setExpirationTime(JWT_CONFIG.expiresIn)
+        .setExpirationTime(expiresIn)
         .sign(SECRET_KEY);
 
       log.auth("Access token generated", {
@@ -99,14 +100,20 @@ class JwtManager {
   /**
    * Generate refresh token for user
    */
-  async generateRefreshToken(userId: string, tokenVersion: number = 1): Promise<string> {
+  async generateRefreshToken(
+    userId: string,
+    tokenVersion: number = 1,
+  ): Promise<string> {
     try {
+      const expiresIn = this.normalizeExpirationTime(
+        JWT_CONFIG.refreshExpiresIn,
+      );
       const token = await new SignJWT({ userId, tokenVersion })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
         .setIssuer(JWT_CONFIG.issuer)
         .setAudience(JWT_CONFIG.audience)
-        .setExpirationTime(JWT_CONFIG.refreshExpiresIn)
+        .setExpirationTime(expiresIn)
         .sign(SECRET_KEY);
 
       log.auth("Refresh token generated", { userId, tokenVersion });
@@ -265,11 +272,44 @@ class JwtManager {
   }
 
   /**
+   * Normalize expiration time to jose-compatible format
+   */
+  normalizeExpirationTime(expiresIn: string): string {
+    // If already in correct format (e.g., "1h", "30d"), return as is
+    if (/^\d+[smhd]$/.test(expiresIn)) {
+      return expiresIn;
+    }
+
+    // If in seconds format (e.g., "3600"), convert to appropriate unit
+    const seconds = parseInt(expiresIn, 10);
+    if (!isNaN(seconds)) {
+      if (seconds >= 86400 && seconds % 86400 === 0) {
+        return `${seconds / 86400}d`;
+      }
+      if (seconds >= 3600 && seconds % 3600 === 0) {
+        return `${seconds / 3600}h`;
+      }
+      if (seconds >= 60 && seconds % 60 === 0) {
+        return `${seconds / 60}m`;
+      }
+      return `${seconds}s`;
+    }
+
+    // Default to 7 days
+    return "7d";
+  }
+
+  /**
    * Convert expiration string to seconds
    */
   getExpirationTime(expiresIn: string): number {
     const match = expiresIn.match(/^(\d+)([smhd])$/);
     if (!match) {
+      // Try parsing as direct seconds
+      const seconds = parseInt(expiresIn, 10);
+      if (!isNaN(seconds)) {
+        return seconds;
+      }
       return 604800; // Default to 7 days in seconds
     }
 
