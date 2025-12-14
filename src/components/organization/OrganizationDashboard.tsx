@@ -151,6 +151,11 @@ export default function OrganizationDashboard() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [notificationModal, setNotificationModal] = useState<{
+    isOpen: boolean;
+    type: "success" | "error";
+    message: string;
+  }>({ isOpen: false, type: "success", message: "" });
 
   // --- Create Election Form State ---
   const [createLoading, setCreateLoading] = useState(false);
@@ -309,10 +314,18 @@ export default function OrganizationDashboard() {
       if (data.success) {
         await loadStats(token); // Refresh UI
       } else {
-        alert(data.message || "Failed to update status");
+        setNotificationModal({
+          isOpen: true,
+          type: "error",
+          message: data.message || "Failed to update status",
+        });
       }
     } catch {
-      alert("Error updating status");
+      setNotificationModal({
+        isOpen: true,
+        type: "error",
+        message: "Error updating status",
+      });
     } finally {
       setUpdateLoading(null);
     }
@@ -454,14 +467,26 @@ export default function OrganizationDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert(data.message);
+        setNotificationModal({
+          isOpen: true,
+          type: "success",
+          message: data.message,
+        });
         setIsAssignModalOpen(false);
         if (token) loadStats(token);
       } else {
-        alert(data.message || "Failed to assign voters");
+        setNotificationModal({
+          isOpen: true,
+          type: "error",
+          message: data.message || "Failed to assign voters",
+        });
       }
     } catch {
-      alert("Error assigning voters");
+      setNotificationModal({
+        isOpen: true,
+        type: "error",
+        message: "Error assigning voters",
+      });
     } finally {
       setAssignLoading(false);
     }
@@ -1545,7 +1570,86 @@ export default function OrganizationDashboard() {
         )}
       </AnimatePresence>
 
-      {/* 3. Profile Settings Modal */}
+      {/* 3. Notification Modal */}
+      <AnimatePresence>
+        {notificationModal.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() =>
+              setNotificationModal({ ...notificationModal, isOpen: false })
+            }
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
+            >
+              <div
+                className={`p-6 border-b ${darkMode ? "border-emerald-800/30" : "border-gray-200"}`}
+              >
+                <div className="flex items-center gap-3">
+                  {notificationModal.type === "success" ? (
+                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <CheckCircle size={24} className="text-emerald-500" />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                      <AlertCircle size={24} className="text-red-500" />
+                    </div>
+                  )}
+                  <div>
+                    <h3
+                      className={`text-lg font-bold ${darkMode ? "text-white" : "text-gray-900"}`}
+                    >
+                      {notificationModal.type === "success"
+                        ? "Success"
+                        : "Error"}
+                    </h3>
+                    <p className="text-sm opacity-60">
+                      {notificationModal.type === "success"
+                        ? "Operation completed"
+                        : "Something went wrong"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <p
+                  className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                >
+                  {notificationModal.message}
+                </p>
+              </div>
+              <div
+                className={`p-4 border-t flex justify-end ${darkMode ? "border-emerald-800/30" : "border-gray-200"}`}
+              >
+                <button
+                  onClick={() =>
+                    setNotificationModal({
+                      ...notificationModal,
+                      isOpen: false,
+                    })
+                  }
+                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                    notificationModal.type === "success"
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                      : "bg-red-600 hover:bg-red-700 text-white"
+                  }`}
+                >
+                  OK
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 4. Profile Settings Modal */}
       <ProfileSettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
