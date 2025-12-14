@@ -18,18 +18,11 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     const body = await request.json();
 
-    console.log("[LOGIN] Request body received:", {
-      identifier: body.identifier,
-      hasPassword: !!body.password,
-    });
-
     const validation = schemas.user.login.safeParse(body);
     if (!validation.success) {
       const errors = validation.error.issues
         .map((issue) => issue.message)
         .join(", ");
-
-      console.log("[LOGIN] Validation failed:", errors);
 
       log.security("Login validation failed", {
         errors,
@@ -54,14 +47,10 @@ export async function POST(request: NextRequest) {
 
     const { identifier, password: userPassword } = validation.data;
 
-    console.log("[LOGIN] Looking up user:", identifier);
-
     // Find user by email or username
     const user = await UserService.findByUsernameOrEmail(identifier);
 
     if (!user) {
-      console.log("[LOGIN] User not found:", identifier);
-
       log.security("Login attempt with non-existent user", {
         identifier,
         ip: request.headers.get("x-forwarded-for") || "unknown",
@@ -82,19 +71,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[LOGIN] User found:", {
-      id: user.id,
-      email: user.email,
-      status: user.status,
-    });
-
     // Check if user account is active
     if (user.status !== "active") {
-      console.log("[LOGIN] Account inactive:", {
-        userId: user.id,
-        status: user.status,
-      });
-
       log.security("Login attempt with inactive account", {
         userId: user.id,
         email: user.email,
@@ -116,15 +94,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[LOGIN] Verifying password...");
-
     // Verify password
     const isPasswordValid = await password.verify(
       userPassword,
       user.passwordHash,
     );
-
-    console.log("[LOGIN] Password valid:", isPasswordValid);
 
     if (!isPasswordValid) {
       log.security("Login attempt with invalid password", {
@@ -147,8 +121,6 @@ export async function POST(request: NextRequest) {
         },
       );
     }
-
-    console.log("[LOGIN] Authentication successful for user:", user.id);
 
     // Check if password hash needs updating (if salt rounds changed)
     if (password.needsRehash(user.passwordHash)) {
@@ -247,8 +219,6 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("[LOGIN] Error:", error);
-
     log.exception(error as Error, "AUTH_LOGIN", {
       path: "/api/auth/login",
       ip: request.headers.get("x-forwarded-for") || "unknown",
