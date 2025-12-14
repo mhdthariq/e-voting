@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import ProfileSettingsModal from "@/components/organization/ProfileSettingsModal";
 import { DonutChart } from "@/components/charts/DonutChart";
+import { timezoneUtils } from "@/utils/timezone";
 
 // ----------------------------------------------------------------------
 // TYPES & INTERFACES
@@ -505,13 +506,7 @@ export default function OrganizationDashboard() {
       .toUpperCase();
 
   const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    timezoneUtils.formatDateTime(dateString);
 
   const getStatusColor = (status: string, isDark: boolean) => {
     switch (status) {
@@ -1002,7 +997,7 @@ export default function OrganizationDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4 opacity-60">
-                          {formatDate(v.createdAt)}
+                          {timezoneUtils.formatDate(v.createdAt)}
                         </td>
                       </tr>
                     ))}

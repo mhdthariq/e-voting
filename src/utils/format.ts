@@ -1,77 +1,84 @@
 /**
  * Formatting utilities for BlockVote application
  * Provides consistent formatting for dates, numbers, text, and other data types
+ * All date/time operations use GMT+7 (Asia/Bangkok) timezone
  */
 
-import { format, formatDistanceToNow, parseISO, isValid } from 'date-fns';
+import { timezoneUtils } from "./timezone";
 
-// Date formatting utilities
+// Date formatting utilities - all use GMT+7 timezone
 export const dateUtils = {
   /**
-   * Format date to human-readable string
+   * Format date to human-readable string in GMT+7
    */
-  format(date: Date | string | number, pattern: string = 'MMM dd, yyyy'): string {
-    try {
-      const dateObj = typeof date === 'string' ? parseISO(date) : new Date(date);
-      if (!isValid(dateObj)) {
-        return 'Invalid Date';
-      }
-      return format(dateObj, pattern);
-    } catch {
-      return 'Invalid Date';
-    }
+  format(
+    date: Date | string | number,
+    pattern: string = "MMM dd, yyyy",
+  ): string {
+    return timezoneUtils.format(date, pattern);
   },
 
   /**
-   * Format date and time
+   * Format date and time in GMT+7
    */
   formatDateTime(date: Date | string | number): string {
-    return this.format(date, 'MMM dd, yyyy hh:mm a');
+    return timezoneUtils.formatDateTime(date);
   },
 
   /**
-   * Format date only
+   * Format date only in GMT+7
    */
   formatDate(date: Date | string | number): string {
-    return this.format(date, 'MMM dd, yyyy');
+    return timezoneUtils.formatDate(date);
   },
 
   /**
-   * Format time only
+   * Format time only in GMT+7 (12-hour format)
    */
   formatTime(date: Date | string | number): string {
-    return this.format(date, 'hh:mm a');
+    return timezoneUtils.formatTime12(date);
   },
 
   /**
-   * Format relative time (e.g., "2 hours ago")
+   * Format time only in GMT+7 (24-hour format)
+   */
+  formatTime24(date: Date | string | number): string {
+    return timezoneUtils.formatTime24(date);
+  },
+
+  /**
+   * Format relative time (e.g., "2 hours ago") - timezone aware
    */
   formatRelative(date: Date | string | number): string {
-    try {
-      const dateObj = typeof date === 'string' ? parseISO(date) : new Date(date);
-      if (!isValid(dateObj)) {
-        return 'Invalid Date';
-      }
-      return formatDistanceToNow(dateObj, { addSuffix: true });
-    } catch {
-      return 'Invalid Date';
-    }
+    return timezoneUtils.formatRelative(date);
   },
 
   /**
    * Format duration in milliseconds to human readable
    */
   formatDuration(milliseconds: number): string {
-    if (milliseconds < 1000) {
-      return `${milliseconds}ms`;
-    }
-    if (milliseconds < 60000) {
-      return `${Math.round(milliseconds / 1000)}s`;
-    }
-    if (milliseconds < 3600000) {
-      return `${Math.round(milliseconds / 60000)}m`;
-    }
-    return `${Math.round(milliseconds / 3600000)}h`;
+    return timezoneUtils.formatDuration(milliseconds);
+  },
+
+  /**
+   * Format with timezone indicator (GMT+7)
+   */
+  formatWithTimezone(date: Date | string | number): string {
+    return timezoneUtils.formatWithTimezone(date);
+  },
+
+  /**
+   * Format in local Thai style (dd/MM/yyyy)
+   */
+  formatLocal(date: Date | string | number): string {
+    return timezoneUtils.formatLocal(date);
+  },
+
+  /**
+   * Format in local Thai style with time (dd/MM/yyyy HH:mm)
+   */
+  formatLocalDateTime(date: Date | string | number): string {
+    return timezoneUtils.formatLocalDateTime(date);
   },
 };
 
@@ -81,7 +88,7 @@ export const numberUtils = {
    * Format number with thousand separators
    */
   format(num: number, decimals: number = 0): string {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat("en-US", {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     }).format(num);
@@ -91,8 +98,8 @@ export const numberUtils = {
    * Format percentage
    */
   formatPercentage(num: number, decimals: number = 1): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
+    return new Intl.NumberFormat("en-US", {
+      style: "percent",
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     }).format(num / 100);
@@ -101,9 +108,9 @@ export const numberUtils = {
   /**
    * Format currency
    */
-  formatCurrency(num: number, currency: string = 'USD'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+  formatCurrency(num: number, currency: string = "USD"): string {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency,
     }).format(num);
   },
@@ -112,19 +119,19 @@ export const numberUtils = {
    * Format file size
    */
   formatFileSize(bytes: number): string {
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    if (bytes === 0) return '0 Bytes';
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    if (bytes === 0) return "0 Bytes";
 
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100} ${sizes[i]}`;
+    return `${Math.round((bytes / Math.pow(1024, i)) * 100) / 100} ${sizes[i]}`;
   },
 
   /**
    * Format large numbers with suffixes (K, M, B)
    */
   formatCompact(num: number): string {
-    return new Intl.NumberFormat('en-US', {
-      notation: 'compact',
+    return new Intl.NumberFormat("en-US", {
+      notation: "compact",
       maximumFractionDigits: 1,
     }).format(num);
   },
@@ -136,7 +143,7 @@ export const textUtils = {
    * Capitalize first letter
    */
   capitalize(text: string): string {
-    if (!text) return '';
+    if (!text) return "";
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
   },
 
@@ -144,11 +151,11 @@ export const textUtils = {
    * Convert to title case
    */
   titleCase(text: string): string {
-    if (!text) return '';
+    if (!text) return "";
     return text
-      .split(' ')
-      .map(word => this.capitalize(word))
-      .join(' ');
+      .split(" ")
+      .map((word) => this.capitalize(word))
+      .join(" ");
   },
 
   /**
@@ -156,15 +163,15 @@ export const textUtils = {
    */
   camelToReadable(text: string): string {
     return text
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, str => str.toUpperCase())
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (str) => str.toUpperCase())
       .trim();
   },
 
   /**
    * Truncate text with ellipsis
    */
-  truncate(text: string, maxLength: number, suffix: string = '...'): string {
+  truncate(text: string, maxLength: number, suffix: string = "..."): string {
     if (!text || text.length <= maxLength) return text;
     return text.slice(0, maxLength - suffix.length) + suffix;
   },
@@ -173,7 +180,7 @@ export const textUtils = {
    * Remove extra whitespace and normalize
    */
   normalize(text: string): string {
-    return text.replace(/\s+/g, ' ').trim();
+    return text.replace(/\s+/g, " ").trim();
   },
 
   /**
@@ -183,15 +190,15 @@ export const textUtils = {
     return text
       .toLowerCase()
       .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   },
 
   /**
    * Mask sensitive text (e.g., email, phone)
    */
-  mask(text: string, visibleChars: number = 3, maskChar: string = '*'): string {
+  mask(text: string, visibleChars: number = 3, maskChar: string = "*"): string {
     if (!text || text.length <= visibleChars * 2) return text;
 
     const start = text.slice(0, visibleChars);
@@ -206,11 +213,11 @@ export const textUtils = {
    */
   getInitials(name: string, maxInitials: number = 2): string {
     return name
-      .split(' ')
-      .filter(word => word.length > 0)
+      .split(" ")
+      .filter((word) => word.length > 0)
       .slice(0, maxInitials)
-      .map(word => word.charAt(0).toUpperCase())
-      .join('');
+      .map((word) => word.charAt(0).toUpperCase())
+      .join("");
   },
 };
 
@@ -221,12 +228,12 @@ export const electionUtils = {
    */
   formatStatus(status: string): string {
     const statusMap: Record<string, string> = {
-      'draft': 'Draft',
-      'scheduled': 'Scheduled',
-      'active': 'Active',
-      'paused': 'Paused',
-      'completed': 'Completed',
-      'cancelled': 'Cancelled',
+      draft: "Draft",
+      scheduled: "Scheduled",
+      active: "Active",
+      paused: "Paused",
+      completed: "Completed",
+      cancelled: "Cancelled",
     };
     return statusMap[status.toLowerCase()] || textUtils.titleCase(status);
   },
@@ -236,9 +243,9 @@ export const electionUtils = {
    */
   formatRole(role: string): string {
     const roleMap: Record<string, string> = {
-      'admin': 'Administrator',
-      'organization': 'Organization',
-      'voter': 'Voter',
+      admin: "Administrator",
+      organization: "Organization",
+      voter: "Voter",
     };
     return roleMap[role.toLowerCase()] || textUtils.titleCase(role);
   },
@@ -247,7 +254,7 @@ export const electionUtils = {
    * Format vote count with proper pluralization
    */
   formatVoteCount(count: number): string {
-    return `${numberUtils.format(count)} ${count === 1 ? 'vote' : 'votes'}`;
+    return `${numberUtils.format(count)} ${count === 1 ? "vote" : "votes"}`;
   },
 
   /**
@@ -285,7 +292,7 @@ export const parseUtils = {
    * Parse phone number
    */
   parsePhone(phone: string): { isValid: boolean; formatted: string } {
-    const cleaned = phone.replace(/\D/g, '');
+    const cleaned = phone.replace(/\D/g, "");
     const isValid = cleaned.length >= 10 && cleaned.length <= 15;
 
     let formatted = cleaned;
@@ -315,24 +322,24 @@ export const cssUtils = {
    */
   cn(...classes: (string | undefined | null | boolean)[]): string {
     return classes
-      .filter((cls): cls is string => typeof cls === 'string' && cls.length > 0)
-      .join(' ');
+      .filter((cls): cls is string => typeof cls === "string" && cls.length > 0)
+      .join(" ");
   },
 
   /**
    * Generate status badge classes
    */
   statusClasses(status: string): string {
-    const baseClasses = 'px-2 py-1 rounded-full text-xs font-medium';
+    const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
 
     const statusClasses: Record<string, string> = {
-      'active': 'bg-green-100 text-green-800',
-      'completed': 'bg-blue-100 text-blue-800',
-      'draft': 'bg-gray-100 text-gray-800',
-      'scheduled': 'bg-yellow-100 text-yellow-800',
-      'paused': 'bg-orange-100 text-orange-800',
-      'cancelled': 'bg-red-100 text-red-800',
-      'pending': 'bg-purple-100 text-purple-800',
+      active: "bg-green-100 text-green-800",
+      completed: "bg-blue-100 text-blue-800",
+      draft: "bg-gray-100 text-gray-800",
+      scheduled: "bg-yellow-100 text-yellow-800",
+      paused: "bg-orange-100 text-orange-800",
+      cancelled: "bg-red-100 text-red-800",
+      pending: "bg-purple-100 text-purple-800",
     };
 
     return this.cn(baseClasses, statusClasses[status.toLowerCase()]);
@@ -342,12 +349,12 @@ export const cssUtils = {
    * Generate role badge classes
    */
   roleClasses(role: string): string {
-    const baseClasses = 'px-2 py-1 rounded text-xs font-medium';
+    const baseClasses = "px-2 py-1 rounded text-xs font-medium";
 
     const roleClasses: Record<string, string> = {
-      'admin': 'bg-red-100 text-red-800',
-      'organization': 'bg-blue-100 text-blue-800',
-      'voter': 'bg-green-100 text-green-800',
+      admin: "bg-red-100 text-red-800",
+      organization: "bg-blue-100 text-blue-800",
+      voter: "bg-green-100 text-green-800",
     };
 
     return this.cn(baseClasses, roleClasses[role.toLowerCase()]);
@@ -364,13 +371,23 @@ export {
   cssUtils as css,
 };
 
+// Export timezone utilities
+export {
+  timezoneUtils as timezone,
+  electionTimezoneUtils as electionTimezone,
+} from "./timezone";
+
 // Export convenience functions
 export const formatters = {
   date: dateUtils.formatDate,
   dateTime: dateUtils.formatDateTime,
   time: dateUtils.formatTime,
+  time24: dateUtils.formatTime24,
   relative: dateUtils.formatRelative,
   duration: dateUtils.formatDuration,
+  withTimezone: dateUtils.formatWithTimezone,
+  local: dateUtils.formatLocal,
+  localDateTime: dateUtils.formatLocalDateTime,
   number: numberUtils.format,
   percentage: numberUtils.formatPercentage,
   currency: numberUtils.formatCurrency,

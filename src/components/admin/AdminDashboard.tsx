@@ -28,6 +28,7 @@ import {
   Building2,
 } from "lucide-react";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { timezoneUtils } from "@/utils/timezone";
 import AdminProfileModal from "@/components/admin/AdminProfileModal";
 import { BarChart } from "@/components/charts/BarChart";
 import { DonutChart } from "@/components/charts/DonutChart";
@@ -887,7 +888,7 @@ export default function AdminDashboard() {
                         <span>{log.user.username}</span>
                       </div>
                       <span className="opacity-50 text-xs">
-                        {new Date(log.createdAt).toLocaleTimeString()}
+                        {timezoneUtils.formatTime12(log.createdAt)}
                       </span>
                     </div>
                   ))}
@@ -1040,8 +1041,7 @@ export default function AdminDashboard() {
                           Applicant: {org.contactName} ({org.username})
                         </p>
                         <p className="text-xs opacity-40 mt-1">
-                          Submitted:{" "}
-                          {new Date(org.submittedAt).toLocaleDateString()}
+                          Submitted: {timezoneUtils.formatDate(org.submittedAt)}
                         </p>
                       </div>
                       <div className="flex gap-3">
@@ -1134,7 +1134,7 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td className="px-6 py-4 opacity-60 font-mono text-xs">
-                            {new Date(org.createdAt).toLocaleDateString()}
+                            {timezoneUtils.formatDate(org.createdAt)}
                           </td>
                           <td className="px-6 py-4 text-right space-x-2">
                             <button
@@ -1254,15 +1254,10 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-6 py-4 text-xs opacity-70">
                               <p>
-                                {new Date(
-                                  election.startDate,
-                                ).toLocaleDateString()}{" "}
-                                -
+                                {timezoneUtils.formatDate(election.startDate)} -
                               </p>
                               <p>
-                                {new Date(
-                                  election.endDate,
-                                ).toLocaleDateString()}
+                                {timezoneUtils.formatDate(election.endDate)}
                               </p>
                             </td>
                             <td className="px-6 py-4 text-right font-mono font-bold text-emerald-500">
@@ -1613,7 +1608,7 @@ export default function AdminDashboard() {
                     logsList.map((log) => (
                       <tr key={log.id} className="hover:opacity-80">
                         <td className="px-6 py-3 font-mono text-xs opacity-50">
-                          {new Date(log.createdAt).toLocaleString()}
+                          {timezoneUtils.formatDateTime(log.createdAt)}
                         </td>
                         <td className="px-6 py-3 font-bold">
                           {log.user.username}{" "}

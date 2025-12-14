@@ -14,6 +14,7 @@ import {
   Calendar,
 } from "lucide-react";
 import ProfileSettingsModal from "@/components/voter/ProfileSettingsModal";
+import { timezoneUtils } from "@/utils/timezone";
 
 // --- Interfaces ---
 
@@ -1072,9 +1073,7 @@ export default function VoterDashboard() {
                                 <span>•</span>
                                 <span className="text-blue-500">
                                   Starts{" "}
-                                  {new Date(
-                                    election.startDate,
-                                  ).toLocaleDateString()}
+                                  {timezoneUtils.formatDate(election.startDate)}
                                 </span>
                               </div>
                             </div>
@@ -1155,9 +1154,7 @@ export default function VoterDashboard() {
                             <span
                               className={`font-medium ${darkMode ? "" : "text-gray-900"}`}
                             >
-                              {new Date(
-                                election.startDate,
-                              ).toLocaleDateString()}
+                              {timezoneUtils.formatDate(election.startDate)}
                             </span>
                           </div>
                           <div>
@@ -1167,7 +1164,7 @@ export default function VoterDashboard() {
                             <span
                               className={`font-medium ${darkMode ? "" : "text-gray-900"}`}
                             >
-                              {new Date(election.endDate).toLocaleDateString()}
+                              {timezoneUtils.formatDate(election.endDate)}
                             </span>
                           </div>
                           <div>
@@ -1366,8 +1363,7 @@ export default function VoterDashboard() {
                       <div
                         className={`mt-1 text-xs ${darkMode ? "opacity-50" : "text-gray-400"}`}
                       >
-                        Invited on{" "}
-                        {new Date(invite.invitedAt).toLocaleDateString()}
+                        Invited on {timezoneUtils.formatDate(invite.invitedAt)}
                       </div>
                     </div>
                     <div className="flex gap-3">
@@ -1458,7 +1454,7 @@ export default function VoterDashboard() {
                         <div
                           className={`font-medium ${darkMode ? "text-white" : "text-gray-900"}`}
                         >
-                          {new Date(vote.votedAt).toLocaleString()}
+                          {timezoneUtils.formatDateTime(vote.votedAt)}
                         </div>
                       </div>
 
