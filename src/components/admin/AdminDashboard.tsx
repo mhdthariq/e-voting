@@ -8,6 +8,7 @@ import {
   Activity, Shield, AlertTriangle, Search, Plus, Trash2, Edit, RefreshCw,
   ChevronLeft, ChevronRight, ChevronDown, HardDrive, Server, Building2
 } from "lucide-react";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import AdminProfileModal from "@/components/admin/AdminProfileModal";
 import { BarChart } from "@/components/charts/BarChart";
 import { DonutChart } from "@/components/charts/DonutChart";
@@ -113,6 +114,14 @@ export default function AdminDashboard() {
   // Modals
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+
+  const [confirmation, setConfirmation] = useState<{
+    isOpen: boolean;
+    type: 'danger' | 'success' | 'info';
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
   
   // Form State
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -279,25 +288,41 @@ export default function AdminDashboard() {
       }
   };
 
-  const handleApproveOrg = async (id: number) => {
-    if(!confirm("Approve this organization?")) return;
-    const token = localStorage.getItem("accessToken");
-    await fetch(`/api/admin/organizations/${id}/approve`, { 
-        method: "POST", headers: { Authorization: `Bearer ${token}` } 
+  const handleApproveOrg = (id: number) => {
+    setConfirmation({
+      isOpen: true,
+      type: 'success',
+      title: 'Approve Organization',
+      message: 'Are you sure you want to approve this organization? This action will grant them access to the platform.',
+      onConfirm: async () => {
+        const token = localStorage.getItem("accessToken");
+        await fetch(`/api/admin/organizations/${id}/approve`, { 
+            method: "POST", headers: { Authorization: `Bearer ${token}` } 
+        });
+        loadDashboardData(token!);
+        loadOrganizations();
+        setConfirmation(null);
+      }
     });
-    loadDashboardData(token!);
-    loadOrganizations(); // Refresh table
   };
 
-  const handleRejectOrg = async (id: number) => {
-    if(!confirm("Reject this organization?")) return;
-    const token = localStorage.getItem("accessToken");
-    await fetch(`/api/admin/organizations/${id}/reject`, { 
-        method: "POST", headers: { Authorization: `Bearer ${token}` } 
+  const handleRejectOrg = (id: number) => {
+    setConfirmation({
+      isOpen: true,
+      type: 'danger',
+      title: 'Reject Organization',
+      message: 'Are you sure you want to reject this organization? This action cannot be undone immediately.',
+      onConfirm: async () => {
+        const token = localStorage.getItem("accessToken");
+        await fetch(`/api/admin/organizations/${id}/reject`, { 
+            method: "POST", headers: { Authorization: `Bearer ${token}` } 
+        });
+        loadDashboardData(token!);
+        setConfirmation(null);
+      }
     });
-    loadDashboardData(token!);
   };
-
+  
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem("accessToken");
@@ -765,6 +790,17 @@ export default function AdminDashboard() {
       </main>
 
       <AdminProfileModal open={settingsOpen} onClose={() => setSettingsOpen(false)} darkMode={darkMode} user={currentUser} onLogout={handleLogout} onUpdateSuccess={() => { loadAdminProfile(); setSettingsOpen(false); }} />
+      
+      {confirmation && (
+        <ConfirmationModal
+          isOpen={confirmation.isOpen}
+          onClose={() => setConfirmation(null)}
+          onConfirm={confirmation.onConfirm}
+          title={confirmation.title}
+          message={confirmation.message}
+          type={confirmation.type}
+        />
+      )}
 
       {/* MODAL: CREATE/EDIT USER */}
       <AnimatePresence>
