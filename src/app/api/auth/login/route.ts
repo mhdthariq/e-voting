@@ -18,11 +18,18 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     const body = await request.json();
 
+    console.log("[LOGIN] Request body received:", {
+      identifier: body.identifier,
+      hasPassword: !!body.password,
+    });
+
     const validation = schemas.user.login.safeParse(body);
     if (!validation.success) {
       const errors = validation.error.issues
         .map((issue) => issue.message)
         .join(", ");
+
+      console.log("[LOGIN] Validation failed:", errors);
 
       log.security("Login validation failed", {
         errors,
@@ -35,16 +42,26 @@ export async function POST(request: NextRequest) {
           error: "Validation failed",
           details: errors,
         },
-        { status: 400 },
+        {
+          status: 400,
+          headers: {
+            "Access-Control-Allow-Origin": request.headers.get("origin") || "*",
+            "Access-Control-Allow-Credentials": "true",
+          },
+        },
       );
     }
 
     const { identifier, password: userPassword } = validation.data;
 
+    console.log("[LOGIN] Looking up user:", identifier);
+
     // Find user by email or username
     const user = await UserService.findByUsernameOrEmail(identifier);
 
     if (!user) {
+      console.log("[LOGIN] User not found:", identifier);
+
       log.security("Login attempt with non-existent user", {
         identifier,
         ip: request.headers.get("x-forwarded-for") || "unknown",
@@ -55,12 +72,29 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Invalid credentials",
         },
-        { status: 401 },
+        {
+          status: 401,
+          headers: {
+            "Access-Control-Allow-Origin": request.headers.get("origin") || "*",
+            "Access-Control-Allow-Credentials": "true",
+          },
+        },
       );
     }
 
+    console.log("[LOGIN] User found:", {
+      id: user.id,
+      email: user.email,
+      status: user.status,
+    });
+
     // Check if user account is active
     if (user.status !== "active") {
+      console.log("[LOGIN] Account inactive:", {
+        userId: user.id,
+        status: user.status,
+      });
+
       log.security("Login attempt with inactive account", {
         userId: user.id,
         email: user.email,
@@ -72,15 +106,25 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Account is disabled",
         },
-        { status: 403 },
+        {
+          status: 403,
+          headers: {
+            "Access-Control-Allow-Origin": request.headers.get("origin") || "*",
+            "Access-Control-Allow-Credentials": "true",
+          },
+        },
       );
     }
+
+    console.log("[LOGIN] Verifying password...");
 
     // Verify password
     const isPasswordValid = await password.verify(
       userPassword,
       user.passwordHash,
     );
+
+    console.log("[LOGIN] Password valid:", isPasswordValid);
 
     if (!isPasswordValid) {
       log.security("Login attempt with invalid password", {
@@ -94,9 +138,17 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Invalid credentials",
         },
-        { status: 401 },
+        {
+          status: 401,
+          headers: {
+            "Access-Control-Allow-Origin": request.headers.get("origin") || "*",
+            "Access-Control-Allow-Credentials": "true",
+          },
+        },
       );
     }
+
+    console.log("[LOGIN] Authentication successful for user:", user.id);
 
     // Check if password hash needs updating (if salt rounds changed)
     if (password.needsRehash(user.passwordHash)) {
@@ -154,17 +206,25 @@ export async function POST(request: NextRequest) {
       createdAt: user.createdAt,
     };
 
-    const response = NextResponse.json({
-      success: true,
-      message: "Login successful",
-      user: userInfo,
-      tokens: {
-        accessToken: tokenResponse.accessToken,
-        refreshToken: tokenResponse.refreshToken,
-        expiresIn: tokenResponse.expiresIn,
-        tokenType: tokenResponse.tokenType,
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: "Login successful",
+        user: userInfo,
+        tokens: {
+          accessToken: tokenResponse.accessToken,
+          refreshToken: tokenResponse.refreshToken,
+          expiresIn: tokenResponse.expiresIn,
+          tokenType: tokenResponse.tokenType,
+        },
       },
-    });
+      {
+        headers: {
+          "Access-Control-Allow-Origin": request.headers.get("origin") || "*",
+          "Access-Control-Allow-Credentials": "true",
+        },
+      },
+    );
 
     // Set HTTP-only cookies for web clients
     const isProduction = process.env.NODE_ENV === "production";
@@ -172,7 +232,7 @@ export async function POST(request: NextRequest) {
     response.cookies.set("accessToken", tokenResponse.accessToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: "strict",
+      sameSite: isProduction ? "none" : "lax",
       maxAge: tokenResponse.expiresIn,
       path: "/",
     });
@@ -180,13 +240,15 @@ export async function POST(request: NextRequest) {
     response.cookies.set("refreshToken", tokenResponse.refreshToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: "strict",
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: "/",
     });
 
     return response;
   } catch (error) {
+    console.error("[LOGIN] Error:", error);
+
     log.exception(error as Error, "AUTH_LOGIN", {
       path: "/api/auth/login",
       ip: request.headers.get("x-forwarded-for") || "unknown",
@@ -196,20 +258,32 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: "Internal server error",
+        details:
+          process.env.NODE_ENV === "development"
+            ? (error as Error).message
+            : undefined,
       },
-      { status: 500 },
+      {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": request.headers.get("origin") || "*",
+          "Access-Control-Allow-Credentials": "true",
+        },
+      },
     );
   }
 }
 
 // Handle OPTIONS for CORS
-export async function OPTIONS() {
+export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": request.headers.get("origin") || "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Allow-Credentials": "true",
+      "Access-Control-Max-Age": "86400",
     },
   });
 }
