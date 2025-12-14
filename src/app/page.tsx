@@ -36,7 +36,7 @@ export default function Home() {
       className={`min-h-screen transition-colors duration-500 ${
         darkMode
           ? "bg-linear-to-br from-black via-neutral-900 to-emerald-950 text-white"
-          : "bg-gray-100 text-gray-800"
+          : "bg-linear-to-br from-gray-50 via-white to-emerald-50 text-gray-800"
       }`}
     >
       {/* === THEME TOGGLE === */}
@@ -46,7 +46,7 @@ export default function Home() {
         className={`fixed top-3 right-5 p-3 rounded-full shadow-md border backdrop-blur-md z-30 ${
           darkMode
             ? "bg-neutral-900/80 border-emerald-700 text-emerald-300"
-            : "bg-white/80 border-gray-300 text-emerald-700"
+            : "bg-white/80 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
         }`}
       >
         {darkMode ? <Sun size={18} /> : <Moon size={18} />}
@@ -58,7 +58,7 @@ export default function Home() {
         className={`sticky top-0 z-20 backdrop-blur-md transition-all border-b ${
           darkMode
             ? "bg-neutral-950/30 border-emerald-800/40"
-            : "bg-white/70 border-gray-300/40"
+            : "bg-white/70 border-emerald-200/40"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
@@ -191,7 +191,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div
               className={`rounded p-3 ${
-                darkMode ? "bg-neutral-800" : "bg-white"
+                darkMode ? "bg-neutral-800" : "bg-white/80 backdrop-blur-sm border border-emerald-100"
               }`}
             >
               <div className="font-medium text-red-400">System Admin</div>
@@ -201,7 +201,7 @@ export default function Home() {
 
             <div
               className={`rounded p-3 ${
-                darkMode ? "bg-neutral-800" : "bg-white"
+                darkMode ? "bg-neutral-800" : "bg-white/80 backdrop-blur-sm border border-emerald-100"
               }`}
             >
               <div className="font-medium text-blue-400">Organization</div>
@@ -211,7 +211,7 @@ export default function Home() {
 
             <div
               className={`rounded p-3 ${
-                darkMode ? "bg-neutral-800" : "bg-white"
+                darkMode ? "bg-neutral-800" : "bg-white/80 backdrop-blur-sm border border-emerald-100"
               }`}
             >
               <div className="font-medium text-green-400">Voter</div>
@@ -246,7 +246,7 @@ export default function Home() {
               className={`group p-8 rounded-2xl shadow-2xl border transition-all hover:scale-105 ${
                 darkMode
                   ? "bg-linear-to-br from-neutral-900 to-neutral-800 border-emerald-900/50 hover:border-emerald-700/70"
-                  : "bg-white border-gray-300 hover:border-emerald-500"
+                  : "bg-linear-to-br from-white to-emerald-50/30 border-emerald-200 hover:border-emerald-400"
               }`}
             >
               <h3 className="text-2xl font-bold text-emerald-400 mb-4 group-hover:text-emerald-300 transition-colors">
@@ -269,7 +269,7 @@ export default function Home() {
         className={`mt-12 border-t py-10 ${
           darkMode
             ? "bg-neutral-900/60 border-emerald-800/30"
-            : "bg-white border-gray-200"
+            : "bg-white/80 backdrop-blur-sm border-emerald-200"
         }`}
       >
         <div className="text-center max-w-7xl mx-auto px-6 text-sm">

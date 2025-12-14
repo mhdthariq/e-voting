@@ -1,44 +1,47 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
-  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
-  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<"verifying" | "success" | "error">(
+    "verifying",
+  );
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const verifyEmail = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
+        const token = urlParams.get("token");
 
         if (token) {
           // Manual token verification (fallback)
-          const response = await fetch('/api/auth/verify-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          const response = await fetch("/api/auth/verify-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token }),
           });
 
           const data = await response.json();
 
           if (response.ok) {
-            setStatus('success');
-            setMessage('Email verified successfully! Redirecting to login...');
-            setTimeout(() => router.push('/auth/login'), 3000);
+            setStatus("success");
+            setMessage("Email verified successfully! Redirecting to login...");
+            setTimeout(() => router.push("/auth/login"), 3000);
           } else {
-            throw new Error(data.message || 'Verification failed');
+            throw new Error(data.message || "Verification failed");
           }
         } else {
-          throw new Error('No verification token found in URL');
+          throw new Error("No verification token found in URL");
         }
       } catch (error) {
-        console.error('Verification error:', error);
-        setStatus('error');
-        setMessage(error instanceof Error ? error.message : 'Email verification failed');
+        console.error("Verification error:", error);
+        setStatus("error");
+        setMessage(
+          error instanceof Error ? error.message : "Email verification failed",
+        );
       }
     };
 
@@ -46,24 +49,40 @@ export default function VerifyEmailPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        {status === 'verifying' && (
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 via-white to-emerald-50 py-12 px-4">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-emerald-200">
+        {status === "verifying" && (
           <div className="text-center">
             <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
-            <h2 className="mt-6 text-2xl font-bold text-gray-900">Verifying your email...</h2>
-            <p className="mt-2 text-sm text-gray-600">Please wait while we verify your account</p>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900">
+              Verifying your email...
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Please wait while we verify your account
+            </p>
           </div>
         )}
 
-        {status === 'success' && (
+        {status === "success" && (
           <div className="text-center">
             <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="h-6 w-6 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
-            <h2 className="mt-6 text-2xl font-bold text-gray-900">Email Verified!</h2>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900">
+              Email Verified!
+            </h2>
             <p className="mt-2 text-sm text-gray-600">{message}</p>
             <div className="mt-6 bg-green-50 border border-green-200 rounded-md p-4">
               <div className="text-sm text-green-700">
@@ -78,24 +97,36 @@ export default function VerifyEmailPage() {
           </div>
         )}
 
-        {status === 'error' && (
+        {status === "error" && (
           <div className="text-center">
             <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-              <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-6 w-6 text-red-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </div>
-            <h2 className="mt-6 text-2xl font-bold text-gray-900">Verification Failed</h2>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900">
+              Verification Failed
+            </h2>
             <p className="mt-2 text-sm text-gray-600">{message}</p>
             <div className="mt-6 space-y-3">
               <button
-                onClick={() => router.push('/auth/login')}
+                onClick={() => router.push("/auth/login")}
                 className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 Go to Login
               </button>
               <button
-                onClick={() => router.push('/auth/register')}
+                onClick={() => router.push("/auth/register")}
                 className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
               >
                 Register Again

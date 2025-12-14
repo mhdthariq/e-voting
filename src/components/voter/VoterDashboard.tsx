@@ -226,14 +226,14 @@ const VotingModal: React.FC<VotingModalProps> = ({
             className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl ${
               darkMode
                 ? "bg-neutral-900 border border-emerald-800"
-                : "bg-white border border-gray-200"
+                : "bg-white/90 backdrop-blur-md border border-emerald-200"
             }`}
           >
             <div
               className={`sticky top-0 z-10 flex justify-between items-center p-6 border-b ${
                 darkMode
                   ? "bg-neutral-900/95 border-emerald-800"
-                  : "bg-white/95 border-gray-200"
+                  : "bg-white/95 border-emerald-200"
               }`}
             >
               <div>
@@ -292,7 +292,7 @@ const VotingModal: React.FC<VotingModalProps> = ({
                             : "border-emerald-600 bg-emerald-50"
                           : darkMode
                             ? "border-neutral-700 bg-neutral-800/50 hover:border-emerald-700"
-                            : "border-gray-200 bg-white hover:border-emerald-400 hover:shadow-md"
+                            : "border-emerald-200 bg-white/80 hover:border-emerald-400 hover:shadow-md"
                       }`}
                     >
                       {selectedCandidate === candidate.id && (
@@ -344,7 +344,7 @@ const VotingModal: React.FC<VotingModalProps> = ({
               className={`sticky bottom-0 p-6 border-t flex justify-end items-center gap-3 ${
                 darkMode
                   ? "bg-neutral-900 border-emerald-800"
-                  : "bg-white border-gray-200"
+                  : "bg-white/90 backdrop-blur-md border-emerald-200"
               }`}
             >
               <button
@@ -352,7 +352,7 @@ const VotingModal: React.FC<VotingModalProps> = ({
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   darkMode
                     ? "text-gray-300 hover:bg-neutral-800"
-                    : "text-gray-600 hover:bg-gray-100"
+                    : "text-gray-600 hover:bg-emerald-50"
                 }`}
                 disabled={isSubmitting}
               >
@@ -597,7 +597,7 @@ export default function VoterDashboard() {
   if (isLoading) {
     return (
       <div
-        className={`min-h-screen flex items-center justify-center ${darkMode ? "bg-linear-to-br from-black via-neutral-900 to-emerald-950 text-white" : "bg-gray-100 text-gray-700"}`}
+        className={`min-h-screen flex items-center justify-center ${darkMode ? "bg-linear-to-br from-black via-neutral-900 to-emerald-950 text-white" : "bg-linear-to-br from-gray-50 via-white to-emerald-50 text-gray-700"}`}
       >
         <div className="text-center">
           <div
@@ -633,7 +633,7 @@ export default function VoterDashboard() {
         className={
           darkMode
             ? "bg-neutral-950/30 border-b border-emerald-800/30 sticky top-0 z-40 backdrop-blur-md"
-            : "bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm"
+            : "bg-white/80 border-b border-emerald-200 sticky top-0 z-40 shadow-sm backdrop-blur-md"
         }
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -666,7 +666,7 @@ export default function VoterDashboard() {
                 className={`p-2 rounded-full transition-all border ${
                   darkMode
                     ? "bg-neutral-900/50 border-emerald-800/50 text-emerald-300 hover:bg-neutral-800"
-                    : "bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400"
+                    : "bg-white/80 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400"
                 }`}
                 title="Toggle Theme"
               >
@@ -679,7 +679,7 @@ export default function VoterDashboard() {
                 className={`flex items-center gap-2 sm:gap-3 pl-1 pr-3 py-1 rounded-full border transition-all group max-w-37.5 sm:max-w-none ${
                   darkMode
                     ? "border-emerald-800/50 bg-neutral-900/50 hover:bg-neutral-800 hover:border-emerald-700"
-                    : "border-gray-300 bg-white hover:bg-gray-50 hover:border-emerald-500 shadow-sm"
+                    : "border-emerald-200 bg-white/80 hover:bg-emerald-50 hover:border-emerald-500 shadow-sm"
                 }`}
               >
                 {/* Avatar */}
@@ -735,7 +735,7 @@ export default function VoterDashboard() {
         className={
           darkMode
             ? "bg-neutral-900/40 border-b border-emerald-800/30"
-            : "bg-white border-b border-gray-200"
+            : "bg-white/80 backdrop-blur-sm border-b border-emerald-200"
         }
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -789,7 +789,7 @@ export default function VoterDashboard() {
                 className={
                   darkMode
                     ? "p-5 rounded-lg bg-neutral-900 border border-emerald-800 shadow hover:border-emerald-600 transition-colors"
-                    : "p-5 rounded-lg bg-white border border-gray-200 shadow-sm"
+                    : "p-5 rounded-lg bg-white/80 backdrop-blur-sm border border-emerald-200 shadow-sm hover:border-emerald-400"
                 }
               >
                 <div className="flex items-center">
@@ -822,7 +822,7 @@ export default function VoterDashboard() {
                 className={
                   darkMode
                     ? "p-5 rounded-lg bg-neutral-900 border border-emerald-800 shadow hover:border-emerald-600 transition-colors"
-                    : "p-5 rounded-lg bg-white border border-gray-200 shadow-sm"
+                    : "p-5 rounded-lg bg-white/80 backdrop-blur-sm border border-emerald-200 shadow-sm hover:border-emerald-400"
                 }
               >
                 <div className="flex items-center">
@@ -859,7 +859,7 @@ export default function VoterDashboard() {
                 className={
                   darkMode
                     ? "p-5 rounded-lg bg-neutral-900 border border-emerald-800 shadow hover:border-emerald-600 transition-colors"
-                    : "p-5 rounded-lg bg-white border border-gray-200 shadow-sm"
+                    : "p-5 rounded-lg bg-white/80 backdrop-blur-sm border border-emerald-200 shadow-sm hover:border-emerald-400"
                 }
               >
                 <div className="flex items-center">
@@ -896,7 +896,7 @@ export default function VoterDashboard() {
                 className={
                   darkMode
                     ? "p-5 rounded-lg bg-neutral-900 border border-emerald-800 shadow hover:border-emerald-600 transition-colors"
-                    : "p-5 rounded-lg bg-white border border-gray-200 shadow-sm"
+                    : "p-5 rounded-lg bg-white/80 backdrop-blur-sm border border-emerald-200 shadow-sm hover:border-emerald-400"
                 }
               >
                 <div className="flex items-center">
@@ -933,7 +933,7 @@ export default function VoterDashboard() {
               className={
                 darkMode
                   ? "bg-neutral-900 border border-emerald-800 rounded-lg shadow-lg overflow-hidden"
-                  : "bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+                  : "bg-white/80 backdrop-blur-sm border border-emerald-200 rounded-lg shadow-sm overflow-hidden"
               }
             >
               <div
@@ -963,7 +963,7 @@ export default function VoterDashboard() {
                         return (
                           <div
                             key={election.id}
-                            className={`flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-lg border ${darkMode ? "border-emerald-800/50 bg-black/20" : "border-gray-200 bg-gray-50"}`}
+                            className={`flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-lg border ${darkMode ? "border-emerald-800/50 bg-black/20" : "border-emerald-200 bg-emerald-50/30"}`}
                           >
                             <div>
                               <h4
@@ -1016,7 +1016,7 @@ export default function VoterDashboard() {
                 {dashboardData.activeElections.length > 0 && (
                   <button
                     onClick={() => setActiveTab("active")}
-                    className={`mt-4 w-full py-2 text-sm font-medium rounded border transition-colors ${darkMode ? "border-emerald-800 text-emerald-400 hover:bg-emerald-900/20" : "border-gray-300 text-gray-700 hover:bg-gray-50 bg-white"}`}
+                    className={`mt-4 w-full py-2 text-sm font-medium rounded border transition-colors ${darkMode ? "border-emerald-800 text-emerald-400 hover:bg-emerald-900/20" : "border-emerald-200 text-emerald-700 hover:bg-emerald-50 bg-white/80"}`}
                   >
                     View All Active Elections
                   </button>
@@ -1029,7 +1029,7 @@ export default function VoterDashboard() {
               className={
                 darkMode
                   ? "bg-neutral-900 border border-blue-800 rounded-lg shadow-lg overflow-hidden"
-                  : "bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+                  : "bg-white/80 backdrop-blur-sm border border-blue-200 rounded-lg shadow-sm overflow-hidden"
               }
             >
               <div
@@ -1058,7 +1058,7 @@ export default function VoterDashboard() {
                         return (
                           <div
                             key={election.id}
-                            className={`flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-lg border ${darkMode ? "border-blue-800/50 bg-black/20" : "border-blue-200 bg-blue-50"}`}
+                            className={`flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-lg border ${darkMode ? "border-blue-800/50 bg-black/20" : "border-blue-200 bg-blue-50/30"}`}
                           >
                             <div>
                               <h4
@@ -1090,7 +1090,7 @@ export default function VoterDashboard() {
                 {dashboardData.upcomingElections.length > 0 && (
                   <button
                     onClick={() => setActiveTab("upcoming")}
-                    className={`mt-4 w-full py-2 text-sm font-medium rounded border transition-colors ${darkMode ? "border-blue-800 text-blue-400 hover:bg-blue-900/20" : "border-gray-300 text-gray-700 hover:bg-gray-50 bg-white"}`}
+                    className={`mt-4 w-full py-2 text-sm font-medium rounded border transition-colors ${darkMode ? "border-blue-800 text-blue-400 hover:bg-blue-900/20" : "border-blue-200 text-blue-700 hover:bg-blue-50 bg-white/80"}`}
                   >
                     View All Upcoming Elections
                   </button>

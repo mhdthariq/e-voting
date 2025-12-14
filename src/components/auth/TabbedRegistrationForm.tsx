@@ -73,7 +73,7 @@ export default function TabbedRegistrationForm() {
 
   const handleUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (userFormData.password !== userFormData.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -145,14 +145,26 @@ export default function TabbedRegistrationForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 via-white to-emerald-50 py-12 px-4">
         <div className="max-w-md w-full space-y-8 text-center">
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-green-100">
-            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <svg
+              className="h-6 w-6 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
-          <h2 className="text-3xl font-extrabold text-gray-900">Registration Successful!</h2>
+          <h2 className="text-3xl font-extrabold text-gray-900">
+            Registration Successful!
+          </h2>
           <p className="text-sm text-gray-600">
             {activeTab === "user"
               ? "Please check your email to verify your account."
@@ -170,24 +182,28 @@ export default function TabbedRegistrationForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 via-white to-emerald-50 py-12 px-4">
       <div className="max-w-2xl w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900">Create Account</h2>
-          <p className="mt-2 text-sm text-gray-600">Join BlockVote - Secure & Transparent Voting</p>
+          <h2 className="text-3xl font-extrabold text-gray-900">
+            Create Account
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Join BlockVote - Secure & Transparent Voting
+          </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="border-b border-gray-200">
+        <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-lg border border-emerald-200">
+          <div className="border-b border-emerald-200">
             <nav className="flex -mb-px">
               <button
                 onClick={() => setActiveTab("user")}
                 className={`w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm ${
                   activeTab === "user"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-emerald-500 text-emerald-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-emerald-300"
                 }`}
               >
                 Register as User
@@ -196,8 +212,8 @@ export default function TabbedRegistrationForm() {
                 onClick={() => setActiveTab("organization")}
                 className={`w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm ${
                   activeTab === "organization"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-emerald-500 text-emerald-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-emerald-300"
                 }`}
               >
                 Register Organization
@@ -210,7 +226,9 @@ export default function TabbedRegistrationForm() {
             {activeTab === "user" && (
               <form onSubmit={handleUserSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Full Name *</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Full Name *
+                  </label>
                   <input
                     type="text"
                     name="fullName"
@@ -223,7 +241,9 @@ export default function TabbedRegistrationForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Email *</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Email *
+                  </label>
                   <input
                     type="email"
                     name="email"
@@ -236,7 +256,9 @@ export default function TabbedRegistrationForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Username *</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Username *
+                  </label>
                   <input
                     type="text"
                     name="username"
@@ -249,7 +271,9 @@ export default function TabbedRegistrationForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Student ID (Optional)</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Student ID (Optional)
+                  </label>
                   <input
                     type="text"
                     name="studentId"
@@ -261,7 +285,9 @@ export default function TabbedRegistrationForm() {
                 </div>
 
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700">Password *</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Password *
+                  </label>
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
@@ -281,7 +307,9 @@ export default function TabbedRegistrationForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Confirm Password *</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Confirm Password *
+                  </label>
                   <input
                     type="password"
                     name="confirmPassword"
@@ -314,7 +342,9 @@ export default function TabbedRegistrationForm() {
               <form onSubmit={handleOrgSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">Organization Name *</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Organization Name *
+                    </label>
                     <input
                       type="text"
                       name="organizationName"
@@ -327,7 +357,9 @@ export default function TabbedRegistrationForm() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Contact Name *</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Contact Name *
+                    </label>
                     <input
                       type="text"
                       name="contactName"
@@ -340,7 +372,9 @@ export default function TabbedRegistrationForm() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Contact Email *</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Contact Email *
+                    </label>
                     <input
                       type="email"
                       name="contactEmail"
@@ -353,7 +387,9 @@ export default function TabbedRegistrationForm() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Username *</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Username *
+                    </label>
                     <input
                       type="text"
                       name="username"
@@ -366,7 +402,9 @@ export default function TabbedRegistrationForm() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Phone</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Phone
+                    </label>
                     <input
                       type="tel"
                       name="phone"
@@ -378,7 +416,9 @@ export default function TabbedRegistrationForm() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Website</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Website
+                    </label>
                     <input
                       type="url"
                       name="website"
@@ -390,7 +430,9 @@ export default function TabbedRegistrationForm() {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">Description *</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Description *
+                    </label>
                     <textarea
                       name="description"
                       required
@@ -403,7 +445,9 @@ export default function TabbedRegistrationForm() {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">Address</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Address
+                    </label>
                     <textarea
                       name="address"
                       rows={2}
@@ -415,7 +459,9 @@ export default function TabbedRegistrationForm() {
                   </div>
 
                   <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700">Password *</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Password *
+                    </label>
                     <input
                       type={showPassword ? "text" : "password"}
                       name="password"
@@ -428,7 +474,9 @@ export default function TabbedRegistrationForm() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Confirm Password *</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Confirm Password *
+                    </label>
                     <input
                       type="password"
                       name="confirmPassword"
@@ -463,7 +511,10 @@ export default function TabbedRegistrationForm() {
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{" "}
-            <a href="/auth/login" className="font-medium text-blue-600 hover:text-blue-500">
+            <a
+              href="/auth/login"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
               Sign in here
             </a>
           </p>

@@ -662,7 +662,7 @@ export default function AdminDashboard() {
   if (isCheckingAuth || loading) {
     return (
       <div
-        className={`min-h-screen flex items-center justify-center ${darkMode ? "bg-black" : "bg-gray-50"}`}
+        className={`min-h-screen flex items-center justify-center ${darkMode ? "bg-black" : "bg-linear-to-br from-gray-50 via-white to-emerald-50"}`}
       >
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
       </div>
@@ -678,7 +678,7 @@ export default function AdminDashboard() {
       className={
         darkMode
           ? "min-h-screen flex flex-col bg-linear-to-br from-black via-neutral-900 to-emerald-950 text-white"
-          : "min-h-screen flex flex-col bg-gray-100 text-gray-900"
+          : "min-h-screen flex flex-col bg-linear-to-br from-gray-50 via-white to-emerald-50 text-gray-900"
       }
     >
       {/* HEADER */}
@@ -686,7 +686,7 @@ export default function AdminDashboard() {
         className={
           darkMode
             ? "bg-neutral-950/30 border-b border-emerald-800/30 sticky top-0 z-30 backdrop-blur-md"
-            : "bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm backdrop-blur-md"
+            : "bg-white/80 border-b border-emerald-200 sticky top-0 z-30 shadow-sm backdrop-blur-md"
         }
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
@@ -708,14 +708,14 @@ export default function AdminDashboard() {
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`p-2 rounded-full border ${darkMode ? "bg-neutral-900/50 border-emerald-800/50 text-emerald-300" : "bg-white text-gray-600"}`}
+              className={`p-2 rounded-full border ${darkMode ? "bg-neutral-900/50 border-emerald-800/50 text-emerald-300" : "bg-white/80 border-emerald-200 text-emerald-600 hover:bg-emerald-50"}`}
             >
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
             <button
               onClick={() => setSettingsOpen(true)}
-              className={`flex items-center gap-3 pl-1 pr-3 py-1 rounded-full border ${darkMode ? "border-emerald-800/50 bg-neutral-900/50" : "bg-white border-gray-300"}`}
+              className={`flex items-center gap-3 pl-1 pr-3 py-1 rounded-full border ${darkMode ? "border-emerald-800/50 bg-neutral-900/50" : "bg-white/80 border-emerald-200 hover:bg-emerald-50"}`}
             >
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center border overflow-hidden ${darkMode ? "bg-emerald-900 border-emerald-700 text-emerald-300" : "bg-emerald-100 text-emerald-700"}`}
@@ -869,7 +869,7 @@ export default function AdminDashboard() {
               </div>
 
               <div
-                className={`p-6 rounded-xl border ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
+                className={`p-6 rounded-xl border ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white/80 backdrop-blur-sm border-emerald-200"}`}
               >
                 <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                   <Shield size={18} /> Recent Activity (Live)
@@ -903,7 +903,7 @@ export default function AdminDashboard() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="flex justify-between items-center mb-6">
               <div
-                className={`flex items-center px-3 py-2 rounded-lg border w-full max-w-md ${darkMode ? "bg-neutral-800 border-emerald-800" : "bg-white border-gray-300"}`}
+                className={`flex items-center px-3 py-2 rounded-lg border w-full max-w-md ${darkMode ? "bg-neutral-800 border-emerald-800" : "bg-white/80 border-emerald-200"}`}
               >
                 <Search size={18} className="opacity-50 mr-2" />
                 <input
@@ -946,7 +946,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody
-                  className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-gray-200 bg-white"}`}
+                  className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-emerald-100 bg-white/50"}`}
                 >
                   {usersList
                     .filter((u) =>
@@ -1019,7 +1019,7 @@ export default function AdminDashboard() {
           >
             {/* Pending Approvals */}
             <div
-              className={`p-6 rounded-xl border ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
+              className={`p-6 rounded-xl border ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white/80 backdrop-blur-sm border-emerald-200"}`}
             >
               <h3 className="font-bold text-lg mb-4 text-yellow-500 flex items-center gap-2">
                 <AlertTriangle size={18} /> Pending Registrations
@@ -1103,7 +1103,7 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody
-                    className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-gray-200 bg-white"}`}
+                    className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-emerald-100 bg-white/50"}`}
                   >
                     {orgsList.length === 0 ? (
                       <tr>
@@ -1211,7 +1211,7 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody
-                      className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-gray-200 bg-white"}`}
+                      className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-emerald-100 bg-white/50"}`}
                     >
                       {electionsList.length === 0 ? (
                         <tr>
@@ -1291,7 +1291,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setSelectedElection(null)}
-                    className={`p-2 rounded-lg ${darkMode ? "hover:bg-neutral-800" : "hover:bg-gray-100"}`}
+                    className={`p-2 rounded-lg ${darkMode ? "hover:bg-neutral-800" : "hover:bg-emerald-50"}`}
                   >
                     <ChevronLeft size={24} />
                   </button>
@@ -1310,7 +1310,7 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* 1. PARTICIPATION CARD */}
                   <div
-                    className={`p-6 rounded-xl border flex flex-col ${darkMode ? "bg-neutral-900 border-emerald-900" : "bg-white border-gray-200"}`}
+                    className={`p-6 rounded-xl border flex flex-col ${darkMode ? "bg-neutral-900 border-emerald-900" : "bg-white/80 backdrop-blur-sm border-emerald-200"}`}
                   >
                     <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
                       <Users size={18} className="text-blue-500" /> Turnout
@@ -1365,7 +1365,7 @@ export default function AdminDashboard() {
 
                   {/* 2. RESULTS CARD */}
                   <div
-                    className={`p-6 rounded-xl border flex flex-col ${darkMode ? "bg-neutral-900 border-emerald-900" : "bg-white border-gray-200"}`}
+                    className={`p-6 rounded-xl border flex flex-col ${darkMode ? "bg-neutral-900 border-emerald-900" : "bg-white/80 backdrop-blur-sm border-emerald-200"}`}
                   >
                     <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
                       <FileText size={18} className="text-purple-500" />{" "}
@@ -1398,7 +1398,7 @@ export default function AdminDashboard() {
                                 </span>
                               </div>
                               <div
-                                className={`h-3 rounded-full overflow-hidden ${darkMode ? "bg-neutral-800" : "bg-gray-100"}`}
+                                className={`h-3 rounded-full overflow-hidden ${darkMode ? "bg-neutral-800" : "bg-emerald-100"}`}
                               >
                                 <div
                                   className={`h-full rounded-full transition-all duration-1000 ${isWinner ? "bg-amber-400" : "bg-emerald-600"}`}
@@ -1436,7 +1436,7 @@ export default function AdminDashboard() {
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div
-                className={`p-6 rounded-xl border flex flex-col items-center justify-center ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
+                className={`p-6 rounded-xl border flex flex-col items-center justify-center ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white/80 backdrop-blur-sm border-emerald-200"}`}
               >
                 <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
                   <Users size={18} /> User Roles Distribution
@@ -1451,7 +1451,7 @@ export default function AdminDashboard() {
                 />
               </div>
               <div
-                className={`p-6 rounded-xl border ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
+                className={`p-6 rounded-xl border ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white/80 backdrop-blur-sm border-emerald-200"}`}
               >
                 <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
                   <Server size={18} /> System Volume
@@ -1470,7 +1470,7 @@ export default function AdminDashboard() {
             </div>
 
             <div
-              className={`p-6 rounded-xl border ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
+              className={`p-6 rounded-xl border ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white/80 backdrop-blur-sm border-emerald-200"}`}
             >
               <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
                 <HardDrive size={20} /> Data Management
@@ -1534,7 +1534,7 @@ export default function AdminDashboard() {
                       setActorFilter(e.target.value);
                       setLogPage(1);
                     }}
-                    className={`w-full appearance-none pl-10 pr-8 py-2 rounded-lg text-sm font-medium border outline-none cursor-pointer ${darkMode ? "bg-neutral-800 border-emerald-800 text-emerald-100" : "bg-white border-gray-300 text-gray-700"}`}
+                    className={`w-full appearance-none pl-10 pr-8 py-2 rounded-lg text-sm font-medium border outline-none cursor-pointer ${darkMode ? "bg-neutral-800 border-emerald-800 text-emerald-100" : "bg-white/80 border-emerald-200 text-gray-700"}`}
                   >
                     <option value="ALL">All Actors</option>
                     <option value="ADMIN">Admins</option>
@@ -1593,7 +1593,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody
-                  className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-gray-200 bg-white"}`}
+                  className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-emerald-100 bg-white/50"}`}
                 >
                   {logsList.length === 0 && !logLoading ? (
                     <tr>
@@ -1687,7 +1687,7 @@ export default function AdminDashboard() {
               </button>
             </div>
             <div
-              className={`p-6 rounded-xl border ${darkMode ? "bg-neutral-900 border-emerald-900" : "bg-white border-gray-200"}`}
+              className={`p-6 rounded-xl border ${darkMode ? "bg-neutral-900 border-emerald-900" : "bg-white/80 backdrop-blur-sm border-emerald-200"}`}
             >
               <p className="mb-6 opacity-60 text-sm">
                 Real-time immutable record of all mining blocks and vote
@@ -1735,7 +1735,7 @@ export default function AdminDashboard() {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           >
             <div
-              className={`w-full max-w-md p-6 rounded-xl border shadow-2xl ${darkMode ? "bg-neutral-900 border-emerald-700 text-white" : "bg-white border-gray-200 text-gray-900"}`}
+              className={`w-full max-w-md p-6 rounded-xl border shadow-2xl ${darkMode ? "bg-neutral-900 border-emerald-700 text-white" : "bg-white/90 backdrop-blur-md border-emerald-200 text-gray-900"}`}
             >
               <h3 className="text-xl font-bold mb-4">
                 {editingUser ? "Edit User" : "Create New User"}
@@ -1790,7 +1790,7 @@ export default function AdminDashboard() {
                     onChange={(e) =>
                       setUserForm({ ...userForm, role: e.target.value })
                     }
-                    className={`w-full p-2 rounded border bg-transparent ${darkMode ? "border-emerald-800 bg-neutral-900" : "border-gray-300 bg-white"}`}
+                    className={`w-full p-2 rounded border bg-transparent ${darkMode ? "border-emerald-800 bg-neutral-900" : "border-emerald-200 bg-white/80"}`}
                   >
                     <option value="voter">Voter</option>
                     <option value="organization">Organization</option>
@@ -1835,7 +1835,7 @@ export default function AdminDashboard() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
+              className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white/90 backdrop-blur-md border-emerald-200"}`}
             >
               <div
                 className={`p-6 border-b ${darkMode ? "border-emerald-800/30" : "border-gray-200"}`}
@@ -1919,7 +1919,7 @@ export default function AdminDashboard() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${darkMode ? "bg-neutral-900 border-red-800" : "bg-white border-red-200"}`}
+              className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${darkMode ? "bg-neutral-900 border-red-800" : "bg-white/90 backdrop-blur-md border-red-200"}`}
             >
               <div
                 className={`p-6 border-b ${darkMode ? "border-red-800/30" : "border-red-200"}`}
