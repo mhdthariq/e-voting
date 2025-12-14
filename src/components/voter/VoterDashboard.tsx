@@ -53,6 +53,7 @@ interface Election {
   _count: {
     votes: number;
     voters: number;
+    UserElectionParticipation: number;
   };
   candidates?: Candidate[];
 }
@@ -1159,7 +1160,8 @@ export default function VoterDashboard() {
                             <span
                               className={`font-medium ${darkMode ? "" : "text-gray-900"}`}
                             >
-                              {election._count.voters}
+                              {election._count.UserElectionParticipation ||
+                                election._count.voters}
                             </span>
                           </div>
                         </div>
@@ -1295,7 +1297,7 @@ export default function VoterDashboard() {
                       <div
                         className="h-full bg-emerald-500"
                         style={{
-                          width: `${Math.min(100, (election._count.votes / Math.max(1, election._count.voters)) * 100)}%`,
+                          width: `${Math.min(100, (election._count.votes / Math.max(1, election._count.UserElectionParticipation || election._count.voters)) * 100)}%`,
                         }}
                       ></div>
                     </div>
