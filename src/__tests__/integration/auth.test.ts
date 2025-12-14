@@ -20,8 +20,9 @@ describe('Authentication Integration (Requires Running Server)', () => {
 
     beforeAll(async () => {
         try {
-            const res = await fetch(`${BASE_URL}/`);
-            if (res.status === 200) serverRunning = true;
+            // Check if server is reachable (even 404 or 405 means it's running)
+            const res = await fetch(`${BASE_URL}/api/auth/login`);
+            if (res.status >= 200 && res.status < 500) serverRunning = true;
         } catch {
             console.warn("Server not running. Skipping integration tests.");
         }

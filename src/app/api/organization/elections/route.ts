@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/database/client";
 import { auth } from "@/lib/auth/jwt";
 import { AuditService } from "@/lib/database/services/audit.service";
-
-const prisma = new PrismaClient();
 
 /**
  * GET /api/organization/elections
@@ -273,7 +271,7 @@ export async function POST(request: NextRequest) {
         candidates: result.candidates,
       },
       message: "Election created successfully",
-    });
+    }, { status: 201 });
   } catch (error) {
     console.error("Error creating election:", error);
     return NextResponse.json(

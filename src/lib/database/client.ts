@@ -102,7 +102,7 @@ export const cleanupDatabase = async () => {
     >`SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename NOT LIKE '_prisma_migrations';`;
 
     for (const { tablename } of tablenames) {
-      await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${tablename}" CASCADE;`);
+      await prisma.$executeRawUnsafe(`DELETE FROM "${tablename}";`);
     }
   }
 };

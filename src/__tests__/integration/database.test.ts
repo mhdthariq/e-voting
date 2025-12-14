@@ -5,6 +5,7 @@
 import { PrismaClient } from "@prisma/client";
 import { UserService } from "@/lib/database/services/user.service";
 import { AuditService } from "@/lib/database/services/audit.service";
+import { cleanupDatabase } from "@/lib/database/client";
 import path from 'path';
 import dotenv from 'dotenv';
 
@@ -16,9 +17,17 @@ describe("Database Integration Tests", () => {
     beforeAll(async () => {
         prisma = new PrismaClient();
         await prisma.$connect();
+        // Ensure clean state before start
+        if (process.env.NODE_ENV === 'test') {
+             await cleanupDatabase();
+        }
     });
 
     afterAll(async () => {
+        // Clean up dummy data created during tests
+        if (process.env.NODE_ENV === 'test') {
+             await cleanupDatabase();
+        }
         await prisma.$disconnect();
     });
 
@@ -74,8 +83,16 @@ describe("Database Integration Tests", () => {
 
     describe('Audit Logs', () => {
         it('should create and retrieve audit logs', async () => {
-             await AuditService.createAuditLog(1, "JEST_TEST", "DB", 1, "Test Log", "127.0.0.1", "jest");
-             const logs = await AuditService.getAuditLogs(1, 5);
+             // Create a user for the audit log
+             const user = await UserService.createUser({
+                 username: "audit_test_user",
+                 email: "audit@test.com",
+                 password: "Password123!",
+                 role: "voter"
+             });
+
+             await AuditService.createAuditLog(user.id, "JEST_TEST", "DB", 1, "Test Log", "127.0.0.1", "jest");
+             const logs = await AuditService.getUserAuditLogs(user.id, 1, 5);
              expect(logs.data.length).toBeGreaterThan(0);
              expect(logs.data[0].action).toBe("JEST_TEST");
         });
@@ -85,7 +102,7 @@ describe("Database Integration Tests", () => {
         it('should have required tables accessible', async () => {
              // Just checking a few key tables to ensure DB is up and schema seeded
              const countUsers = await prisma.user.count();
-             expect(countUsers).toBeGreaterThanOrEqual(1); // Seed data
+             expect(countUsers).toBeGreaterThanOrEqual(0); // DB might be empty after cleanup
              
              const elections = await prisma.election.count();
              expect(elections).toBeGreaterThanOrEqual(0);
