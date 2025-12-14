@@ -58,7 +58,7 @@ async function getUserFromToken(request: NextRequest) {
     return null;
   }
 
-  const verification = auth.verifyToken(token);
+  const verification = await auth.verifyToken(token);
   if (!verification.isValid || !verification.payload) {
     return null;
   }

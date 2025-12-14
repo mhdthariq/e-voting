@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
+
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -11,52 +11,11 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     const verifyEmail = async () => {
-      // Check if Supabase is configured
-      if (!isSupabaseConfigured()) {
-        setStatus('error');
-        setMessage('Email verification is not configured. Using manual verification instead.');
-        return;
-      }
-
       try {
-        // Get the token from URL hash (Supabase magic link format)
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
-
-        // Also check URL params (alternative format)
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
 
-        if (accessToken && refreshToken) {
-          // Supabase magic link verification
-          const { data: { user }, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-
-          if (error) throw error;
-
-          // Activate user in our database
-          const response = await fetch('/api/auth/verify-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: user?.user_metadata?.userId,
-              email: user?.email,
-              type: type || 'signup',
-            }),
-          });
-
-          if (response.ok) {
-            setStatus('success');
-            setMessage('Email verified successfully! Redirecting to login...');
-            setTimeout(() => router.push('/auth/login'), 3000);
-          } else {
-            throw new Error('Failed to verify email in database');
-          }
-        } else if (token) {
+        if (token) {
           // Manual token verification (fallback)
           const response = await fetch('/api/auth/verify-email', {
             method: 'POST',

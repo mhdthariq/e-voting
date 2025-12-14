@@ -20,7 +20,7 @@ export async function GET(
 
     const token = authHeader.substring(7);
     let decoded;
-    try { decoded = auth.verifyToken(token).payload; } catch { return NextResponse.json({ success: false }, { status: 401 }); }
+    try { const verification = await auth.verifyToken(token); decoded = verification.payload; } catch { return NextResponse.json({ success: false }, { status: 401 }); }
     
     const userId = typeof decoded?.userId === "string" ? parseInt(decoded.userId, 10) : decoded?.userId;
     if (!userId) return NextResponse.json({ success: false }, { status: 401 });

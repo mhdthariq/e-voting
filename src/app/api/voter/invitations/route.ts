@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tokenResult = auth.verifyToken(token);
+    const tokenResult = await auth.verifyToken(token);
     if (!tokenResult.isValid || !tokenResult.payload?.userId) {
       return NextResponse.json(
         {

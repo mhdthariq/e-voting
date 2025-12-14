@@ -57,7 +57,7 @@ export default function ChangePasswordModal({ open, onClose, darkMode }: Props) 
       } else {
         setError(json.message || "Failed to change password");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred");
     } finally {
       setLoading(false);

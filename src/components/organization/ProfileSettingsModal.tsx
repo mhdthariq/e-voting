@@ -74,7 +74,7 @@ export default function ProfileSettingsModal({ open, onClose, darkMode, user, on
       } else {
         alert(json.message);
       }
-    } catch (e) {
+    } catch {
       alert("Failed to update profile");
     } finally {
       setLoading(false);
@@ -104,11 +104,14 @@ export default function ProfileSettingsModal({ open, onClose, darkMode, user, on
           {/* Image Upload */}
           <div className="flex flex-col items-center mb-8">
             <div className="relative group cursor-pointer">
-              <img
-                src={profileImage || `https://ui-avatars.com/api/?name=${username}&background=10a37f&color=fff`}
-                alt="profile"
-                className={`w-24 h-24 rounded-full object-cover border-4 ${darkMode ? "border-emerald-800" : "border-emerald-100"}`}
-              />
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={profileImage || `https://ui-avatars.com/api/?name=${username}&background=10a37f&color=fff`}
+                  alt="profile"
+                  className={`w-24 h-24 rounded-full object-cover border-4 ${darkMode ? "border-emerald-800" : "border-emerald-100"}`}
+                />
+              </>
               <label className="absolute bottom-0 right-0 bg-emerald-600 p-2 rounded-full text-white cursor-pointer shadow-lg hover:bg-emerald-700 transition-colors">
                 <Camera size={16} />
                 <input

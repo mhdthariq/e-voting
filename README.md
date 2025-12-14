@@ -19,17 +19,26 @@ A prototype e-voting system built with Next.js that implements blockchain concep
 
 ### 👥 User Roles
 
-| Role | Capabilities |
-|------|-------------|
-| **Admin** | System oversight, election monitoring, blockchain validation |
+| Role             | Capabilities                                                     |
+| ---------------- | ---------------------------------------------------------------- |
+| **Admin**        | System oversight, election monitoring, blockchain validation     |
 | **Organization** | Create elections, manage candidates, invite voters, view results |
-| **Voter** | Receive credentials via email, cast votes securely |
+| **Voter**        | Receive credentials via email, cast votes securely               |
 
-## 🚀 Current Status (65% Complete)
+## 🚀 Current Status (75% Complete)
 
 ### ✅ Completed Features
 
+#### 🔐 Authentication System (100% Complete)
+
+- **Unified Auth**: Custom Prisma-based authentication
+- **JWT Implementation**: `jose` library for Edge Runtime compatibility
+- **Secure Sessions**: HttpOnly cookies and access/refresh token rotation
+- **Role-Based Access**: Middleware protection for Admin, Organization, and Voter roles
+- **Email Verification**: Nodemailer integration for account verification
+
 #### 🔗 Blockchain Infrastructure (100% Complete)
+
 - **CryptoUtils**: Double SHA-256, Ed25519 signatures, canonical serialization
 - **MerkleTree**: Vote integrity proofs and validation
 - **Block**: Mining, validation, vote storage
@@ -37,32 +46,35 @@ A prototype e-voting system built with Next.js that implements blockchain concep
 - **BlockchainManager**: Multi-election blockchain support
 
 #### 🗄️ Database Layer (100% Complete)
-- **Prisma ORM**: Multi-environment support (SQLite/PostgreSQL/MySQL)
-- **11 Database Tables**: Complete schema with all relationships
-- **4 Database Services**: UserService, ElectionService, VoteService, BlockchainService
-- **Automated Seeding**: 7 test users, 1 election, 3 candidates ready for development
-- **Production Ready**: Migration scripts and deployment configuration
+
+- **Dual Support**: Seamless switching between SQLite (local dev/test) and PostgreSQL (production)
+- **Prisma ORM**: Optimized schema with all relationships
+- **Services**: Complete CRUD operations for Users, Elections, Votes
+- **Automated Seeding**: Ready-to-use test data
 
 #### 🏗️ Project Foundation (100% Complete)
+
 - Next.js 15 with TypeScript
 - Tailwind CSS styling
 - Complete type definitions
 - Environment configuration
 - Zero build errors
 
-### 🚧 Next Phase - Authentication System
+### 🚧 Next Phase - User Interfaces
 
-- JWT token implementation
-- Login/logout API endpoints
-- Role-based middleware
-- Password reset functionality
+- Admin dashboard refinement
+- Organization portal
+- Voter interaction flow
+- Real-time results visualization
 
 ## 🛠️ Technology Stack
 
 - **Framework**: Next.js 15 with TypeScript
-- **Database**: Prisma ORM with SQLite (dev) / PostgreSQL (prod)
+- **Database**: Prisma ORM with hybrid support:
+  - **SQLite**: Optimized for local development and testing (zero-config)
+  - **PostgreSQL**: Production-grade performance and scalability
 - **Styling**: Tailwind CSS
-- **Authentication**: JWT + bcrypt (ready for implementation)
+- **Authentication**: Custom JWT (JOSE) + bcrypt + Nodemailer
 - **Blockchain**: Custom implementation with Node.js crypto
 - **Email**: Nodemailer
 - **UI Components**: Radix UI + Lucide React
@@ -103,6 +115,7 @@ scripts/                # Development & testing scripts
 ## 🔐 Security Features
 
 ### Blockchain Security
+
 - **Double SHA-256**: Prevents length extension attacks
 - **Digital Signatures**: Ed25519 for vote authenticity
 - **Merkle Trees**: Efficient vote integrity verification
@@ -110,6 +123,7 @@ scripts/                # Development & testing scripts
 - **Proof-of-Work**: Light difficulty for block validation
 
 ### Application Security
+
 - **JWT Authentication**: Stateless secure sessions
 - **bcrypt Hashing**: Secure password storage
 - **Role-Based Access**: Granular permission control
@@ -119,34 +133,40 @@ scripts/                # Development & testing scripts
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 
 ### Installation
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/mhdthariq/e-voting.git
 cd e-voting
 ```
 
 2. **Install dependencies**
+
 ```bash
 npm install
 ```
 
 3. **Configure environment**
+
 ```bash
 cp env.example .env
 # Edit .env with your configuration
 ```
 
 4. **Initialize database**
+
 ```bash
 npm run db:setup:dev  # Setup development database with test data
 ```
 
 5. **Start development server**
+
 ```bash
 npm run dev
 ```
@@ -154,20 +174,23 @@ npm run dev
 Visit `http://localhost:3000` to see the application.
 
 ### Default Test Accounts (Development)
+
 - **Admin**: admin@blockvote.com / admin123!
 - **Organization**: org@blockvote.com / org123!
 - **Voters**: voter1@blockvote.com / voter123! (voter1-5)
 
-*(Automatically created with `npm run db:seed`)*
+_(Automatically created with `npm run db:seed`)_
 
 ## 📊 Development Roadmap
 
 ### Phase 1: Foundation ✅ (Complete)
+
 - Next.js setup and configuration
 - Project structure and dependencies
 - Environment configuration
 
 ### Phase 2: Database Layer ✅ (Complete)
+
 - ✅ Prisma ORM with multi-environment support
 - ✅ 11 comprehensive database tables
 - ✅ 4 complete database services with CRUD operations
@@ -175,36 +198,42 @@ Visit `http://localhost:3000` to see the application.
 - ✅ Production deployment scripts
 
 ### Phase 3: Authentication 🚧 (Next Priority)
+
 - JWT token implementation
 - Login/logout functionality
 - Role-based middleware
 - Session management
 
 ### Phase 4: Blockchain ✅ (Complete)
+
 - ✅ Core blockchain classes
 - ✅ Cryptographic security
 - ✅ Vote validation and mining
 - ✅ Multi-election blockchain management
 
 ### Phase 5: User Interfaces ⏳ (Planned)
+
 - Admin dashboard
 - Organization management
 - Voter interface
 - Responsive design
 
 ### Phase 6: Election Management ⏳ (Planned)
+
 - Election lifecycle
 - Candidate management
 - Vote processing
 - Results calculation
 
 ### Phase 7: Email System ⏳ (Planned)
+
 - Voter credential distribution
 - Election notifications
 - Results delivery
 - Template system
 
 ### Phase 8: Security & Testing ⏳ (Planned)
+
 - Penetration testing
 - Performance optimization
 - Security audit
@@ -213,12 +242,14 @@ Visit `http://localhost:3000` to see the application.
 ## 🧪 Testing
 
 ### Blockchain Testing
+
 ```bash
 # Test blockchain functionality
 npm run test:blockchain
 ```
 
 ### Database Testing
+
 ```bash
 # Test database health
 npm run db:health
@@ -231,6 +262,7 @@ npm run db:studio
 ```
 
 ### Development Commands
+
 ```bash
 # Setup development environment
 npm run db:setup:dev
@@ -245,17 +277,20 @@ npm run build
 ## 📝 API Documentation (Coming Soon)
 
 ### Authentication Endpoints
+
 - `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
 - `GET /api/auth/me` - Get current user
 
 ### Election Endpoints
+
 - `GET /api/elections` - List elections
 - `POST /api/elections` - Create election
 - `PUT /api/elections/:id` - Update election
 - `DELETE /api/elections/:id` - Delete election
 
 ### Voting Endpoints
+
 - `POST /api/votes` - Cast vote
 - `GET /api/results/:electionId` - Get results
 
@@ -284,12 +319,14 @@ EMAIL_PASSWORD=your-app-password
 ## 🚀 Deployment
 
 ### Production Build
+
 ```bash
 npm run build
 npm start
 ```
 
 ### Environment Variables (Production)
+
 - Set strong `JWT_SECRET`
 - Configure production database
 - Set up email service credentials
@@ -305,6 +342,7 @@ npm start
 5. Submit a pull request
 
 ### Development Guidelines
+
 - Follow TypeScript strict mode (pure TypeScript workflow)
 - Use ESLint and Prettier for code quality
 - Test blockchain functionality with `npm run test:blockchain`
@@ -326,12 +364,14 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 💡 Key Concepts
 
 ### Blockchain vs Traditional Database
+
 - **Immutability**: Votes cannot be changed once recorded
 - **Transparency**: All votes are cryptographically verifiable
 - **Decentralization**: No single point of failure (in concept)
 - **Consensus**: Proof-of-work ensures valid blocks
 
 ### Privacy Protection
+
 - Vote choices are encrypted and anonymous
 - Only vote counts are publicly visible
 - Voter identities are protected
@@ -342,6 +382,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🎯 Git Repository Status
 
 ### Ready for Version Control
+
 - ✅ Clean project structure with organized directories
 - ✅ Pure TypeScript codebase (no mixed JS/TS files)
 - ✅ Proper .gitignore configured
@@ -350,6 +391,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - ✅ Comprehensive documentation
 
 ### What's Included
+
 - **Source Code**: Complete TypeScript implementation
 - **Documentation**: Project specs, roadmap, and setup guides
 - **Configuration**: Environment templates and TypeScript configs
@@ -357,6 +399,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Dependencies**: All required packages in package.json
 
 ### What's Excluded (via .gitignore)
+
 - **Generated Data**: `/data` directory (blockchain test files)
 - **Database Files**: `*.db`, `dev.db*`, `test.db*` (generated locally)
 - **Prisma Generated**: `/src/generated/`, `/prisma/migrations/`
@@ -366,6 +409,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **System Files**: `.DS_Store`, `*.pem`
 
 ### For Contributors
+
 1. Clone repository
 2. `npm install` to install dependencies
 3. `npm run db:setup:dev` to setup database with test data
@@ -376,15 +420,17 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 The project is ready for collaborative development with a complete database foundation and zero build errors.
 
 ### Available Test Data
+
 After running `npm run db:setup:dev`, you'll have:
+
 - 7 user accounts (1 admin, 1 organization, 5 voters)
 - 1 sample election with 3 candidates
 - All database tables populated and ready for testing
 
 ---
 
-*Built with ❤️ for secure, transparent democracy*
+_Built with ❤️ for secure, transparent democracy_
 
-*Last Updated: October 2025*
-*Database Implementation: Complete ✅*
-*Next Phase: Authentication System*
+_Last Updated: October 2025_
+_Database Implementation: Complete ✅_
+_Next Phase: Authentication System_

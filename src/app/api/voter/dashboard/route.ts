@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
     }
 
-    const tokenResult = auth.verifyToken(token);
+    const tokenResult = await auth.verifyToken(token);
     if (!tokenResult.isValid || !tokenResult.payload?.userId) {
       return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
     }
@@ -173,12 +173,12 @@ export async function GET(request: NextRequest) {
         log.exception(error as Error, "VOTER_DASHBOARD", {
             path: "/api/voter/dashboard",
         });
-    } catch (e) {}
-
-    return NextResponse.json(
+    } catch {
+      return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }
     );
+    }
   } finally {
     await prisma.$disconnect();
   }

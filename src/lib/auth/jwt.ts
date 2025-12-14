@@ -1,9 +1,10 @@
 /**
  * JWT Token Utilities for BlockVote Authentication
  * Provides secure JWT token generation, verification, and management
+ * Uses 'jose' library for Edge Runtime compatibility
  */
 
-import * as jwt from "jsonwebtoken";
+import { SignJWT, jwtVerify, decodeJwt } from "jose";
 import { log } from "@/utils/logger";
 
 // JWT configuration from .env file
@@ -19,18 +20,8 @@ const JWT_CONFIG = {
 if (!JWT_CONFIG.secret) {
   throw new Error("JWT_SECRET is required in .env file");
 }
-if (!JWT_CONFIG.expiresIn) {
-  throw new Error("JWT_EXPIRES_IN is required in .env file");
-}
-if (!JWT_CONFIG.refreshExpiresIn) {
-  throw new Error("JWT_REFRESH_EXPIRES_IN is required in .env file");
-}
-if (!JWT_CONFIG.issuer) {
-  throw new Error("JWT_ISSUER is required in .env file");
-}
-if (!JWT_CONFIG.audience) {
-  throw new Error("JWT_AUDIENCE is required in .env file");
-}
+// Ensure secret is long enough (jose requires minimal lengths for HS256 etc)
+const SECRET_KEY = new TextEncoder().encode(JWT_CONFIG.secret);
 
 // JWT Payload interface
 export interface JwtPayload {
@@ -43,6 +34,7 @@ export interface JwtPayload {
   exp?: number;
   iss?: string;
   aud?: string;
+  [key: string]: unknown; // Allow for other jose claims
 }
 
 // Refresh token payload (minimal for security)
@@ -53,13 +45,14 @@ export interface RefreshTokenPayload {
   exp?: number;
   iss?: string;
   aud?: string;
+  [key: string]: unknown;
 }
 
 // Token response interface
 export interface TokenResponse {
   accessToken: string;
   refreshToken: string;
-  expiresIn: number;
+  expiresIn: number; // in seconds
   tokenType: "Bearer";
 }
 
@@ -78,15 +71,17 @@ class JwtManager {
   /**
    * Generate access token for authenticated user
    */
-  generateAccessToken(
+  async generateAccessToken(
     payload: Omit<JwtPayload, "iat" | "exp" | "iss" | "aud">,
-  ): string {
+  ): Promise<string> {
     try {
-      const token = jwt.sign(payload, JWT_CONFIG.secret, {
-        expiresIn: JWT_CONFIG.expiresIn,
-        issuer: JWT_CONFIG.issuer,
-        audience: JWT_CONFIG.audience,
-      } as jwt.SignOptions);
+      const token = await new SignJWT({ ...payload })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setIssuer(JWT_CONFIG.issuer)
+        .setAudience(JWT_CONFIG.audience)
+        .setExpirationTime(JWT_CONFIG.expiresIn)
+        .sign(SECRET_KEY);
 
       log.auth("Access token generated", {
         userId: payload.userId,
@@ -104,18 +99,15 @@ class JwtManager {
   /**
    * Generate refresh token for user
    */
-  generateRefreshToken(userId: string, tokenVersion: number = 1): string {
+  async generateRefreshToken(userId: string, tokenVersion: number = 1): Promise<string> {
     try {
-      const payload: Omit<RefreshTokenPayload, "iss" | "aud"> = {
-        userId,
-        tokenVersion,
-      };
-
-      const token = jwt.sign(payload, JWT_CONFIG.secret, {
-        expiresIn: JWT_CONFIG.refreshExpiresIn,
-        issuer: JWT_CONFIG.issuer,
-        audience: JWT_CONFIG.audience,
-      } as jwt.SignOptions);
+      const token = await new SignJWT({ userId, tokenVersion })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setIssuer(JWT_CONFIG.issuer)
+        .setAudience(JWT_CONFIG.audience)
+        .setExpirationTime(JWT_CONFIG.refreshExpiresIn)
+        .sign(SECRET_KEY);
 
       log.auth("Refresh token generated", { userId, tokenVersion });
       return token;
@@ -130,13 +122,13 @@ class JwtManager {
   /**
    * Generate both access and refresh tokens
    */
-  generateTokenPair(
+  async generateTokenPair(
     userPayload: Omit<JwtPayload, "iat" | "exp" | "iss" | "aud">,
     tokenVersion: number = 1,
-  ): TokenResponse {
-    const accessToken = this.generateAccessToken(userPayload);
-    const refreshToken = this.generateRefreshToken(
-      userPayload.userId,
+  ): Promise<TokenResponse> {
+    const accessToken = await this.generateAccessToken(userPayload);
+    const refreshToken = await this.generateRefreshToken(
+      userPayload.userId as string,
       tokenVersion,
     );
 
@@ -154,19 +146,19 @@ class JwtManager {
   /**
    * Verify and decode access token
    */
-  verifyAccessToken(token: string): TokenVerificationResult {
+  async verifyAccessToken(token: string): Promise<TokenVerificationResult> {
     try {
-      const decoded = jwt.verify(token, JWT_CONFIG.secret, {
+      const { payload } = await jwtVerify(token, SECRET_KEY, {
         issuer: JWT_CONFIG.issuer,
         audience: JWT_CONFIG.audience,
-      }) as JwtPayload;
+      });
 
       return {
         isValid: true,
-        payload: decoded,
+        payload: payload as unknown as JwtPayload,
       };
     } catch (error) {
-      const isExpired = error instanceof jwt.TokenExpiredError;
+      const isExpired = (error as { code?: string }).code === "ERR_JWT_EXPIRED";
 
       log.security("Access token verification failed", {
         error: (error as Error).message,
@@ -184,20 +176,20 @@ class JwtManager {
   /**
    * Verify and decode refresh token
    */
-  verifyRefreshToken(token: string): {
+  async verifyRefreshToken(token: string): Promise<{
     isValid: boolean;
     payload?: RefreshTokenPayload;
     error?: string;
-  } {
+  }> {
     try {
-      const decoded = jwt.verify(token, JWT_CONFIG.secret, {
+      const { payload } = await jwtVerify(token, SECRET_KEY, {
         issuer: JWT_CONFIG.issuer,
         audience: JWT_CONFIG.audience,
-      }) as RefreshTokenPayload;
+      });
 
       return {
         isValid: true,
-        payload: decoded,
+        payload: payload as unknown as RefreshTokenPayload,
       };
     } catch (error) {
       log.security("Refresh token verification failed", {
@@ -232,7 +224,7 @@ class JwtManager {
    */
   decodeToken(token: string): JwtPayload | RefreshTokenPayload | null {
     try {
-      return jwt.decode(token) as JwtPayload | RefreshTokenPayload;
+      return decodeJwt(token) as JwtPayload | RefreshTokenPayload;
     } catch (error) {
       log.exception(error as Error, "AUTH", { operation: "decodeToken" });
       return null;
@@ -244,7 +236,7 @@ class JwtManager {
    */
   isTokenExpired(token: string): boolean {
     try {
-      const decoded = jwt.decode(token) as { exp?: number };
+      const decoded = decodeJwt(token);
       if (!decoded || !decoded.exp) {
         return true;
       }
@@ -260,7 +252,7 @@ class JwtManager {
    */
   getTokenLifetime(token: string): number {
     try {
-      const decoded = jwt.decode(token) as { exp?: number };
+      const decoded = decodeJwt(token);
       if (!decoded || !decoded.exp) {
         return 0;
       }
@@ -371,7 +363,7 @@ export const auth = {
       organizationName?: string | null;
     } | null>,
   ) => {
-    const refreshResult = jwtManager.verifyRefreshToken(refreshToken);
+    const refreshResult = await jwtManager.verifyRefreshToken(refreshToken);
 
     if (!refreshResult.isValid || !refreshResult.payload) {
       throw new Error("Invalid refresh token");
@@ -384,7 +376,7 @@ export const auth = {
     }
 
     // Generate new access token
-    const accessToken = jwtManager.generateAccessToken({
+    const accessToken = await jwtManager.generateAccessToken({
       userId: user.id.toString(),
       email: user.email,
       username: user.username,

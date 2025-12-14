@@ -17,10 +17,12 @@ const createPrismaClient = () => {
 };
 
 // 3. Use global variable in development to prevent hot reload issues
-const prisma = globalThis.__prisma ?? createPrismaClient();
+const globalForPrisma = globalThis as unknown as { __prisma: PrismaClient | undefined };
 
-if (process.env.NODE_ENV === "development") {
-  globalThis.__prisma = prisma;
+const prisma = globalForPrisma.__prisma ?? createPrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.__prisma = prisma;
 }
 
 // ==============================================================================
@@ -78,17 +80,30 @@ export const cleanupDatabase = async () => {
     throw new Error("Database cleanup is only allowed in test environment");
   }
 
-  // Khusus SQLite, syntax cleanup mungkin berbeda dengan PostgreSQL/MySQL
-  // Pastikan ini sesuai dengan database yang Anda pakai (SQLite di schema Anda)
-  const tablenames = await prisma.$queryRaw<
-    Array<{ name: string }>
-  >`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_prisma_migrations';`;
+  // Detect database provider from URL
+  const isSQLite = process.env.DATABASE_URL?.startsWith("file:");
 
-  for (const { name } of tablenames) {
-    await prisma.$executeRawUnsafe(`DELETE FROM "${name}";`);
-    await prisma.$executeRawUnsafe(
-      `DELETE FROM sqlite_sequence WHERE name='${name}';`,
-    );
+  if (isSQLite) {
+    // SQLite Cleanup
+    const tablenames = await prisma.$queryRaw<
+      Array<{ name: string }>
+    >`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_prisma_migrations';`;
+
+    for (const { name } of tablenames) {
+      await prisma.$executeRawUnsafe(`DELETE FROM "${name}";`);
+      await prisma.$executeRawUnsafe(
+        `DELETE FROM sqlite_sequence WHERE name='${name}';`,
+      );
+    }
+  } else {
+    // PostgreSQL Cleanup
+    const tablenames = await prisma.$queryRaw<
+      Array<{ tablename: string }>
+    >`SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename NOT LIKE '_prisma_migrations';`;
+
+    for (const { tablename } of tablenames) {
+      await prisma.$executeRawUnsafe(`DELETE FROM "${tablename}";`);
+    }
   }
 };
 

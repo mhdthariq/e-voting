@@ -24,12 +24,10 @@ export async function GET(request: NextRequest) {
     let decoded;
 
     try {
-      decoded = auth.verifyToken(token).payload;
-    } catch (error) {
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 },
-      );
+      const verification = await auth.verifyToken(token);
+      decoded = verification.payload;
+    } catch {
+      // Ignore token error for now or handle appropriately
     }
 
     if (!decoded || !decoded.userId) {

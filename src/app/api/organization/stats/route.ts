@@ -49,8 +49,9 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7);
     let decoded;
     try {
-      decoded = auth.verifyToken(token).payload;
-    } catch (error) {
+      const verification = await auth.verifyToken(token);
+      decoded = verification.payload;
+    } catch {
       return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
     }
 
@@ -125,8 +126,7 @@ export async function GET(request: NextRequest) {
         const stat = electionStatistics.find(s => s.electionId === election.id);
 
         const voterCount = stat ? stat.totalRegisteredVoters : 0;
-        const voteCount = stat ? stat.totalVotesCast : election._count.votes; // Gunakan stat jika ada
-        const participationRate = stat ? stat.participationRate : 0; // Gunakan stat jika ada
+        const voteCount = stat ? stat.totalVotesCast : election._count.votes;
 
         recentElections.push({
           id: election.id,
