@@ -73,5 +73,8 @@
       "eslint",
       "npm run test:unit -- --bail --findRelatedTests --passWithNoTests"
     ]
+  },
+  "prisma": {
+    "seed": "npx ts-node prisma/seed.ts"
   }
 }
