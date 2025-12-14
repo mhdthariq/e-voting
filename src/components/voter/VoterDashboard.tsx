@@ -11,6 +11,7 @@ import {
   X,
   Loader2,
   Vote,
+  Calendar,
 } from "lucide-react";
 import ProfileSettingsModal from "@/components/voter/ProfileSettingsModal";
 
@@ -91,6 +92,7 @@ interface VotingHistoryEntry {
 interface VoterDashboardData {
   participations: UserElectionParticipation[];
   activeElections: Election[];
+  upcomingElections: Election[];
   votingHistory: UserElectionParticipation[];
   pendingInvitations: UserElectionParticipation[];
   statistics: {
@@ -101,7 +103,7 @@ interface VoterDashboardData {
   };
 }
 
-type TabKey = "overview" | "active" | "history" | "invitations";
+type TabKey = "overview" | "active" | "upcoming" | "history" | "invitations";
 
 // --- Component: Voting Modal ---
 
@@ -391,6 +393,7 @@ export default function VoterDashboard() {
   const [dashboardData, setDashboardData] = useState<VoterDashboardData>({
     participations: [],
     activeElections: [],
+    upcomingElections: [],
     votingHistory: [],
     pendingInvitations: [],
     statistics: {
@@ -723,6 +726,7 @@ export default function VoterDashboard() {
               {[
                 { key: "overview", label: "Overview" },
                 { key: "active", label: "Active Elections" },
+                { key: "upcoming", label: "Upcoming Elections" },
                 {
                   key: "invitations",
                   label: `Invitations (${dashboardData.statistics.pendingInvitations})`,
@@ -1000,6 +1004,202 @@ export default function VoterDashboard() {
                 )}
               </div>
             </div>
+
+            {/* Upcoming Elections Preview */}
+            <div
+              className={
+                darkMode
+                  ? "bg-neutral-900 border border-blue-800 rounded-lg shadow-lg overflow-hidden"
+                  : "bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+              }
+            >
+              <div
+                className={`p-6 border-b ${darkMode ? "border-gray-200/10" : "border-gray-200"}`}
+              >
+                <h3
+                  className={
+                    darkMode
+                      ? "text-lg font-medium text-blue-300"
+                      : "text-lg font-medium text-gray-900"
+                  }
+                >
+                  Upcoming Elections
+                </h3>
+              </div>
+              <div className="p-6">
+                {dashboardData.upcomingElections.length === 0 ? (
+                  <p className="text-center opacity-60 py-4">
+                    No upcoming elections at the moment.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {dashboardData.upcomingElections
+                      .slice(0, 3)
+                      .map((election) => {
+                        return (
+                          <div
+                            key={election.id}
+                            className={`flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-lg border ${darkMode ? "border-blue-800/50 bg-black/20" : "border-blue-200 bg-blue-50"}`}
+                          >
+                            <div>
+                              <h4
+                                className={`font-medium ${darkMode ? "text-white" : "text-gray-900"}`}
+                              >
+                                {election.title}
+                              </h4>
+                              <div
+                                className={`flex items-center gap-3 mt-1 text-sm ${darkMode ? "opacity-70" : "text-gray-500"}`}
+                              >
+                                <span>By {election.organization.username}</span>
+                                <span>•</span>
+                                <span className="text-blue-500">
+                                  Starts{" "}
+                                  {new Date(
+                                    election.startDate,
+                                  ).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="mt-3 sm:mt-0">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <Calendar size={12} className="mr-1" /> Upcoming
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+                {dashboardData.upcomingElections.length > 0 && (
+                  <button
+                    onClick={() => setActiveTab("upcoming")}
+                    className={`mt-4 w-full py-2 text-sm font-medium rounded border transition-colors ${darkMode ? "border-blue-800 text-blue-400 hover:bg-blue-900/20" : "border-gray-300 text-gray-700 hover:bg-gray-50 bg-white"}`}
+                  >
+                    View All Upcoming Elections
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB: UPCOMING ELECTIONS --- */}
+        {activeTab === "upcoming" && (
+          <div className="grid gap-6">
+            {dashboardData.upcomingElections.length === 0 ? (
+              <div
+                className={`text-center py-12 rounded-lg border border-dashed ${darkMode ? "border-gray-700 text-gray-400" : "border-gray-300 text-gray-500"}`}
+              >
+                No upcoming elections at the moment.
+              </div>
+            ) : (
+              dashboardData.upcomingElections.map((election) => (
+                <div
+                  key={election.id}
+                  className={`rounded-xl border overflow-hidden shadow-sm transition-all ${darkMode ? "bg-neutral-900 border-blue-800" : "bg-white border-blue-200"}`}
+                >
+                  <div className="p-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start">
+                      <div className="flex-1 pr-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3
+                            className={`text-xl font-bold ${darkMode ? "text-white" : "text-gray-900"}`}
+                          >
+                            {election.title}
+                          </h3>
+                          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-500/20 text-blue-500 border border-blue-500/30">
+                            UPCOMING
+                          </span>
+                        </div>
+                        <p
+                          className={`mb-4 ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+                        >
+                          {election.description}
+                        </p>
+
+                        <div
+                          className={`grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm ${darkMode ? "opacity-80" : "text-gray-600"}`}
+                        >
+                          <div>
+                            <span className="block text-xs uppercase tracking-wider opacity-70">
+                              Organization
+                            </span>
+                            <span
+                              className={`font-medium ${darkMode ? "" : "text-gray-900"}`}
+                            >
+                              {election.organization.username}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-xs uppercase tracking-wider opacity-70">
+                              Starts On
+                            </span>
+                            <span
+                              className={`font-medium ${darkMode ? "" : "text-gray-900"}`}
+                            >
+                              {new Date(
+                                election.startDate,
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-xs uppercase tracking-wider opacity-70">
+                              Ends On
+                            </span>
+                            <span
+                              className={`font-medium ${darkMode ? "" : "text-gray-900"}`}
+                            >
+                              {new Date(election.endDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-xs uppercase tracking-wider opacity-70">
+                              Eligible Voters
+                            </span>
+                            <span
+                              className={`font-medium ${darkMode ? "" : "text-gray-900"}`}
+                            >
+                              {election._count.voters}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end justify-center min-w-30 mt-4 md:mt-0">
+                        <div className="flex flex-col items-end text-blue-500">
+                          <Calendar size={32} className="mb-2" />
+                          <span className="font-bold text-sm">Not Started</span>
+                          <span className="text-xs opacity-70 mt-1">
+                            Starts{" "}
+                            {(() => {
+                              const start = new Date(election.startDate);
+                              const now = new Date();
+                              const diff = start.getTime() - now.getTime();
+                              const days = Math.floor(
+                                diff / (1000 * 60 * 60 * 24),
+                              );
+                              const hours = Math.floor(
+                                (diff % (1000 * 60 * 60 * 24)) /
+                                  (1000 * 60 * 60),
+                              );
+                              if (days > 0) return `in ${days}d ${hours}h`;
+                              if (hours > 0) return `in ${hours}h`;
+                              return "soon";
+                            })()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-800">
+                    <div
+                      className="h-full bg-blue-500"
+                      style={{ width: "0%" }}
+                    ></div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
 

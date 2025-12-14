@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { X, Camera, LogOut, Lock, Save, Loader2 } from "lucide-react";
+import {
+  X,
+  Camera,
+  LogOut,
+  Lock,
+  Save,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
 import ChangePasswordModal from "@/components/organization/ChangePasswordModal"; // Re-use component yang sama
 
 interface Props {
@@ -28,6 +36,7 @@ export default function AdminProfileModal({
   const [username, setUsername] = useState(user?.username || "");
   const [profileImage, setProfileImage] = useState(user?.profileImage || "");
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Sync state
@@ -141,9 +150,7 @@ export default function AdminProfileModal({
               </div>
             </button>
             <button
-              onClick={() => {
-                if (confirm("Logout?")) onLogout();
-              }}
+              onClick={() => setIsLogoutModalOpen(true)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${darkMode ? "bg-red-900/10 border-red-900/30 text-red-400 hover:bg-red-900/20" : "bg-red-50 border-red-100 text-red-600 hover:bg-red-100"}`}
             >
               <div className="flex items-center gap-3">
@@ -173,6 +180,76 @@ export default function AdminProfileModal({
           />
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {isLogoutModalOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 z-10000"
+            onClick={() => setIsLogoutModalOpen(false)}
+          ></div>
+          <div className="fixed inset-0 z-10001 flex items-center justify-center pointer-events-none p-4">
+            <div
+              className={`pointer-events-auto w-full max-w-sm rounded-2xl p-6 shadow-2xl border ${
+                darkMode
+                  ? "bg-neutral-900 border-red-900/50 text-white"
+                  : "bg-white border-gray-200 text-gray-900"
+              }`}
+            >
+              {/* Icon */}
+              <div className="flex justify-center mb-4">
+                <div
+                  className={`p-3 rounded-full ${
+                    darkMode ? "bg-red-900/20" : "bg-red-50"
+                  }`}
+                >
+                  <AlertTriangle
+                    size={32}
+                    className={darkMode ? "text-red-400" : "text-red-600"}
+                  />
+                </div>
+              </div>
+
+              {/* Title */}
+              <h3 className="text-lg font-bold text-center mb-2">
+                Are you sure you want to logout?
+              </h3>
+
+              {/* Message */}
+              <p
+                className={`text-sm text-center mb-6 ${
+                  darkMode ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                You will be redirected to the login page.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsLogoutModalOpen(false)}
+                  className={`flex-1 py-2.5 rounded-lg font-medium transition-all ${
+                    darkMode
+                      ? "bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700"
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setIsLogoutModalOpen(false);
+                    onLogout();
+                  }}
+                  className="flex-1 py-2.5 rounded-lg font-medium bg-red-600 hover:bg-red-700 text-white transition-all"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
