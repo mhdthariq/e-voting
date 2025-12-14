@@ -82,15 +82,26 @@ export class AuditService {
       ]);
 
       return {
-        data: logs.map((log) => ({
-          ...log,
-          user: log.user
-            ? {
-                ...log.user,
-                role: log.user.role.toLowerCase(),
-              }
-            : undefined,
-        })) as AuditLogEntry[],
+        data: logs.map((log) => {
+          const logWithUser = log as typeof log & {
+            user: {
+              id: number;
+              username: string;
+              email: string;
+              role: string;
+            };
+          };
+
+          return {
+            ...log,
+            user: logWithUser.user
+              ? {
+                  ...logWithUser.user,
+                  role: logWithUser.user.role.toLowerCase(),
+                }
+              : undefined,
+          };
+        }) as AuditLogEntry[],
         pagination: {
           page,
           limit,
@@ -128,8 +139,8 @@ export class AuditService {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    return this.getAuditLogs(1, limit, { 
-      createdAt: { gte: yesterday } 
+    return this.getAuditLogs(1, limit, {
+      createdAt: { gte: yesterday },
     });
   }
 
@@ -223,7 +234,7 @@ export class AuditService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const userActivity = await prisma.auditLog.groupBy({
+    const userActivity = (await prisma.auditLog.groupBy({
       by: ["userId"],
       where: {
         createdAt: { gte: startDate },
@@ -237,7 +248,10 @@ export class AuditService {
         },
       },
       take: limit,
-    });
+    })) as Array<{
+      userId: number;
+      _count: { id: number };
+    }>;
 
     // Get user details for each active user
     const usersWithActivity = await Promise.all(
@@ -285,49 +299,48 @@ export class AuditService {
     query: Prisma.AuditLogWhereInput = {},
     includeUser: boolean = true,
   ): Promise<AuditLogEntry[]> {
-    
     try {
-        const logs = await prisma.auditLog.findMany({
+      const logs = await prisma.auditLog.findMany({
         where: query,
         include: includeUser
-            ? {
-                user: {
+          ? {
+              user: {
                 select: {
-                    id: true,
-                    username: true,
-                    email: true,
-                    role: true,
+                  id: true,
+                  username: true,
+                  email: true,
+                  role: true,
                 },
-                },
+              },
             }
-            : undefined,
+          : undefined,
         orderBy: { createdAt: "desc" },
-        take: 10000 // Safety limit
-        });
+        take: 10000, // Safety limit
+      });
 
-        return logs.map((log) => {
+      return logs.map((log) => {
         const logWithUser = log as typeof log & {
-            user?: {
+          user?: {
             id: number;
             username: string;
             email: string;
             role: string;
-            };
+          };
         };
 
         return {
-            ...log,
-            user: logWithUser.user
+          ...log,
+          user: logWithUser.user
             ? {
                 ...logWithUser.user,
                 role: logWithUser.user.role.toLowerCase(),
-                }
+              }
             : undefined,
         };
-        }) as AuditLogEntry[];
+      }) as AuditLogEntry[];
     } catch (error) {
-        console.error("Error exporting logs", error);
-        throw error;
+      console.error("Error exporting logs", error);
+      throw error;
     }
   }
 
