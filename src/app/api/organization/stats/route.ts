@@ -126,7 +126,8 @@ export async function GET(request: NextRequest) {
         const stat = electionStatistics.find(s => s.electionId === election.id);
 
         const voterCount = stat ? stat.totalRegisteredVoters : 0;
-        const voteCount = stat ? stat.totalVotesCast : election._count.votes;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const voteCount = stat ? stat.totalVotesCast : (election as any)._count.votes;
 
         recentElections.push({
           id: election.id,
@@ -134,7 +135,8 @@ export async function GET(request: NextRequest) {
           status: election.status,
           startDate: election.startDate,
           endDate: election.endDate,
-          candidateCount: election.candidates.length,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          candidateCount: (election as any).candidates.length,
           voterCount,
           voteCount: voteCount, // Diperbarui dari stat
           participationRate: voterCount > 0 ? Math.round((voteCount / voterCount) * 100 * 100) / 100 : 0, // Kalkulasi ulang untuk konsistensi, atau gunakan stat.participationRate

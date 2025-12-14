@@ -114,10 +114,35 @@ export class UserElectionService {
       });
 
       return {
-        participations: participations.map((p) => ({
-          ...this.mapPrismaToParticipation(p),
-          election: p.election,
-        })),
+        participations: participations.map((p) => {
+          const pWithElection = p as typeof p & {
+            election: {
+              id: number;
+              title: string;
+              description: string;
+              organizationId: number;
+              status: string;
+              startDate: Date;
+              endDate: Date;
+              createdAt: Date;
+              updatedAt: Date;
+              organization: {
+                id: number;
+                username: string;
+                email: string;
+              };
+              _count: {
+                votes: number;
+                voters: number;
+              };
+            };
+          };
+
+          return {
+            ...this.mapPrismaToParticipation(p),
+            election: pWithElection.election,
+          };
+        }),
         activeElections,
       };
     } catch (error) {
@@ -253,11 +278,15 @@ export class UserElectionService {
    */
   static async getElectionParticipationStats(electionId: number) {
     try {
-      const stats = await prisma.userElectionParticipation.groupBy({
+      const stats = (await prisma.userElectionParticipation.groupBy({
         by: ["inviteStatus", "hasVoted"],
         where: { electionId },
         _count: true,
-      });
+      })) as Array<{
+        inviteStatus: string;
+        hasVoted: boolean;
+        _count: number;
+      }>;
 
       const totalInvited = await prisma.userElectionParticipation.count({
         where: { electionId },
@@ -320,10 +349,26 @@ export class UserElectionService {
         orderBy: { votedAt: "desc" },
       });
 
-      return history.map((record) => ({
-        ...this.mapPrismaToParticipation(record),
-        election: record.election,
-      }));
+      return history.map((record) => {
+        const recordWithElection = record as typeof record & {
+          election: {
+            id: number;
+            title: string;
+            description: string;
+            status: string;
+            startDate: Date;
+            endDate: Date;
+            organization: {
+              username: string;
+            };
+          };
+        };
+
+        return {
+          ...this.mapPrismaToParticipation(record),
+          election: recordWithElection.election,
+        };
+      });
     } catch (error) {
       log.exception(error as Error, "USER_ELECTION", {
         operation: "getUserVotingHistory",
@@ -444,10 +489,31 @@ export class UserElectionService {
           orderBy: { invitedAt: "desc" },
         });
 
-      return pendingInvitations.map((invitation) => ({
-        ...this.mapPrismaToParticipation(invitation),
-        election: invitation.election,
-      }));
+      return pendingInvitations.map((invitation) => {
+        const invitationWithElection = invitation as typeof invitation & {
+          election: {
+            id: number;
+            title: string;
+            description: string;
+            organizationId: number;
+            status: string;
+            startDate: Date;
+            endDate: Date;
+            createdAt: Date;
+            updatedAt: Date;
+            organization: {
+              id: number;
+              username: string;
+              email: string;
+            };
+          };
+        };
+
+        return {
+          ...this.mapPrismaToParticipation(invitation),
+          election: invitationWithElection.election,
+        };
+      });
     } catch (error) {
       log.exception(error as Error, "USER_ELECTION", {
         operation: "getUserPendingInvitations",

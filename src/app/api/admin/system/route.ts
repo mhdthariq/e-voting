@@ -46,8 +46,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        roles: usersByRole.map(r => ({ label: r.role, value: r._count.role })),
-        elections: electionsByStatus.map(e => ({ label: e.status, value: e._count.status })),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        roles: (usersByRole as any[]).map(r => ({ label: r.role, value: r._count.role })),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        elections: (electionsByStatus as any[]).map(e => ({ label: e.status, value: e._count.status })),
         volume: [
           { label: "Total Votes", value: totalVotes },
           { label: "Audit Logs", value: totalLogs },
@@ -150,7 +152,8 @@ export async function POST(request: NextRequest) {
         const csvHeader = "ID,Timestamp,Actor,Role,Action,Resource,Details,IP Address\n";
         
         // Buat Baris CSV
-        const csvRows = logs.map(log => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const csvRows = logs.map((log: any) => {
             // Escape tanda kutip di dalam details agar CSV valid
             const safeDetails = log.details.replace(/"/g, '""'); 
             return `${log.id},"${new Date(log.createdAt).toISOString()}","${log.user.username}","${log.user.role}","${log.action}","${log.resource}","${safeDetails}","${log.ipAddress}"`;
