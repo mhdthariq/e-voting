@@ -26,22 +26,31 @@ export async function GET(request: NextRequest) {
         const cookies = cookieHeader
           .split(";")
           .map((c) => c.trim())
-          .reduce((acc, cookie) => {
-            const [key, value] = cookie.split("=");
-            if (key && value) acc[key] = decodeURIComponent(value);
-            return acc;
-          }, {} as Record<string, string>);
+          .reduce(
+            (acc, cookie) => {
+              const [key, value] = cookie.split("=");
+              if (key && value) acc[key] = decodeURIComponent(value);
+              return acc;
+            },
+            {} as Record<string, string>,
+          );
         token = cookies.accessToken;
       }
     }
 
     if (!token) {
-      return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, message: "Authentication required" },
+        { status: 401 },
+      );
     }
 
     const tokenResult = await auth.verifyToken(token);
     if (!tokenResult.isValid || !tokenResult.payload?.userId) {
-      return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, message: "Invalid token" },
+        { status: 401 },
+      );
     }
 
     const userId = parseInt(tokenResult.payload.userId);
@@ -49,22 +58,28 @@ export async function GET(request: NextRequest) {
     // Get user to verify role
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, role: true, email: true, username: true } 
+      select: { id: true, role: true, email: true, username: true },
     });
 
     if (!user) {
-      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 },
+      );
     }
 
     // Secure Role Check
     if ((user.role as string).toLowerCase() !== "voter") {
-      return NextResponse.json({ success: false, message: "Voter access required" }, { status: 403 });
+      return NextResponse.json(
+        { success: false, message: "Voter access required" },
+        { status: 403 },
+      );
     }
 
     // ------------------------------------------------------------------
     // 2. FETCH DATA
     // ------------------------------------------------------------------
-    
+
     const now = new Date();
 
     // A. Get Pending Invitations
@@ -73,18 +88,25 @@ export async function GET(request: NextRequest) {
         userId: userId,
         inviteStatus: "PENDING", // Matches Prisma Enum
         election: {
-            status: { not: "DRAFT" } 
-        }
+          status: { not: "DRAFT" },
+        },
       },
       include: {
         election: {
-          select: { id: true, title: true, description: true, status: true, startDate: true, endDate: true }
-        }
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            status: true,
+            startDate: true,
+            endDate: true,
+          },
+        },
       },
-      orderBy: { invitedAt: "desc" }
+      orderBy: { invitedAt: "desc" },
     });
 
-    // B. Get Active Elections (THE FIX IS HERE)
+    // B. Get Active Elections (currently happening)
     const activeElections = await prisma.election.findMany({
       where: {
         status: "ACTIVE",
@@ -96,67 +118,103 @@ export async function GET(request: NextRequest) {
             UserElectionParticipation: {
               some: {
                 userId: userId,
-                inviteStatus: "ACCEPTED" // Only show if accepted
-              }
-            }
+                inviteStatus: "ACCEPTED", // Only show if accepted
+              },
+            },
           },
           {
             // Fallback for public voters
             voters: {
               some: {
-                email: user.email
-              }
-            }
-          }
-        ]
+                email: user.email,
+              },
+            },
+          },
+        ],
       },
       include: {
         organization: {
-          select: { id: true, username: true, email: true }
+          select: { id: true, username: true, email: true },
         },
         _count: {
-          select: { votes: true, voters: true }
+          select: { votes: true, voters: true },
         },
         candidates: {
-            select: { id: true, name: true, description: true }
-        }
+          select: { id: true, name: true, description: true },
+        },
       },
-      orderBy: { endDate: "asc" }
+      orderBy: { endDate: "asc" },
     });
 
-    // C. Get Voting History
+    // C. Get Upcoming Elections (accepted invitations but not started yet)
+    const upcomingElections = await prisma.election.findMany({
+      where: {
+        status: "ACTIVE",
+        startDate: { gt: now }, // Starts in the future
+        UserElectionParticipation: {
+          some: {
+            userId: userId,
+            inviteStatus: "ACCEPTED", // Only accepted invitations
+          },
+        },
+      },
+      include: {
+        organization: {
+          select: { id: true, username: true, email: true },
+        },
+        _count: {
+          select: { votes: true, voters: true },
+        },
+        candidates: {
+          select: { id: true, name: true, description: true },
+        },
+      },
+      orderBy: { startDate: "asc" },
+    });
+
+    // D. Get Voting History
     const votingHistory = await prisma.vote.findMany({
       where: { voterId: userId },
       include: {
         election: {
-          select: { id: true, title: true, description: true, status: true, startDate: true, endDate: true, organization: { select: { username: true } } }
-        }
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            status: true,
+            startDate: true,
+            endDate: true,
+            organization: { select: { username: true } },
+          },
+        },
       },
-      orderBy: { votedAt: "desc" }
+      orderBy: { votedAt: "desc" },
     });
 
-    // D. Statistics
+    // E. Statistics
     const allParticipations = await prisma.userElectionParticipation.findMany({
-        where: { userId: userId }
+      where: { userId: userId },
     });
 
     const totalInvitations = allParticipations.length;
     const totalVoted = votingHistory.length;
-    const participationRate = totalInvitations > 0 ? (totalVoted / totalInvitations) * 100 : 0;
+    const participationRate =
+      totalInvitations > 0 ? (totalVoted / totalInvitations) * 100 : 0;
     const pendingInvitationsCount = pendingInvitations.length;
 
     log.info("Voter accessed dashboard", "VOTER_DASHBOARD", {
       userId,
       totalInvitations,
       totalVoted,
-      pendingInvitations: pendingInvitationsCount
+      pendingInvitations: pendingInvitationsCount,
     });
 
     return NextResponse.json({
       success: true,
       data: {
-        participations: allParticipations, 
+        participations: allParticipations,
         activeElections,
+        upcomingElections,
         votingHistory,
         pendingInvitations,
         statistics: {
@@ -167,17 +225,16 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-
   } catch (error) {
     try {
-        log.exception(error as Error, "VOTER_DASHBOARD", {
-            path: "/api/voter/dashboard",
-        });
+      log.exception(error as Error, "VOTER_DASHBOARD", {
+        path: "/api/voter/dashboard",
+      });
     } catch {
       return NextResponse.json(
-      { success: false, message: "Internal server error" },
-      { status: 500 }
-    );
+        { success: false, message: "Internal server error" },
+        { status: 500 },
+      );
     }
   } finally {
     await prisma.$disconnect();
