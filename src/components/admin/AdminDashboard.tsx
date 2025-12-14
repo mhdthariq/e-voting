@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sun, Moon, Users, FileText, CheckCircle, Database, 
-  Activity, Shield, AlertTriangle, Search, Plus, Trash2, Edit, RefreshCw,
+  Activity, Shield, AlertTriangle, Search, Plus, Trash2, Edit, RefreshCw, Link as LinkIcon,
   ChevronLeft, ChevronRight, ChevronDown, HardDrive, Server, Building2
 } from "lucide-react";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import AdminProfileModal from "@/components/admin/AdminProfileModal";
 import { BarChart } from "@/components/charts/BarChart";
 import { DonutChart } from "@/components/charts/DonutChart";
+import BlockchainViewer from "@/components/admin/BlockchainViewer";
 
 // --- TYPES ---
 interface User {
@@ -76,7 +77,8 @@ interface Election {
   };
 }
 
-type Tab = "Overview" | "Users" | "Organizations" | "Elections" | "System" | "Logs";
+
+type Tab = "Overview" | "Users" | "Organizations" | "Elections" | "System" | "Logs" | "Blockchain";
 
 // --- COMPONENT ---
 export default function AdminDashboard() {
@@ -108,8 +110,48 @@ export default function AdminDashboard() {
 
   // Lists State
   const [usersList, setUsersList] = useState<User[]>([]);
-  const [orgsList, setOrgsList] = useState<User[]>([]); 
-  const [electionsList, setElectionsList] = useState<Election[]>([]); // New: Daftar Pemilu
+  const [orgsList, setOrgsList] = useState<User[]>([]);
+interface ElectionDetail {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  organization: { username: string; email: string };
+  stats: { invited: number; voted: number; participationRate: number };
+  results: { id: number; name: string; voteCount: number }[];
+}
+
+// ...
+  const [electionsList, setElectionsList] = useState<Election[]>([]); 
+  const [selectedElection, setSelectedElection] = useState<ElectionDetail | null>(null); // For detail view
+  const [loadingElectionId, setLoadingElectionId] = useState<number | null>(null);
+interface VoteTransaction {
+    voteId: string;
+    voterPublicKey: string;
+    candidateId: number;
+    timestamp: string;
+    signature: string;
+}
+
+interface Block {
+  id: number;
+  blockIndex: number;
+  previousHash: string;
+  hash: string;
+  merkleRoot: string;
+  nonce: number;
+  timestamp: string;
+  electionId: number;
+  election: {
+      title: string;
+  };
+  voteCount: number;
+  parsedVotes: VoteTransaction[];
+}
+
+  // Lists State
+  const [blockchainData, setBlockchainData] = useState<Block[]>([]); // Blockchain data
+  const [blockchainLoading, setBlockchainLoading] = useState(false);
 
   // Modals
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -210,6 +252,20 @@ export default function AdminDashboard() {
     } catch(e) { console.error("Failed loading elections:", e); }
   };
 
+
+
+  const loadElectionDetails = async (id: number) => {
+    const token = localStorage.getItem("accessToken");
+    if(!token) return;
+    setLoadingElectionId(id);
+    try {
+      const res = await fetch(`/api/admin/elections/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if(data.success) setSelectedElection(data.data);
+    } catch(e) { console.error("Failed loading detail:", e); }
+    finally { setLoadingElectionId(null); }
+  };
+
   const loadSystemChartData = async () => {
     const token = localStorage.getItem("accessToken");
     if(!token) return;
@@ -218,6 +274,19 @@ export default function AdminDashboard() {
         const data = await res.json();
         if(data.success) setSystemChartData(data.data);
     } catch(e) { console.error("System Data Error:", e); }
+
+  };
+
+  const loadBlockchainData = async () => {
+    const token = localStorage.getItem("accessToken");
+    if(!token) return;
+    setBlockchainLoading(true);
+    try {
+        const res = await fetch("/api/admin/blockchain?limit=20", { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json();
+        if(data.success) setBlockchainData(data.data);
+    } catch(e) { console.error("Blockchain Data Error:", e); }
+    finally { setBlockchainLoading(false); }
   };
 
   // --- FIXED: Logs Filter Logic ---
@@ -429,6 +498,7 @@ export default function AdminDashboard() {
           setLogPage(1); 
           loadLogsByPage(1);
       }
+      if(activeTab === "Blockchain") loadBlockchainData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
@@ -490,7 +560,8 @@ export default function AdminDashboard() {
       <nav className={darkMode ? "bg-neutral-900/40 border-b border-emerald-800/30" : "bg-white border-b border-gray-200"}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-6 overflow-x-auto pb-1 scrollbar-hide">
-            {["Overview", "Users", "Organizations", "Elections", "System", "Logs"].map(tab => (
+
+            {["Overview", "Users", "Organizations", "Elections", "System", "Logs", "Blockchain"].map(tab => (
                <button key={tab} onClick={() => setActiveTab(tab as Tab)} className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${activeTab === tab ? (darkMode ? "border-emerald-400 text-emerald-300" : "border-emerald-600 text-emerald-700") : "border-transparent opacity-60"}`}>
                  {tab}
                </button>
@@ -659,53 +730,163 @@ export default function AdminDashboard() {
         )}
 
         {/* 3.5 ELECTIONS TAB */}
+
+
+        {/* 3.5 ELECTIONS TAB */}
         {activeTab === "Elections" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-lg flex items-center gap-2"><FileText size={18}/> All Elections</h3>
-                    <button onClick={loadElections} className="p-2 rounded-full hover:bg-gray-500/20"><RefreshCw size={18}/></button>
-                </div>
+                {!selectedElection ? (
+                  <>
+                    <div className="flex justify-between items-center">
+                        <h3 className="font-bold text-lg flex items-center gap-2"><FileText size={18}/> All Elections</h3>
+                        <button onClick={loadElections} className="p-2 rounded-full hover:bg-gray-500/20"><RefreshCw size={18}/></button>
+                    </div>
 
-                <div className={`overflow-hidden rounded-xl border ${darkMode ? "border-emerald-900" : "border-gray-200"}`}>
-                    <table className={`min-w-full text-sm ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
-                        <thead className={darkMode ? "bg-neutral-900" : "bg-gray-50"}>
-                            <tr>
-                                <th className="px-6 py-4 text-left">Election Title</th>
-                                <th className="px-6 py-4 text-left">Organization</th>
-                                <th className="px-6 py-4 text-left">Status</th>
-                                <th className="px-6 py-4 text-left">Duration</th>
-                                <th className="px-6 py-4 text-right">Votes</th>
-                            </tr>
-                        </thead>
-                        <tbody className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-gray-200 bg-white"}`}>
-                            {electionsList.length === 0 ? (
-                                <tr><td colSpan={5} className="px-6 py-8 text-center opacity-50">No elections found.</td></tr>
-                            ) : electionsList.map(election => (
-                                <tr key={election.id} className={darkMode ? "hover:bg-neutral-800" : "hover:bg-gray-50"}>
-                                    <td className="px-6 py-4 font-bold">{election.title}</td>
-                                    <td className="px-6 py-4">
-                                        <p className="font-medium text-emerald-600">{election.organization.username}</p>
-                                        <p className="text-xs opacity-50">{election.organization.email}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded text-xs border ${
-                                            election.status === 'ACTIVE' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
-                                            election.status === 'ENDED' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
-                                            'bg-gray-500/10 text-gray-500 border-gray-500/20'
-                                        }`}>{election.status}</span>
-                                    </td>
-                                    <td className="px-6 py-4 text-xs opacity-70">
-                                        <p>{new Date(election.startDate).toLocaleDateString()} -</p>
-                                        <p>{new Date(election.endDate).toLocaleDateString()}</p>
-                                    </td>
-                                    <td className="px-6 py-4 text-right font-mono font-bold text-emerald-500">
-                                        {election._count.votes}
-                                    </td>
+                    <div className={`overflow-hidden rounded-xl border ${darkMode ? "border-emerald-900" : "border-gray-200"}`}>
+                        <table className={`min-w-full text-sm ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
+                            <thead className={darkMode ? "bg-neutral-900" : "bg-gray-50"}>
+                                <tr>
+                                    <th className="px-6 py-4 text-left">Election Title</th>
+                                    <th className="px-6 py-4 text-left">Organization</th>
+                                    <th className="px-6 py-4 text-left">Status</th>
+                                    <th className="px-6 py-4 text-left">Duration</th>
+                                    <th className="px-6 py-4 text-right">Votes</th>
+                                    <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-gray-200 bg-white"}`}>
+                                {electionsList.length === 0 ? (
+                                    <tr><td colSpan={6} className="px-6 py-8 text-center opacity-50">No elections found.</td></tr>
+                                ) : electionsList.map(election => (
+                                    <tr key={election.id} className={`${darkMode ? "hover:bg-neutral-800" : "hover:bg-gray-50"} transition-colors`}>
+                                        <td className="px-6 py-4 font-bold">{election.title}</td>
+                                        <td className="px-6 py-4">
+                                            <p className="font-medium text-emerald-600">{election.organization.username}</p>
+                                            <p className="text-xs opacity-50">{election.organization.email}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-1 rounded text-xs border ${
+                                                election.status === 'ACTIVE' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
+                                                election.status === 'ENDED' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
+                                                'bg-gray-500/10 text-gray-500 border-gray-500/20'
+                                            }`}>{election.status}</span>
+                                        </td>
+                                        <td className="px-6 py-4 text-xs opacity-70">
+                                            <p>{new Date(election.startDate).toLocaleDateString()} -</p>
+                                            <p>{new Date(election.endDate).toLocaleDateString()}</p>
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-mono font-bold text-emerald-500">
+                                            {election._count.votes}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button 
+                                              onClick={() => loadElectionDetails(election.id)}
+                                              disabled={loadingElectionId === election.id}
+                                              className="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-600/50 text-white font-medium flex items-center gap-1 ml-auto"
+                                            >
+                                              {loadingElectionId === election.id ? <RefreshCw size={12} className="animate-spin" /> : null}
+                                              View Analytics
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                      {/* DETAIL VIEW HEADER */}
+                      <div className="flex items-center gap-4">
+                        <button onClick={() => setSelectedElection(null)} className={`p-2 rounded-lg ${darkMode ? "hover:bg-neutral-800" : "hover:bg-gray-100"}`}>
+                          <ChevronLeft size={24} />
+                        </button>
+                        <div>
+                          <h2 className="text-2xl font-bold">{selectedElection.title}</h2>
+                          <p className="opacity-60 text-sm flex gap-2 items-center">
+                            By {selectedElection.organization.username} 
+                            <span className="w-1 h-1 rounded-full bg-current opacity-50"></span>
+                            {selectedElection.status}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {/* 1. PARTICIPATION CARD */}
+                          <div className={`p-6 rounded-xl border flex flex-col ${darkMode ? "bg-neutral-900 border-emerald-900" : "bg-white border-gray-200"}`}>
+                              <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
+                                <Users size={18} className="text-blue-500"/> Turnout Metrics
+                              </h4>
+                              <div className="flex-1 flex flex-col items-center justify-center relative">
+                                  {selectedElection.stats.invited === 0 ? (
+                                    <div className="text-center opacity-50 py-10">No statistics available yet.</div>
+                                  ) : (
+                                    <>
+                                      <DonutChart 
+                                        size={220} 
+                                        data={[
+                                          { label: "Voted", value: selectedElection.stats.voted, color: "#10B981" }, // Emerald 500
+                                          { label: "Invited", value: selectedElection.stats.invited - selectedElection.stats.voted, color: darkMode ? "#333" : "#e5e7eb" } // Gray
+                                        ]} 
+                                      />
+                                      <div className="mt-6 grid grid-cols-2 gap-8 text-center w-full">
+                                        <div>
+                                          <div className="text-2xl font-bold text-gray-400">{selectedElection.stats.invited}</div>
+                                          <div className="text-xs uppercase tracking-wider opacity-60">Total Invited</div>
+                                        </div>
+                                        <div>
+                                          <div className="text-2xl font-bold text-emerald-500">{selectedElection.stats.voted}</div>
+                                          <div className="text-xs uppercase tracking-wider opacity-60">Votes Cast</div>
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                              </div>
+                          </div>
+
+                          {/* 2. RESULTS CARD */}
+                          <div className={`p-6 rounded-xl border flex flex-col ${darkMode ? "bg-neutral-900 border-emerald-900" : "bg-white border-gray-200"}`}>
+                              <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
+                                <FileText size={18} className="text-purple-500"/> Candidate Results
+                              </h4>
+                              <div className="space-y-4">
+                                {selectedElection.results.length === 0 ? (
+                                  <div className="text-center opacity-50 py-10">No candidates found.</div>
+                                ) : (
+                                  selectedElection.results.map((candidate, idx) => {
+                                      const totalVotes = selectedElection.stats.voted || 1; // avoid divide by zero
+                                      const percent = Math.round((candidate.voteCount / totalVotes) * 100);
+                                      const isWinner = idx === 0 && candidate.voteCount > 0;
+                                      
+                                      return (
+                                        <div key={candidate.id} className="relative group">
+                                          <div className="flex justify-between items-end mb-1">
+                                            <span className={`font-bold ${isWinner ? "text-amber-400 text-lg" : ""}`}>
+                                              {isWinner && "👑 "}{candidate.name}
+                                            </span>
+                                            <span className="font-mono opacity-80">{candidate.voteCount} votes ({percent}%)</span>
+                                          </div>
+                                          <div className={`h-3 rounded-full overflow-hidden ${darkMode ? "bg-neutral-800" : "bg-gray-100"}`}>
+                                            <div 
+                                              className={`h-full rounded-full transition-all duration-1000 ${isWinner ? "bg-amber-400" : "bg-emerald-600"}`} 
+                                              style={{ width: `${percent}%` }}
+                                            ></div>
+                                          </div>
+                                          {isWinner && <div className="absolute -right-2 top-0 text-amber-500 text-[10px] font-bold rotate-12 opacity-0 group-hover:opacity-100 transition-opacity">WINNER</div>}
+                                        </div>
+                                      )
+                                  })
+                                )}
+                              </div>
+                              {selectedElection.status === 'ACTIVE' && (
+                                <div className="mt-auto pt-6 text-center text-xs opacity-50">
+                                  Live Results • Updated just now
+                                </div>
+                              )}
+                          </div>
+                      </div>
+                  </div>
+                )}
             </motion.div>
         )}
 
@@ -783,6 +964,21 @@ export default function AdminDashboard() {
                             <button onClick={() => setLogPage(p => Math.min(logTotalPages, p + 1))} disabled={logPage === logTotalPages || logLoading} className="p-1 rounded hover:bg-gray-500/20 disabled:opacity-30"><ChevronRight size={20}/></button>
                         </div>
                     </div>
+                </div>
+            </motion.div>
+        )}
+
+
+        {/* 6. BLOCKCHAIN TAB */}
+        {activeTab === "Blockchain" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <div className="flex justify-between items-center">
+                    <h3 className="font-bold text-lg flex items-center gap-2"><LinkIcon size={18}/> Blockchain Ledger</h3>
+                    <button onClick={loadBlockchainData} className="p-2 rounded-full hover:bg-gray-500/20"><RefreshCw size={18} className={blockchainLoading ? "animate-spin" : ""}/></button>
+                </div>
+                <div className={`p-6 rounded-xl border ${darkMode ? "bg-neutral-900 border-emerald-900" : "bg-white border-gray-200"}`}>
+                   <p className="mb-6 opacity-60 text-sm">Real-time immutable record of all mining blocks and vote transactions.</p>
+                   <BlockchainViewer blocks={blockchainData} loading={blockchainLoading} />
                 </div>
             </motion.div>
         )}
