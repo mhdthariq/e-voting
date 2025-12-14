@@ -11,7 +11,7 @@ const prismaClientSingleton = () => {
   }).$extends(withAccelerate());
 };
 
-type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
+export type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClientSingleton | undefined;
@@ -33,7 +33,7 @@ export const connectToDatabase = async () => {
   try {
     // Extended client doesn't have explicit $connect. We trigger a query to check.
     // However, for compatibility with old calls, we just mock success or try a query.
-    await prisma.$queryRaw`SELECT 1`; 
+    await prisma.$queryRaw`SELECT 1`;
     console.log("✅ Database connected successfully (Accelerate)");
     return true;
   } catch (error) {
@@ -44,8 +44,8 @@ export const connectToDatabase = async () => {
 
 // 5. Database disconnection helper
 export const disconnectFromDatabase = async () => {
-    // Accelerate handles this, usually no-op is fine or unavailable.
-    // console.log("Database disconnection handled by Accelerate");
+  // Accelerate handles this, usually no-op is fine or unavailable.
+  // console.log("Database disconnection handled by Accelerate");
 };
 
 // 6. Health check function
@@ -59,11 +59,13 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
   }
 };
 
-// 7. Transaction helper
+// 7. Transaction helper with proper type safety
 export const executeTransaction = async <T>(
   fn: (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    prisma: any
+    prisma: Omit<
+      PrismaClientSingleton,
+      "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends"
+    >,
   ) => Promise<T>,
 ): Promise<T> => {
   return await prisma.$transaction(fn);
