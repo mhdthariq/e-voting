@@ -9,7 +9,10 @@ import {
   Save,
   Loader2,
   AlertTriangle,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import ChangePasswordModal from "./ChangePasswordModal";
 
 interface Props {
@@ -40,6 +43,11 @@ export default function ProfileSettingsModal({
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [notificationModal, setNotificationModal] = useState<{
+    isOpen: boolean;
+    type: "success" | "error";
+    message: string;
+  }>({ isOpen: false, type: "success", message: "" });
 
   if (!open) return null;
 
@@ -74,13 +82,25 @@ export default function ProfileSettingsModal({
 
       const json = await res.json();
       if (json.success) {
-        alert("Profile updated successfully!");
+        setNotificationModal({
+          isOpen: true,
+          type: "success",
+          message: "Profile updated successfully!",
+        });
         // Opsional: onClose(); // Tutup modal setelah save jika diinginkan
       } else {
-        alert(json.message);
+        setNotificationModal({
+          isOpen: true,
+          type: "error",
+          message: json.message,
+        });
       }
     } catch {
-      alert("Failed to update profile");
+      setNotificationModal({
+        isOpen: true,
+        type: "error",
+        message: "Failed to update profile",
+      });
     } finally {
       setLoading(false);
     }
@@ -89,10 +109,7 @@ export default function ProfileSettingsModal({
   return (
     <>
       {/* BACKDROP */}
-      <div
-        className="fixed inset-0 bg-black/60 z-9998"
-        onClick={onClose}
-      ></div>
+      <div className="fixed inset-0 bg-black/60 z-9998" onClick={onClose}></div>
 
       {/* MODAL CONTAINER */}
       <div className="fixed inset-0 z-9999 flex items-center justify-center pointer-events-none p-4">
@@ -314,6 +331,85 @@ export default function ProfileSettingsModal({
           </div>
         </>
       )}
+
+      {/* Notification Modal */}
+      <AnimatePresence>
+        {notificationModal.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-10000 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() =>
+              setNotificationModal({ ...notificationModal, isOpen: false })
+            }
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
+            >
+              <div
+                className={`p-6 border-b ${darkMode ? "border-emerald-800/30" : "border-gray-200"}`}
+              >
+                <div className="flex items-center gap-3">
+                  {notificationModal.type === "success" ? (
+                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <CheckCircle size={24} className="text-emerald-500" />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                      <AlertCircle size={24} className="text-red-500" />
+                    </div>
+                  )}
+                  <div>
+                    <h3
+                      className={`text-lg font-bold ${darkMode ? "text-white" : "text-gray-900"}`}
+                    >
+                      {notificationModal.type === "success"
+                        ? "Success"
+                        : "Error"}
+                    </h3>
+                    <p className="text-sm opacity-60">
+                      {notificationModal.type === "success"
+                        ? "Operation completed"
+                        : "Something went wrong"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <p
+                  className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                >
+                  {notificationModal.message}
+                </p>
+              </div>
+              <div
+                className={`p-4 border-t flex justify-end ${darkMode ? "border-emerald-800/30" : "border-gray-200"}`}
+              >
+                <button
+                  onClick={() =>
+                    setNotificationModal({
+                      ...notificationModal,
+                      isOpen: false,
+                    })
+                  }
+                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                    notificationModal.type === "success"
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                      : "bg-red-600 hover:bg-red-700 text-white"
+                  }`}
+                >
+                  OK
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

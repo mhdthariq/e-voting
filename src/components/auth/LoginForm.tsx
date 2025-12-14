@@ -16,7 +16,7 @@ export default function Home() {
   // --- Login states ---
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // State untuk toggle password
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -97,24 +97,26 @@ export default function Home() {
         setError("Unexpected error occurred");
       }
     } finally {
-      setLoading(false); // Pastikan loading mati walau error
+      setLoading(false);
     }
   };
 
   return (
     <div
       className={`relative min-h-screen flex flex-col md:flex-row transition-colors duration-500 ${
-        darkMode ? "bg-black text-white" : "bg-gray-100 text-gray-900"
+        darkMode
+          ? "bg-linear-to-br from-gray-900 via-black to-emerald-950"
+          : "bg-linear-to-br from-gray-50 via-white to-emerald-50"
       }`}
     >
       {/* Theme Toggle */}
       <motion.button
         whileTap={{ rotate: 180, scale: 0.9 }}
         onClick={() => setDarkMode(!darkMode)}
-        className={`absolute top-6 right-6 p-3 rounded-full shadow-md transition-all border z-20 ${
+        className={`absolute top-6 right-6 p-3 rounded-full shadow-lg transition-all border z-20 ${
           darkMode
-            ? "bg-neutral-900 border-emerald-800 hover:bg-emerald-800 text-emerald-300"
-            : "bg-white border-gray-300 hover:bg-emerald-100 text-emerald-700"
+            ? "bg-gray-900/80 backdrop-blur-sm border-emerald-700/50 hover:bg-emerald-900/50 text-emerald-400"
+            : "bg-white/80 backdrop-blur-sm border-emerald-200 hover:bg-emerald-50 text-emerald-700"
         }`}
       >
         {darkMode ? <Sun size={20} /> : <Moon size={20} />}
@@ -132,22 +134,40 @@ export default function Home() {
         >
           {!showLogin ? (
             // Info side
-            <motion.div className="flex flex-col justify-center items-center text-center px-6 py-16 bg-linear-to-br from-emerald-700 to-black text-white rounded-2xl mx-4">
-              <h1 className="text-4xl font-extrabold mb-3 text-emerald-400">
+            <motion.div
+              className={`flex flex-col justify-center items-center text-center px-6 py-16 rounded-2xl mx-4 shadow-2xl ${
+                darkMode
+                  ? "bg-linear-to-br from-emerald-900/40 via-gray-900/60 to-black/80 backdrop-blur-md border border-emerald-800/30"
+                  : "bg-linear-to-br from-emerald-100/80 via-white/90 to-gray-50/80 backdrop-blur-md border border-emerald-200"
+              }`}
+            >
+              <h1
+                className={`text-4xl font-extrabold mb-3 ${
+                  darkMode ? "text-emerald-400" : "text-emerald-700"
+                }`}
+              >
                 Welcome to BlockVote
               </h1>
-              <p className="text-base mb-6 max-w-sm opacity-90">
+              <p
+                className={`text-base mb-6 max-w-sm ${
+                  darkMode ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
                 A secure blockchain-based voting system — designed for trust and
                 transparency.
               </p>
-              <ul className="text-emerald-200 text-sm mb-6 space-y-2">
+              <ul
+                className={`text-sm mb-6 space-y-2 ${
+                  darkMode ? "text-emerald-300" : "text-emerald-800"
+                }`}
+              >
                 <li>🔐 Secure and verifiable</li>
                 <li>🗳️ Blockchain-backed voting</li>
                 <li>🌍 Transparent results</li>
               </ul>
               <Button
                 onClick={() => setShowLogin(true)}
-                className="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold px-6 py-2 rounded-full flex items-center gap-2"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-2 rounded-full flex items-center gap-2 shadow-lg"
               >
                 <LogIn size={18} /> Go to Login
               </Button>
@@ -158,11 +178,11 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className={`w-full max-w-sm mx-auto rounded-2xl shadow-2xl border ${
+              className={`w-full max-w-sm mx-auto rounded-2xl shadow-2xl border p-8 ${
                 darkMode
-                  ? "bg-neutral-900 border-emerald-800"
-                  : "bg-white border-gray-300"
-              } p-8`}
+                  ? "bg-gray-900/90 backdrop-blur-md border-emerald-800/50"
+                  : "bg-white/90 backdrop-blur-md border-emerald-200"
+              }`}
             >
               <h2
                 className={`text-3xl font-bold mb-6 text-center ${
@@ -175,7 +195,9 @@ export default function Home() {
               <form onSubmit={handleLogin} className="space-y-5">
                 <div>
                   <label
-                    className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                    className={`block font-medium mb-1 ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
                   >
                     Username
                   </label>
@@ -184,10 +206,10 @@ export default function Home() {
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder="Username"
-                    className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:outline-none ${
+                    className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:outline-none transition-all ${
                       darkMode
-                        ? "bg-black border-emerald-800 text-white focus:ring-emerald-500"
-                        : "border-gray-300 focus:ring-emerald-500"
+                        ? "bg-black/50 border-emerald-800/50 text-white placeholder-gray-500 focus:ring-emerald-500 focus:border-emerald-500"
+                        : "bg-white border-emerald-200 text-gray-900 placeholder-gray-400 focus:ring-emerald-400 focus:border-emerald-400"
                     }`}
                   />
                 </div>
@@ -195,7 +217,9 @@ export default function Home() {
                 {/* Password Input Mobile */}
                 <div>
                   <label
-                    className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                    className={`block font-medium mb-1 ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
                   >
                     Password
                   </label>
@@ -205,10 +229,10 @@ export default function Home() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className={`w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:outline-none ${
+                      className={`w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:outline-none transition-all ${
                         darkMode
-                          ? "bg-black border-emerald-800 text-white focus:ring-emerald-500"
-                          : "border-gray-300 focus:ring-emerald-500"
+                          ? "bg-black/50 border-emerald-800/50 text-white placeholder-gray-500 focus:ring-emerald-500 focus:border-emerald-500"
+                          : "bg-white border-emerald-200 text-gray-900 placeholder-gray-400 focus:ring-emerald-400 focus:border-emerald-400"
                       }`}
                     />
                     <button
@@ -216,8 +240,8 @@ export default function Home() {
                       onClick={() => setShowPassword(!showPassword)}
                       className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors ${
                         darkMode
-                          ? "text-gray-400 hover:text-white"
-                          : "text-gray-500 hover:text-black"
+                          ? "text-gray-400 hover:text-emerald-400"
+                          : "text-gray-500 hover:text-emerald-600"
                       }`}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -236,7 +260,7 @@ export default function Home() {
                 )}
 
                 <Button
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-black py-2 rounded-lg font-semibold flex justify-center items-center gap-2"
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-lg font-semibold flex justify-center items-center gap-2 shadow-lg"
                   type="submit"
                   disabled={loading}
                 >
@@ -248,7 +272,7 @@ export default function Home() {
                         duration: 1,
                         ease: "linear",
                       }}
-                      className="w-5 h-5 border-2 border-black border-t-transparent rounded-full"
+                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                     />
                   ) : (
                     "Login"
@@ -258,7 +282,11 @@ export default function Home() {
 
               <Button
                 onClick={() => setShowLogin(false)}
-                className="mt-6 w-full text-emerald-400 hover:text-emerald-500 flex justify-center items-center gap-2"
+                className={`mt-6 w-full flex justify-center items-center gap-2 ${
+                  darkMode
+                    ? "text-emerald-400 hover:text-emerald-300"
+                    : "text-emerald-600 hover:text-emerald-700"
+                }`}
                 variant="outline"
               >
                 <ArrowLeft size={18} /> Back
@@ -275,16 +303,32 @@ export default function Home() {
           initial={{ x: -80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex-1 flex flex-col justify-center bg-linear-to-br from-emerald-700 to-black text-white p-16"
+          className={`flex-1 flex flex-col justify-center p-16 ${
+            darkMode
+              ? "bg-linear-to-br from-emerald-900/30 via-gray-900/50 to-black/70"
+              : "bg-linear-to-br from-emerald-100/50 via-white/60 to-gray-50/50"
+          }`}
         >
-          <h1 className="text-5xl font-extrabold mb-4 text-emerald-400">
+          <h1
+            className={`text-5xl font-extrabold mb-4 ${
+              darkMode ? "text-emerald-400" : "text-emerald-700"
+            }`}
+          >
             Welcome to BlockVote
           </h1>
-          <p className="text-lg mb-6 max-w-md opacity-90">
+          <p
+            className={`text-lg mb-6 max-w-md ${
+              darkMode ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
             A secure, decentralized voting system built on blockchain
             technology. Designed for trust, transparency, and digital democracy.
           </p>
-          <ul className="space-y-3 text-base list-disc list-inside text-emerald-200">
+          <ul
+            className={`space-y-3 text-base ${
+              darkMode ? "text-emerald-300" : "text-emerald-800"
+            }`}
+          >
             <li>🔐 Blockchain-backed vote integrity</li>
             <li>🗳️ Tamper-proof, verifiable sessions</li>
             <li>🌍 Accessible for any organization</li>
@@ -299,11 +343,11 @@ export default function Home() {
           className="flex-1 flex justify-center items-center p-16"
         >
           <div
-            className={`w-full max-w-md rounded-2xl shadow-2xl border ${
+            className={`w-full max-w-md rounded-2xl shadow-2xl border p-8 ${
               darkMode
-                ? "bg-neutral-900 border-emerald-800"
-                : "bg-white border-gray-300"
-            } p-8`}
+                ? "bg-gray-900/90 backdrop-blur-md border-emerald-800/50"
+                : "bg-white/90 backdrop-blur-md border-emerald-200"
+            }`}
           >
             <h2
               className={`text-3xl font-bold mb-6 text-center ${
@@ -316,7 +360,9 @@ export default function Home() {
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
                 <label
-                  className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                  className={`block font-medium mb-1 ${
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
                 >
                   Username
                 </label>
@@ -325,10 +371,10 @@ export default function Home() {
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="Enter your Username"
-                  className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:outline-none ${
+                  className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:outline-none transition-all ${
                     darkMode
-                      ? "bg-black border-emerald-800 text-white focus:ring-emerald-500"
-                      : "border-gray-300 focus:ring-emerald-500"
+                      ? "bg-black/50 border-emerald-800/50 text-white placeholder-gray-500 focus:ring-emerald-500 focus:border-emerald-500"
+                      : "bg-white border-emerald-200 text-gray-900 placeholder-gray-400 focus:ring-emerald-400 focus:border-emerald-400"
                   }`}
                 />
               </div>
@@ -336,7 +382,9 @@ export default function Home() {
               {/* Password Input Desktop */}
               <div>
                 <label
-                  className={`block font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                  className={`block font-medium mb-1 ${
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
                 >
                   Password
                 </label>
@@ -346,10 +394,10 @@ export default function Home() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className={`w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:outline-none ${
+                    className={`w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:outline-none transition-all ${
                       darkMode
-                        ? "bg-black border-emerald-800 text-white focus:ring-emerald-500"
-                        : "border-gray-300 focus:ring-emerald-500"
+                        ? "bg-black/50 border-emerald-800/50 text-white placeholder-gray-500 focus:ring-emerald-500 focus:border-emerald-500"
+                        : "bg-white border-emerald-200 text-gray-900 placeholder-gray-400 focus:ring-emerald-400 focus:border-emerald-400"
                     }`}
                   />
                   <button
@@ -357,8 +405,8 @@ export default function Home() {
                     onClick={() => setShowPassword(!showPassword)}
                     className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors ${
                       darkMode
-                        ? "text-gray-400 hover:text-white"
-                        : "text-gray-500 hover:text-black"
+                        ? "text-gray-400 hover:text-emerald-400"
+                        : "text-gray-500 hover:text-emerald-600"
                     }`}
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -377,7 +425,7 @@ export default function Home() {
               )}
 
               <Button
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-black py-2 rounded-lg font-semibold flex justify-center items-center gap-2"
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-lg font-semibold flex justify-center items-center gap-2 shadow-lg"
                 type="submit"
                 disabled={loading}
               >
@@ -389,7 +437,7 @@ export default function Home() {
                       duration: 1,
                       ease: "linear",
                     }}
-                    className="w-5 h-5 border-2 border-black border-t-transparent rounded-full"
+                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                   />
                 ) : (
                   "Login"

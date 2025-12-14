@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import ProfileSettingsModal from "@/components/organization/ProfileSettingsModal";
 import { DonutChart } from "@/components/charts/DonutChart";
+import { timezoneUtils } from "@/utils/timezone";
 
 // ----------------------------------------------------------------------
 // TYPES & INTERFACES
@@ -151,6 +152,11 @@ export default function OrganizationDashboard() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [notificationModal, setNotificationModal] = useState<{
+    isOpen: boolean;
+    type: "success" | "error";
+    message: string;
+  }>({ isOpen: false, type: "success", message: "" });
 
   // --- Create Election Form State ---
   const [createLoading, setCreateLoading] = useState(false);
@@ -309,10 +315,18 @@ export default function OrganizationDashboard() {
       if (data.success) {
         await loadStats(token); // Refresh UI
       } else {
-        alert(data.message || "Failed to update status");
+        setNotificationModal({
+          isOpen: true,
+          type: "error",
+          message: data.message || "Failed to update status",
+        });
       }
     } catch {
-      alert("Error updating status");
+      setNotificationModal({
+        isOpen: true,
+        type: "error",
+        message: "Error updating status",
+      });
     } finally {
       setUpdateLoading(null);
     }
@@ -454,14 +468,26 @@ export default function OrganizationDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert(data.message);
+        setNotificationModal({
+          isOpen: true,
+          type: "success",
+          message: data.message,
+        });
         setIsAssignModalOpen(false);
         if (token) loadStats(token);
       } else {
-        alert(data.message || "Failed to assign voters");
+        setNotificationModal({
+          isOpen: true,
+          type: "error",
+          message: data.message || "Failed to assign voters",
+        });
       }
     } catch {
-      alert("Error assigning voters");
+      setNotificationModal({
+        isOpen: true,
+        type: "error",
+        message: "Error assigning voters",
+      });
     } finally {
       setAssignLoading(false);
     }
@@ -480,13 +506,7 @@ export default function OrganizationDashboard() {
       .toUpperCase();
 
   const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    timezoneUtils.formatDateTime(dateString);
 
   const getStatusColor = (status: string, isDark: boolean) => {
     switch (status) {
@@ -552,7 +572,7 @@ export default function OrganizationDashboard() {
   if (loading)
     return (
       <div
-        className={`min-h-screen flex items-center justify-center ${darkMode ? "bg-black" : "bg-gray-50"}`}
+        className={`min-h-screen flex items-center justify-center ${darkMode ? "bg-black" : "bg-linear-to-br from-gray-50 via-white to-emerald-50"}`}
       >
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
       </div>
@@ -567,7 +587,7 @@ export default function OrganizationDashboard() {
       className={
         darkMode
           ? "min-h-screen flex flex-col bg-linear-to-br from-black via-neutral-900 to-emerald-950 text-white"
-          : "min-h-screen flex flex-col bg-gray-100 text-gray-900"
+          : "min-h-screen flex flex-col bg-linear-to-br from-gray-50 via-white to-emerald-50 text-gray-900"
       }
     >
       {/* HEADER */}
@@ -575,7 +595,7 @@ export default function OrganizationDashboard() {
         className={
           darkMode
             ? "bg-neutral-950/30 border-b border-emerald-800/30 sticky top-0 z-30 backdrop-blur-md"
-            : "bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm backdrop-blur-md"
+            : "bg-white/80 border-b border-emerald-200 sticky top-0 z-30 shadow-sm backdrop-blur-md"
         }
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
@@ -597,7 +617,7 @@ export default function OrganizationDashboard() {
           <div className="flex items-center space-x-2 sm:space-x-3">
             <button
               onClick={() => setDarkMode((s) => !s)}
-              className={`p-2 rounded-full transition-all border ${darkMode ? "bg-neutral-900/50 border-emerald-800/50 text-emerald-300 hover:bg-neutral-800" : "bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400"}`}
+              className={`p-2 rounded-full transition-all border ${darkMode ? "bg-neutral-900/50 border-emerald-800/50 text-emerald-300 hover:bg-neutral-800" : "bg-white/80 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400"}`}
               title="Toggle Theme"
             >
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
@@ -605,7 +625,7 @@ export default function OrganizationDashboard() {
 
             <button
               onClick={() => setSettingsOpen(true)}
-              className={`flex items-center gap-2 sm:gap-3 pl-1 pr-3 py-1 rounded-full border transition-all group max-w-37.5 sm:max-w-none ${darkMode ? "border-emerald-800/50 bg-neutral-900/50 hover:bg-neutral-800 hover:border-emerald-700" : "border-gray-300 bg-white hover:bg-gray-50 hover:border-emerald-500 shadow-sm"}`}
+              className={`flex items-center gap-2 sm:gap-3 pl-1 pr-3 py-1 rounded-full border transition-all group max-w-37.5 sm:max-w-none ${darkMode ? "border-emerald-800/50 bg-neutral-900/50 hover:bg-neutral-800 hover:border-emerald-700" : "border-emerald-200 bg-white/80 hover:bg-emerald-50 hover:border-emerald-500 shadow-sm"}`}
             >
               <div
                 className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center overflow-hidden border ${darkMode ? "bg-emerald-900 border-emerald-700 text-emerald-300" : "bg-emerald-100 border-emerald-200 text-emerald-700"}`}
@@ -645,7 +665,7 @@ export default function OrganizationDashboard() {
         className={
           darkMode
             ? "bg-neutral-900/40 border-b border-emerald-800/30"
-            : "bg-white border-b border-gray-200"
+            : "bg-white/80 backdrop-blur-sm border-b border-emerald-200"
         }
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -711,7 +731,7 @@ export default function OrganizationDashboard() {
                 <motion.div
                   key={i}
                   whileHover={{ scale: 1.02 }}
-                  className={`p-5 rounded-xl border shadow-sm transition-all ${darkMode ? "bg-neutral-900 border-emerald-800 text-white" : "bg-white border-gray-200 text-gray-900"}`}
+                  className={`p-5 rounded-xl border shadow-sm transition-all ${darkMode ? "bg-neutral-900 border-emerald-800 text-white" : "bg-white/80 backdrop-blur-sm border-emerald-200 text-gray-900"}`}
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -743,7 +763,7 @@ export default function OrganizationDashboard() {
                 {stats.recentElections.filter((e) => e.status === "ACTIVE")
                   .length === 0 ? (
                   <div
-                    className={`p-8 rounded-xl border text-center ${darkMode ? "bg-neutral-900/50 border-emerald-900 text-gray-400" : "bg-gray-50 border-gray-200 text-gray-500"}`}
+                    className={`p-8 rounded-xl border text-center ${darkMode ? "bg-neutral-900/50 border-emerald-900 text-gray-400" : "bg-white/50 backdrop-blur-sm border-emerald-200 text-gray-500"}`}
                   >
                     <p>No active elections currently running.</p>
                   </div>
@@ -755,7 +775,7 @@ export default function OrganizationDashboard() {
                       .map((e) => (
                         <div
                           key={e.id}
-                          className={`p-4 rounded-xl border flex justify-between items-center ${darkMode ? "bg-neutral-900 border-emerald-900" : "bg-white border-gray-200"}`}
+                          className={`p-4 rounded-xl border flex justify-between items-center ${darkMode ? "bg-neutral-900 border-emerald-900" : "bg-white/80 backdrop-blur-sm border-emerald-200"}`}
                         >
                           <div>
                             <h3 className="font-bold text-lg">{e.title}</h3>
@@ -776,7 +796,7 @@ export default function OrganizationDashboard() {
               </div>
 
               <div
-                className={`p-6 rounded-xl border h-fit ${darkMode ? "bg-linear-to-br from-emerald-900/20 to-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
+                className={`p-6 rounded-xl border h-fit ${darkMode ? "bg-linear-to-br from-emerald-900/20 to-neutral-900 border-emerald-800" : "bg-linear-to-br from-white to-emerald-50/30 backdrop-blur-sm border-emerald-200"}`}
               >
                 <h3 className="text-lg font-bold mb-2">Quick Actions</h3>
                 <p className="text-sm opacity-70 mb-6">
@@ -833,7 +853,7 @@ export default function OrganizationDashboard() {
                   <motion.div
                     key={e.id}
                     whileHover={{ y: -5 }}
-                    className={`p-5 rounded-xl border shadow-md transition-all overflow-hidden relative ${darkMode ? "bg-neutral-900 border-emerald-900/50 text-white" : "bg-white border-gray-200 text-gray-900"}`}
+                    className={`p-5 rounded-xl border shadow-md transition-all overflow-hidden relative ${darkMode ? "bg-neutral-900 border-emerald-900/50 text-white" : "bg-white/80 backdrop-blur-sm border-emerald-200 text-gray-900"}`}
                   >
                     <div className="absolute top-4 right-4 z-10">
                       {updateLoading === e.id ? (
@@ -867,7 +887,7 @@ export default function OrganizationDashboard() {
                       <button
                         onClick={() => openAssignModal(e.id, e.title)}
                         disabled={e.status === "ENDED"}
-                        className={`text-xs flex items-center gap-1 px-3 py-1.5 rounded-md border transition-colors ${darkMode ? "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-emerald-400" : "bg-gray-50 border-gray-200 hover:bg-gray-100 text-emerald-700"} disabled:opacity-50 disabled:cursor-not-allowed`}
+                        className={`text-xs flex items-center gap-1 px-3 py-1.5 rounded-md border transition-colors ${darkMode ? "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-emerald-400" : "bg-white/80 border-emerald-200 hover:bg-emerald-50 text-emerald-700"} disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         <UserPlus size={12} /> Assign Voters
                       </button>
@@ -943,7 +963,7 @@ export default function OrganizationDashboard() {
                     className={
                       darkMode
                         ? "bg-neutral-900 text-emerald-500 uppercase tracking-wider font-semibold"
-                        : "bg-gray-50 text-gray-700 uppercase tracking-wider font-semibold"
+                        : "bg-emerald-50/50 text-gray-700 uppercase tracking-wider font-semibold"
                     }
                   >
                     <tr>
@@ -955,7 +975,7 @@ export default function OrganizationDashboard() {
                     </tr>
                   </thead>
                   <tbody
-                    className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-gray-200 bg-white"}`}
+                    className={`divide-y ${darkMode ? "divide-neutral-800 bg-neutral-900/50" : "divide-emerald-100 bg-white/50"}`}
                   >
                     {voters.map((v) => (
                       <tr
@@ -977,7 +997,7 @@ export default function OrganizationDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4 opacity-60">
-                          {formatDate(v.createdAt)}
+                          {timezoneUtils.formatDate(v.createdAt)}
                         </td>
                       </tr>
                     ))}
@@ -1545,7 +1565,86 @@ export default function OrganizationDashboard() {
         )}
       </AnimatePresence>
 
-      {/* 3. Profile Settings Modal */}
+      {/* 3. Notification Modal */}
+      <AnimatePresence>
+        {notificationModal.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() =>
+              setNotificationModal({ ...notificationModal, isOpen: false })
+            }
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`w-full max-w-md rounded-xl shadow-2xl border overflow-hidden ${darkMode ? "bg-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
+            >
+              <div
+                className={`p-6 border-b ${darkMode ? "border-emerald-800/30" : "border-gray-200"}`}
+              >
+                <div className="flex items-center gap-3">
+                  {notificationModal.type === "success" ? (
+                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <CheckCircle size={24} className="text-emerald-500" />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                      <AlertCircle size={24} className="text-red-500" />
+                    </div>
+                  )}
+                  <div>
+                    <h3
+                      className={`text-lg font-bold ${darkMode ? "text-white" : "text-gray-900"}`}
+                    >
+                      {notificationModal.type === "success"
+                        ? "Success"
+                        : "Error"}
+                    </h3>
+                    <p className="text-sm opacity-60">
+                      {notificationModal.type === "success"
+                        ? "Operation completed"
+                        : "Something went wrong"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <p
+                  className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                >
+                  {notificationModal.message}
+                </p>
+              </div>
+              <div
+                className={`p-4 border-t flex justify-end ${darkMode ? "border-emerald-800/30" : "border-gray-200"}`}
+              >
+                <button
+                  onClick={() =>
+                    setNotificationModal({
+                      ...notificationModal,
+                      isOpen: false,
+                    })
+                  }
+                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                    notificationModal.type === "success"
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                      : "bg-red-600 hover:bg-red-700 text-white"
+                  }`}
+                >
+                  OK
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 4. Profile Settings Modal */}
       <ProfileSettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}

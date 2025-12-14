@@ -137,7 +137,13 @@ export async function GET(request: NextRequest) {
           select: { id: true, username: true, email: true },
         },
         _count: {
-          select: { votes: true, voters: true },
+          select: {
+            votes: true,
+            voters: true,
+            UserElectionParticipation: {
+              where: { inviteStatus: "ACCEPTED" },
+            },
+          },
         },
         candidates: {
           select: { id: true, name: true, description: true },
@@ -163,7 +169,13 @@ export async function GET(request: NextRequest) {
           select: { id: true, username: true, email: true },
         },
         _count: {
-          select: { votes: true, voters: true },
+          select: {
+            votes: true,
+            voters: true,
+            UserElectionParticipation: {
+              where: { inviteStatus: "ACCEPTED" },
+            },
+          },
         },
         candidates: {
           select: { id: true, name: true, description: true },
