@@ -1290,7 +1290,7 @@ export default function OrganizationDashboard() {
                 >
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1 flex items-center gap-2">
+                      <label className="text-sm font-medium mb-1 flex items-center gap-2">
                         <FileText size={16} /> Election Title
                       </label>
                       <input
@@ -1315,7 +1315,7 @@ export default function OrganizationDashboard() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1 flex items-center gap-2">
+                        <label className="text-sm font-medium mb-1 flex items-center gap-2">
                           <Calendar size={16} /> Start Date
                         </label>
                         <input
@@ -1327,7 +1327,7 @@ export default function OrganizationDashboard() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1 flex items-center gap-2">
+                        <label className="text-sm font-medium mb-1 flex items-center gap-2">
                           <Calendar size={16} /> End Date
                         </label>
                         <input
