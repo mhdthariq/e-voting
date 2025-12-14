@@ -35,7 +35,7 @@ export default function Home() {
     <div
       className={`min-h-screen transition-colors duration-500 ${
         darkMode
-          ? "bg-gradient-to-br from-black via-neutral-900 to-emerald-950 text-white"
+          ? "bg-linear-to-br from-black via-neutral-900 to-emerald-950 text-white"
           : "bg-gray-100 text-gray-800"
       }`}
     >
@@ -63,8 +63,13 @@ export default function Home() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-             <div className="h-10 w-10">
-               <Image src="/favicon-16x16.svg" alt="BlockVote logo" width={40} height={40} />
+            <div className="h-10 w-10">
+              <Image
+                src="/favicon-16x16.svg"
+                alt="BlockVote logo"
+                width={40}
+                height={40}
+              />
             </div>
 
             <h1 className="text-lg font-extrabold tracking-wide text-emerald-400">
@@ -94,7 +99,7 @@ export default function Home() {
         <div className="sm:hidden w-full px-4 pb-3 flex gap-2">
           <button
             onClick={() => router.push("/auth/login")}
-            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black 
+            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black
             px-3 py-2 rounded-md text-sm font-semibold shadow-md"
           >
             Sign In
@@ -112,7 +117,6 @@ export default function Home() {
           </button>
         </div>
       </header>
-
 
       {/* === HERO SECTION === */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-14 text-center">
@@ -168,7 +172,7 @@ export default function Home() {
         </motion.div>
 
         {/* === Demo Credentials === */}
-        {/* 
+        {/*
         <div
           className={`mt-14 p-6 rounded-xl border shadow-lg max-w-2xl mx-auto ${
             darkMode
@@ -217,8 +221,8 @@ export default function Home() {
           </div>
         </div>
         */}
-        {/* === FEATURES GRID (Smooth responsive) === */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-20">
+        {/* === FEATURES GRID === */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24">
           {[
             {
               title: "Cryptographic Security",
@@ -235,21 +239,21 @@ export default function Home() {
           ].map((item, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.15 }}
-              className={`p-6 rounded-xl shadow-xl border ${
+              transition={{ delay: i * 0.2, duration: 0.5 }}
+              className={`group p-8 rounded-2xl shadow-2xl border transition-all hover:scale-105 ${
                 darkMode
-                  ? "bg-neutral-900 border-emerald-900/50"
-                  : "bg-white border-gray-300"
+                  ? "bg-linear-to-br from-neutral-900 to-neutral-800 border-emerald-900/50 hover:border-emerald-700/70"
+                  : "bg-white border-gray-300 hover:border-emerald-500"
               }`}
             >
-              <h3 className="text-xl font-bold text-emerald-400">
+              <h3 className="text-2xl font-bold text-emerald-400 mb-4 group-hover:text-emerald-300 transition-colors">
                 {item.title}
               </h3>
               <p
-                className={`mt-2 text-sm ${
+                className={`text-base leading-relaxed ${
                   darkMode ? "text-gray-300" : "text-gray-600"
                 }`}
               >
@@ -257,33 +261,6 @@ export default function Home() {
               </p>
             </motion.div>
           ))}
-        </div>
-
-        {/* === STATS === */}
-        <div
-          className={`mt-20 p-8 rounded-xl shadow-lg border ${
-            darkMode
-              ? "bg-neutral-900 border-emerald-900/50"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <h3 className="text-2xl font-bold mb-6 text-center text-emerald-400">
-            Platform Status
-          </h3>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
-            {[
-              ["100%", "Test Coverage"],
-              ["309", "Tests Passing"],
-              ["Phase 4", "Complete"],
-              ["Ready", "Production"],
-            ].map(([num, label], i) => (
-              <div key={i}>
-                <div className="text-3xl font-bold text-emerald-400">{num}</div>
-                <div className="text-sm opacity-80">{label}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </main>
 
@@ -297,111 +274,270 @@ export default function Home() {
       >
         <div className="text-center max-w-7xl mx-auto px-6 text-sm">
           <div className="flex items-center justify-center gap-3 mb-2">
-              <div className="h-10 w-10">
-              <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+            <div className="h-10 w-10">
+              <svg
+                viewBox="0 0 200 200"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-full h-full"
+              >
                 <defs>
-                  <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style={{stopColor:"#10b981", stopOpacity:1}} />
-                    <stop offset="50%" style={{stopColor:"#14b8a6", stopOpacity:1}} />
-                    <stop offset="100%" style={{stopColor:"#06b6d4", stopOpacity:1}} />
+                  <linearGradient
+                    id="mainGradient"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop
+                      offset="0%"
+                      style={{ stopColor: "#10b981", stopOpacity: 1 }}
+                    />
+                    <stop
+                      offset="50%"
+                      style={{ stopColor: "#14b8a6", stopOpacity: 1 }}
+                    />
+                    <stop
+                      offset="100%"
+                      style={{ stopColor: "#06b6d4", stopOpacity: 1 }}
+                    />
                   </linearGradient>
-                  
+
                   <filter id="glow">
-                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
                     <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
                 </defs>
-                
+
                 <g filter="url(#glow)">
-                  <polygon points="100,30 140,52.5 140,97.5 100,120 60,97.5 60,52.5" 
-                           fill="none" 
-                           stroke="url(#mainGradient)" 
-                           strokeWidth="3"/>
-                  
+                  <polygon
+                    points="100,30 140,52.5 140,97.5 100,120 60,97.5 60,52.5"
+                    fill="none"
+                    stroke="url(#mainGradient)"
+                    strokeWidth="3"
+                  />
+
                   <g opacity="0.8">
-                    <circle cx="100" cy="30" r="8" fill="none" stroke="#10b981" strokeWidth="2.5"/>
-                    <circle cx="100" cy="30" r="5" fill="none" stroke="#10b981" strokeWidth="1.5"/>
-                    
-                    <circle cx="140" cy="52.5" r="8" fill="none" stroke="#14b8a6" strokeWidth="2.5"/>
-                    <circle cx="140" cy="52.5" r="5" fill="none" stroke="#14b8a6" strokeWidth="1.5"/>
-                    
-                    <circle cx="140" cy="97.5" r="8" fill="none" stroke="#06b6d4" strokeWidth="2.5"/>
-                    <circle cx="140" cy="97.5" r="5" fill="none" stroke="#06b6d4" strokeWidth="1.5"/>
-                    
-                    <circle cx="100" cy="120" r="8" fill="none" stroke="#14b8a6" strokeWidth="2.5"/>
-                    <circle cx="100" cy="120" r="5" fill="none" stroke="#14b8a6" strokeWidth="1.5"/>
-                    
-                    <circle cx="60" cy="97.5" r="8" fill="none" stroke="#10b981" strokeWidth="2.5"/>
-                    <circle cx="60" cy="97.5" r="5" fill="none" stroke="#10b981" strokeWidth="1.5"/>
-                    
-                    <circle cx="60" cy="52.5" r="8" fill="none" stroke="#06b6d4" strokeWidth="2.5"/>
-                    <circle cx="60" cy="52.5" r="5" fill="none" stroke="#06b6d4" strokeWidth="1.5"/>
+                    <circle
+                      cx="100"
+                      cy="30"
+                      r="8"
+                      fill="none"
+                      stroke="#10b981"
+                      strokeWidth="2.5"
+                    />
+                    <circle
+                      cx="100"
+                      cy="30"
+                      r="5"
+                      fill="none"
+                      stroke="#10b981"
+                      strokeWidth="1.5"
+                    />
+
+                    <circle
+                      cx="140"
+                      cy="52.5"
+                      r="8"
+                      fill="none"
+                      stroke="#14b8a6"
+                      strokeWidth="2.5"
+                    />
+                    <circle
+                      cx="140"
+                      cy="52.5"
+                      r="5"
+                      fill="none"
+                      stroke="#14b8a6"
+                      strokeWidth="1.5"
+                    />
+
+                    <circle
+                      cx="140"
+                      cy="97.5"
+                      r="8"
+                      fill="none"
+                      stroke="#06b6d4"
+                      strokeWidth="2.5"
+                    />
+                    <circle
+                      cx="140"
+                      cy="97.5"
+                      r="5"
+                      fill="none"
+                      stroke="#06b6d4"
+                      strokeWidth="1.5"
+                    />
+
+                    <circle
+                      cx="100"
+                      cy="120"
+                      r="8"
+                      fill="none"
+                      stroke="#14b8a6"
+                      strokeWidth="2.5"
+                    />
+                    <circle
+                      cx="100"
+                      cy="120"
+                      r="5"
+                      fill="none"
+                      stroke="#14b8a6"
+                      strokeWidth="1.5"
+                    />
+
+                    <circle
+                      cx="60"
+                      cy="97.5"
+                      r="8"
+                      fill="none"
+                      stroke="#10b981"
+                      strokeWidth="2.5"
+                    />
+                    <circle
+                      cx="60"
+                      cy="97.5"
+                      r="5"
+                      fill="none"
+                      stroke="#10b981"
+                      strokeWidth="1.5"
+                    />
+
+                    <circle
+                      cx="60"
+                      cy="52.5"
+                      r="8"
+                      fill="none"
+                      stroke="#06b6d4"
+                      strokeWidth="2.5"
+                    />
+                    <circle
+                      cx="60"
+                      cy="52.5"
+                      r="5"
+                      fill="none"
+                      stroke="#06b6d4"
+                      strokeWidth="1.5"
+                    />
                   </g>
-                  
-                  <circle cx="100" cy="30" r="3" fill="#10b981"/>
-                  <circle cx="140" cy="52.5" r="3" fill="#14b8a6"/>
-                  <circle cx="140" cy="97.5" r="3" fill="#06b6d4"/>
-                  <circle cx="100" cy="120" r="3" fill="#14b8a6"/>
-                  <circle cx="60" cy="97.5" r="3" fill="#10b981"/>
-                  <circle cx="60" cy="52.5" r="3" fill="#06b6d4"/>
+
+                  <circle cx="100" cy="30" r="3" fill="#10b981" />
+                  <circle cx="140" cy="52.5" r="3" fill="#14b8a6" />
+                  <circle cx="140" cy="97.5" r="3" fill="#06b6d4" />
+                  <circle cx="100" cy="120" r="3" fill="#14b8a6" />
+                  <circle cx="60" cy="97.5" r="3" fill="#10b981" />
+                  <circle cx="60" cy="52.5" r="3" fill="#06b6d4" />
                 </g>
-                
+
                 <g opacity="0.3">
-                  <line x1="100" y1="30" x2="140" y2="52.5" stroke="#10b981" strokeWidth="1.5"/>
-                  <line x1="140" y1="52.5" x2="140" y2="97.5" stroke="#14b8a6" strokeWidth="1.5"/>
-                  <line x1="140" y1="97.5" x2="100" y2="120" stroke="#06b6d4" strokeWidth="1.5"/>
-                  <line x1="100" y1="120" x2="60" y2="97.5" stroke="#14b8a6" strokeWidth="1.5"/>
-                  <line x1="60" y1="97.5" x2="60" y2="52.5" stroke="#10b981" strokeWidth="1.5"/>
-                  <line x1="60" y1="52.5" x2="100" y2="30" stroke="#06b6d4" strokeWidth="1.5"/>
+                  <line
+                    x1="100"
+                    y1="30"
+                    x2="140"
+                    y2="52.5"
+                    stroke="#10b981"
+                    strokeWidth="1.5"
+                  />
+                  <line
+                    x1="140"
+                    y1="52.5"
+                    x2="140"
+                    y2="97.5"
+                    stroke="#14b8a6"
+                    strokeWidth="1.5"
+                  />
+                  <line
+                    x1="140"
+                    y1="97.5"
+                    x2="100"
+                    y2="120"
+                    stroke="#06b6d4"
+                    strokeWidth="1.5"
+                  />
+                  <line
+                    x1="100"
+                    y1="120"
+                    x2="60"
+                    y2="97.5"
+                    stroke="#14b8a6"
+                    strokeWidth="1.5"
+                  />
+                  <line
+                    x1="60"
+                    y1="97.5"
+                    x2="60"
+                    y2="52.5"
+                    stroke="#10b981"
+                    strokeWidth="1.5"
+                  />
+                  <line
+                    x1="60"
+                    y1="52.5"
+                    x2="100"
+                    y2="30"
+                    stroke="#06b6d4"
+                    strokeWidth="1.5"
+                  />
                 </g>
-                
+
                 <g transform="translate(100, 75)" filter="url(#glow)">
-                  <path d="M -10 -2 L -10 -8 Q -10 -13 -5 -13 L 5 -13 Q 10 -13 10 -8 L 10 -2" 
-                        fill="none" 
-                        stroke="url(#mainGradient)" 
-                        strokeWidth="3"
-                        strokeLinecap="round"/>
-                  
-                  <rect x="-12.5" y="-2" width="25" height="13" rx="4" 
-                        fill="#0a0a0a" 
-                        stroke="url(#mainGradient)" 
-                        strokeWidth="3"/>
-                  
-                  <circle cx="0" cy="4.2" r="4" 
-                          fill="none" 
-                          stroke="#10b981" 
-                          strokeWidth="2"/>
-                  
-                  <circle cx="0" cy="4.2" r="1.5" fill="#10b981"/>
+                  <path
+                    d="M -10 -2 L -10 -8 Q -10 -13 -5 -13 L 5 -13 Q 10 -13 10 -8 L 10 -2"
+                    fill="none"
+                    stroke="url(#mainGradient)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+
+                  <rect
+                    x="-12.5"
+                    y="-2"
+                    width="25"
+                    height="13"
+                    rx="4"
+                    fill="#0a0a0a"
+                    stroke="url(#mainGradient)"
+                    strokeWidth="3"
+                  />
+
+                  <circle
+                    cx="0"
+                    cy="4.2"
+                    r="4"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="2"
+                  />
+
+                  <circle cx="0" cy="4.2" r="1.5" fill="#10b981" />
                 </g>
-                
+
                 <g opacity="0.4">
-                  <circle cx="80" cy="41" r="1.5" fill="#10b981"/>
-                  <circle cx="120" cy="41" r="1.5" fill="#14b8a6"/>
-                  <circle cx="150" cy="75" r="1.5" fill="#06b6d4"/>
-                  <circle cx="120" cy="109" r="1.5" fill="#14b8a6"/>
-                  <circle cx="80" cy="109" r="1.5" fill="#10b981"/>
-                  <circle cx="50" cy="75" r="1.5" fill="#06b6d4"/>
-                  
-                  <circle cx="90" cy="60" r="1" fill="#14b8a6"/>
-                  <circle cx="110" cy="60" r="1" fill="#10b981"/>
-                  <circle cx="125" cy="75" r="1" fill="#06b6d4"/>
-                  <circle cx="110" cy="90" r="1" fill="#14b8a6"/>
-                  <circle cx="90" cy="90" r="1" fill="#10b981"/>
-                  <circle cx="75" cy="75" r="1" fill="#06b6d4"/>
+                  <circle cx="80" cy="41" r="1.5" fill="#10b981" />
+                  <circle cx="120" cy="41" r="1.5" fill="#14b8a6" />
+                  <circle cx="150" cy="75" r="1.5" fill="#06b6d4" />
+                  <circle cx="120" cy="109" r="1.5" fill="#14b8a6" />
+                  <circle cx="80" cy="109" r="1.5" fill="#10b981" />
+                  <circle cx="50" cy="75" r="1.5" fill="#06b6d4" />
+
+                  <circle cx="90" cy="60" r="1" fill="#14b8a6" />
+                  <circle cx="110" cy="60" r="1" fill="#10b981" />
+                  <circle cx="125" cy="75" r="1" fill="#06b6d4" />
+                  <circle cx="110" cy="90" r="1" fill="#14b8a6" />
+                  <circle cx="90" cy="90" r="1" fill="#10b981" />
+                  <circle cx="75" cy="75" r="1" fill="#06b6d4" />
                 </g>
               </svg>
             </div>
-            
 
             <span className="font-semibold text-emerald-400">BlockVote</span>
           </div>
 
           <p className="opacity-70">
-            Secure blockchain-based voting platform with cryptographic integrity.
+            Secure blockchain-based voting platform with cryptographic
+            integrity.
           </p>
 
           <div className="flex justify-center gap-3 mt-2 opacity-60">
