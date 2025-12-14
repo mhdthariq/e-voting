@@ -566,7 +566,7 @@ export default function OrganizationDashboard() {
     <div
       className={
         darkMode
-          ? "min-h-screen flex flex-col bg-gradient-to-br from-black via-neutral-900 to-emerald-950 text-white"
+          ? "min-h-screen flex flex-col bg-linear-to-br from-black via-neutral-900 to-emerald-950 text-white"
           : "min-h-screen flex flex-col bg-gray-100 text-gray-900"
       }
     >
@@ -605,10 +605,10 @@ export default function OrganizationDashboard() {
 
             <button
               onClick={() => setSettingsOpen(true)}
-              className={`flex items-center gap-2 sm:gap-3 pl-1 pr-3 py-1 rounded-full border transition-all group max-w-[150px] sm:max-w-none ${darkMode ? "border-emerald-800/50 bg-neutral-900/50 hover:bg-neutral-800 hover:border-emerald-700" : "border-gray-300 bg-white hover:bg-gray-50 hover:border-emerald-500 shadow-sm"}`}
+              className={`flex items-center gap-2 sm:gap-3 pl-1 pr-3 py-1 rounded-full border transition-all group max-w-37.5 sm:max-w-none ${darkMode ? "border-emerald-800/50 bg-neutral-900/50 hover:bg-neutral-800 hover:border-emerald-700" : "border-gray-300 bg-white hover:bg-gray-50 hover:border-emerald-500 shadow-sm"}`}
             >
               <div
-                className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden border ${darkMode ? "bg-emerald-900 border-emerald-700 text-emerald-300" : "bg-emerald-100 border-emerald-200 text-emerald-700"}`}
+                className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center overflow-hidden border ${darkMode ? "bg-emerald-900 border-emerald-700 text-emerald-300" : "bg-emerald-100 border-emerald-200 text-emerald-700"}`}
               >
                 {currentUser?.profileImage ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
@@ -655,7 +655,7 @@ export default function OrganizationDashboard() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as Tab)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors flex-shrink-0 ${
+                  className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors shrink-0 ${
                     activeTab === tab
                       ? darkMode
                         ? "border-emerald-400 text-emerald-300"
@@ -674,7 +674,7 @@ export default function OrganizationDashboard() {
       </nav>
 
       {/* MAIN BODY CONTENT */}
-      <main className="flex-grow max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-8 w-full">
+      <main className="grow max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-8 w-full">
         {error && <p className="text-red-500 text-center">{error}</p>}
 
         {/* 1. OVERVIEW TAB */}
@@ -776,7 +776,7 @@ export default function OrganizationDashboard() {
               </div>
 
               <div
-                className={`p-6 rounded-xl border h-fit ${darkMode ? "bg-gradient-to-br from-emerald-900/20 to-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
+                className={`p-6 rounded-xl border h-fit ${darkMode ? "bg-linear-to-br from-emerald-900/20 to-neutral-900 border-emerald-800" : "bg-white border-gray-200"}`}
               >
                 <h3 className="text-lg font-bold mb-2">Quick Actions</h3>
                 <p className="text-sm opacity-70 mb-6">
@@ -895,7 +895,7 @@ export default function OrganizationDashboard() {
                             <span>👑</span> Winner
                           </span>
                           <span
-                            className="font-bold text-amber-400 truncate max-w-[120px]"
+                            className="font-bold text-amber-400 truncate max-w-30"
                             title={e.winner.name}
                           >
                             {e.winner.name}
@@ -1019,7 +1019,7 @@ export default function OrganizationDashboard() {
                   >
                     Ended Elections
                   </div>
-                  <div className="divide-y divide-gray-100 dark:divide-emerald-900/50 max-h-[600px] overflow-y-auto">
+                  <div className="divide-y divide-gray-100 dark:divide-emerald-900/50 max-h-150 overflow-y-auto">
                     {endedElectionsList.map((election) => (
                       <div
                         key={election.electionId}
@@ -1051,7 +1051,7 @@ export default function OrganizationDashboard() {
                 {/* Right: Detailed Results */}
                 <div className="lg:col-span-2 space-y-6">
                   {loadingElectionId ? (
-                    <div className="h-full min-h-[400px] flex items-center justify-center">
+                    <div className="h-full min-h-100 flex items-center justify-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
                     </div>
                   ) : selectedElectionDetail ? (
@@ -1224,7 +1224,7 @@ export default function OrganizationDashboard() {
                     </>
                   ) : (
                     <div
-                      className={`h-full min-h-[300px] flex flex-col items-center justify-center rounded-xl border border-dashed ${darkMode ? "border-emerald-900/50 bg-neutral-900/30" : "border-gray-300 bg-gray-50"}`}
+                      className={`h-full min-h-75 flex flex-col items-center justify-center rounded-xl border border-dashed ${darkMode ? "border-emerald-900/50 bg-neutral-900/30" : "border-gray-300 bg-gray-50"}`}
                     >
                       <p className="opacity-50">
                         Select an election to view detailed results and
